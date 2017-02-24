@@ -25,14 +25,47 @@
 
 import Foundation
 
+public func RandomWeightMatrix(width: Int, height: Int, depth: Int, range: ClosedRange<Float> = Float(-0.01) ... Float(0.01)) -> Matrix3
+{
+	var weightMatrix = Matrix3(repeating: 0, width: width, height: height, depth: depth)
+	
+	for (x,y,z) in weightMatrix.indices
+	{
+		weightMatrix[x,y,z] = Float(drand48()) * (range.upperBound - range.lowerBound) + range.lowerBound
+	}
+	
+	return weightMatrix
+}
+
+public func RandomWeightMatrix(width: Int, height: Int, range: ClosedRange<Float> = Float(-0.01) ... Float(0.01)) -> Matrix
+{
+	var weightMatrix = Matrix(repeating: 0, width: width, height: height)
+	
+	for (x,y) in weightMatrix.indices
+	{
+		weightMatrix[x,y] = Float(drand48()) * (range.upperBound - range.lowerBound) + range.lowerBound
+	}
+	
+	return weightMatrix
+}
+
 public protocol NeuralLayer
 {
 	var inputSize: (width: Int, height: Int, depth: Int) { get }
 	var outputSize: (width: Int, height: Int, depth: Int) { get }
 	
-	func forward(_ input: Matrix3) -> Matrix3
+	func activated(_ input: Matrix3) -> Matrix3
+	func weighted(_ output: Matrix3) -> Matrix3
 	
 	mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
+}
+
+public extension NeuralLayer
+{
+	func forward(_ input: Matrix3) -> Matrix3
+	{
+		return weighted(activated(input))
+	}
 }
 
 public struct FullyConnectedLayer: NeuralLayer
@@ -48,27 +81,43 @@ public struct FullyConnectedLayer: NeuralLayer
 		return (width: 1, height: 1, depth: weights.height)
 	}
 	
-	public var weights: Matrix
+	public private(set) var weights: Matrix
 	public let activationFunction: ([Float]) -> [Float]
 	public let activationDerivative: ([Float]) -> [Float]
 	
-	public func forward(_ input: Matrix3) -> Matrix3
+	public func activated(_ input: Matrix3) -> Matrix3
 	{
-		precondition(input.dimension == inputSize, "Size of input sample must match layer input size")
-		// + [1] appends bias value to input vector
-		return Matrix3(values: weights * (self.activationFunction(input.values) + [1]), width: 1, height: 1, depth: weights.height)
+		return Matrix3(values: (activationFunction(input.values) + [1]), width: inputSize.width, height: inputSize.height, depth: inputSize.depth+1)
 	}
+	
+	public func weighted(_ output: Matrix3) -> Matrix3
+	{
+		return Matrix3(values: weights * output.values, width: 1, height: 1, depth: weights.height)
+	}
+	
+//	public func forward(_ input: Matrix3) -> Matrix3
+//	{
+//		precondition(input.dimension == inputSize, "Size of input sample must match layer input size")
+//		// + [1] appends bias value to input vector
+//		return Matrix3(values: weights * (self.activationFunction(input.values) + [1]), width: 1, height: 1, depth: weights.height)
+//	}
 	
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
 	{
+		// Calculating signal errors
 		let weightedErrors = weights.transposed * nextLayerErrors.values
-		let errorsIncludingBias = weightedErrors &* activationDerivative(outputs.values)
-		for i in 0 ..< weights.width
-		{
-			let scale = learningRate * outputs[i,0,0]
-			let delta = scale &* errorsIncludingBias
-			weights[column: i] = weights[column: i] &+ delta
-		}
+		let errorsIncludingBias = weightedErrors &* (activationDerivative(outputs.values))
+		
+		let errorFactor = learningRate &* outputs.values
+		
+//		for i in 0 ..< weights.width
+//		{
+//			let scale = learningRate * outputs[0,0,i]
+//			let delta = scale &* errorsIncludingBias
+//			weights[column: i] = weights[column: i] &+ delta
+//		}
+		
+		// Bias error is dropped.
 		return Matrix3(values: Array<Float>(errorsIncludingBias.dropLast()), width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
 	}
 	
@@ -88,7 +137,7 @@ public struct FullyConnectedLayer: NeuralLayer
 
 public struct ConvolutionLayer: NeuralLayer
 {
-	public var kernels: [Matrix3]
+	public private(set) var kernels: [Matrix3]
 	public var bias: [Float]
 	
 	public let inputSize: (width: Int, height: Int, depth: Int)
@@ -110,34 +159,55 @@ public struct ConvolutionLayer: NeuralLayer
 	public let activationFunction: ([Float]) -> [Float]
 	public let activationDerivative: ([Float]) -> [Float]
 	
-	public func forward(_ input: Matrix3) -> Matrix3
+//	public func forward(_ input: Matrix3) -> Matrix3
+//	{
+//		precondition(!kernels.isEmpty, "Convolution layer must have at least one convolution kernel")
+//		
+//		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
+//		
+//		for y in 0 ..< outputSize.height
+//		{
+//			let inputY = y * verticalStride + verticalInset
+//			for x in 0 ..< outputSize.width
+//			{
+//				let inputX = x * horizontalStride + horizontalInset
+//				let slice = input[x: inputX, y: inputY, z: 0, width: kernels.first!.width, height: kernels.first!.height, depth: input.depth]
+//				
+//				for (z, kernel) in kernels.enumerated()
+//				{
+//					output[x, y, z] = kernel.convolve(with: slice)
+//				}
+//			}
+//		}
+//		
+//		output.values = activationFunction(output.values)
+//		return output
+//	}
+	
+	public func activated(_ input: Matrix3) -> Matrix3
 	{
-		precondition(!kernels.isEmpty, "Convolution layer must have at least one convolution kernel")
-		
-		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		
-		for y in 0 ..< outputSize.height
-		{
-			let inputY = y * verticalStride + verticalInset
-			for x in 0 ..< outputSize.width
-			{
-				let inputX = x * horizontalStride + horizontalInset
-				let slice = input[x: inputX, y: inputY, z: 0, width: kernels.first!.width, height: kernels.first!.height, depth: input.depth]
-				
-				for (z, kernel) in kernels.enumerated()
-				{
-					output[x, y, z] = kernel.convolve(with: slice)
-				}
-			}
-		}
-		
-		output.values = activationFunction(output.values)
-		return output
+		return Matrix3(values: activationFunction(input.values), width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
+	}
+	
+	public func weighted(_ output: Matrix3) -> Matrix3
+	{
+		fatalError()
 	}
 	
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
 	{
-		fatalError()
+//		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
+//		
+//		for y in 0 ..< outputSize.height
+//		{
+//			for x in 0 ..< outputSize.width
+//			{
+//				
+//			}
+//		}
+//		
+//		return errors
+		fatalError("TODO")
 	}
 }
 
@@ -146,12 +216,21 @@ public struct PoolingLayer: NeuralLayer
 	public let inputSize: (width: Int, height: Int, depth: Int)
 	public let outputSize: (width: Int, height: Int, depth: Int)
 	
-	public func forward(_ input: Matrix3) -> Matrix3
+//	public func forward(_ input: Matrix3) -> Matrix3
+//	{
+//		precondition(inputSize.width  % outputSize.width  == 0, "Scaling factor from output to input must be an integer")
+//		precondition(inputSize.height % outputSize.height == 0, "Scaling factor from output to input must be an integer")
+//		precondition(inputSize.depth  % outputSize.depth  == 0, "Scaling factor from output to input must be an integer")
+//		
+//	}
+	
+	public func activated(_ input: Matrix3) -> Matrix3
 	{
-		precondition(inputSize.width  % outputSize.width  == 0, "Scaling factor from output to input must be an integer")
-		precondition(inputSize.height % outputSize.height == 0, "Scaling factor from output to input must be an integer")
-		precondition(inputSize.depth  % outputSize.depth  == 0, "Scaling factor from output to input must be an integer")
-		
+		return input
+	}
+	
+	public func weighted(_ activated: Matrix3) -> Matrix3
+	{
 		let xScale = inputSize.width / outputSize.width
 		let yScale = inputSize.height / outputSize.height
 		let zScale = inputSize.depth / outputSize.depth
@@ -168,7 +247,7 @@ public struct PoolingLayer: NeuralLayer
 				{
 					let xOffset = x * xScale
 					
-					let submatrix = input[x: xOffset, y: yOffset, z: zOffset, width: xScale, height: yScale, depth: zScale]
+					let submatrix = activated[x: xOffset, y: yOffset, z: zOffset, width: xScale, height: yScale, depth: zScale]
 					let max = submatrix.values.max() ?? 0
 					output[x, y, z] = max
 				}

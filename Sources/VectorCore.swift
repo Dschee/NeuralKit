@@ -26,7 +26,7 @@
 import Foundation
 import Accelerate
 
-
+/// Operator for component wise division of a vector.
 infix operator &/ : MultiplicationPrecedence
 
 
@@ -258,6 +258,22 @@ public func tanh(_ values: [Float]) -> [Float]
 {
 	var output = [Float](repeating: 0, count: values.count)
 	vvtanhf(&output, values, [Int32(values.count)])
+	return output
+}
+
+
+/// Calculates the derivative of the tangens hyperbolicus for every element of the input vector.
+///
+/// **Note:** The input vector must consist of output values from the tanh function.
+///
+/// - Parameter values: Values for which the derivative of the tangens hyperbolicus should be calculated
+/// - Returns: The derivative of the tangens hyperbolicus of every element in the input vector.
+public func tanh_deriv(_ values: [Float]) -> [Float]
+{
+	var output = [Float](repeating: 0, count: values.count)
+	vDSP_vsq(values, 1, &output, 1, vDSP_Length(values.count))
+	vDSP_vneg(output, 1, &output, 1, vDSP_Length(values.count))
+	vDSP_vsadd(output, 1, [1], &output, 1, vDSP_Length(values.count))
 	return output
 }
 
