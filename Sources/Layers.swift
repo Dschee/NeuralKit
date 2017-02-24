@@ -108,14 +108,7 @@ public struct FullyConnectedLayer: NeuralLayer
 		let weightedErrors = weights.transposed * nextLayerErrors.values
 		let errorsIncludingBias = weightedErrors &* (activationDerivative(outputs.values))
 		
-		let errorFactor = learningRate &* outputs.values
 		
-//		for i in 0 ..< weights.width
-//		{
-//			let scale = learningRate * outputs[0,0,i]
-//			let delta = scale &* errorsIncludingBias
-//			weights[column: i] = weights[column: i] &+ delta
-//		}
 		
 		// Bias error is dropped.
 		return Matrix3(values: Array<Float>(errorsIncludingBias.dropLast()), width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
