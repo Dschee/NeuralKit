@@ -40,16 +40,20 @@ class MNISTTest: XCTestCase
 		}
 		
 		guard
-			let trainingBytes = try? Data(contentsOf: URL(fileURLWithPath: path + "train-images-idx3-ubyte")),
-			let trainingLabels = try? Data(contentsOf: URL(fileURLWithPath: path + "train-labels-idx1-ubyte")),
-			let testingBytes = try? Data(contentsOf: URL(fileURLWithPath: path + "t10k-images-idx3-ubyte")),
-		let testingLabels = try? Data(contentsOf: URL(fileURLWithPath: path + "t10k-labels-idx1-ubyte"))
+			let trainingBytes = try? Data(contentsOf: URL(fileURLWithPath: path + "train-images-idx3-ubyte")).bytes,
+			let trainingLabels = try? Data(contentsOf: URL(fileURLWithPath: path + "train-labels-idx1-ubyte")).bytes,
+			let testingBytes = try? Data(contentsOf: URL(fileURLWithPath: path + "t10k-images-idx3-ubyte")).bytes,
+		let testingLabels = try? Data(contentsOf: URL(fileURLWithPath: path + "t10k-labels-idx1-ubyte")).bytes
 		else
 		{
 			return ([],[])
 		}
 		
+		let trainingSampleCount = 60_000
+		let testingSampleCount = 10_000
 		
+		let trainingSamples = readSamples(from: trainingBytes, labels: trainingLabels, count: trainingSampleCount)
+		let testinSamples = readSamples(from: testingBytes, labels: testingLabels, count: testingSampleCount)
 		
 		return ([],[])
 	}
