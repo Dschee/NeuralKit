@@ -43,6 +43,17 @@ public struct InputSample: Sample
 	/// Values of the sample in a three dimensional matrix
 	public let values: Matrix3
 	
+	
+	/// Initializes an input sample with the given value matrix.
+	/// The dimensions of the value matrix must fit the input dimensions
+	/// of a neural network which will process the sample
+	///
+	/// - Parameter values: Input values
+	public init(values: Matrix3)
+	{
+		self.values = values
+	}
+	
 }
 
 
@@ -56,6 +67,25 @@ public struct TrainingSample: Sample
 	
 	/// Expected output values towards which a network can be trained
 	public let expected: Matrix3
+	
+	
+	/// Initializes a training sample which can be used to train a neural
+	/// network using backpropagation.
+	///
+	/// The training sample stores an input aswell as the output which is
+	/// expected for the given input.
+	///
+	/// The input value must match the network input dimensions.
+	/// The output value must match the network output dimensions.
+	///
+	/// - Parameters:
+	///   - values: Input value for the network.
+	///   - expected: Expected output for the given input
+	public init (values: Matrix3, expected: Matrix3)
+	{
+		self.values = values
+		self.expected = expected
+	}
 	
 }
 

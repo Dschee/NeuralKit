@@ -1,0 +1,10 @@
+version: "Apple Swift version 3.1 (swiftlang-802.0.36.2 clang-802.0.35)"
+options: "4c32f503ac6e4d7e0c44523f85355e63"
+build_time: [541317935, 421068000]
+inputs:
+  "/Users/Palle/Developer/NeuralKit/Sources/MatrixCore.swift": [541290999, 0]
+  "/Users/Palle/Developer/NeuralKit/Sources/VectorCore.swift": [541295717, 0]
+  "/Users/Palle/Developer/NeuralKit/Sources/ImageProcessing.swift": [541229312, 0]
+  "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit.swift": [541313374, 0]
+  "/Users/Palle/Developer/NeuralKit/Sources/Samples.swift": [541317417, 0]
+  "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift": [541317706, 0]

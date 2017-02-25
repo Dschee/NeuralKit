@@ -110,7 +110,7 @@ class FullyConnectedLayerTests: XCTestCase
 	func performRegressionTest(network net: NeuralNetwork, trainingSamples: [TrainingSample], testSamples: [InputSample], expected: [Matrix3])
 	{
 		var network = net
-		for _ in 0 ..< 30_000
+		for _ in 0 ..< 10_000
 		{
 			for sample in trainingSamples
 			{
@@ -137,7 +137,7 @@ class FullyConnectedLayerTests: XCTestCase
 		{
 			for sample in trainingSamples
 			{
-				network.train(sample, learningRate: 0.001)
+				network.train(sample, learningRate: 0.003)
 			}
 		}
 		
@@ -150,6 +150,7 @@ class FullyConnectedLayerTests: XCTestCase
 
 	func testLinearRegression()
 	{
+		srand48(time(nil))
 		let network = NeuralNetwork(layers: [
 			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 1), activationFunction: tanh, activationDerivative: tanh_deriv)
 		])
@@ -162,9 +163,10 @@ class FullyConnectedLayerTests: XCTestCase
 	
 	func testNonlinearRegression()
 	{
+		srand48(time(nil))
 		let	network = NeuralNetwork(layers: [
-			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 6), activationFunction: tanh, activationDerivative: tanh_deriv),
-			FullyConnectedLayer(weights: RandomWeightMatrix(width: 7, height: 1), activationFunction: tanh, activationDerivative: tanh_deriv)
+			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 4), activationFunction: tanh, activationDerivative: tanh_deriv),
+			FullyConnectedLayer(weights: RandomWeightMatrix(width: 5, height: 1), activationFunction: tanh, activationDerivative: tanh_deriv)
 		])
 		
 		for x in ["a", "b", "c"]
@@ -176,6 +178,7 @@ class FullyConnectedLayerTests: XCTestCase
 	
 	func testLinearClassification()
 	{
+		srand48(time(nil))
 		let network = NeuralNetwork(
 			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 1), activationFunction: tanh, activationDerivative: tanh_deriv)],
 			outputActivation: tanh,
@@ -190,6 +193,7 @@ class FullyConnectedLayerTests: XCTestCase
 	
 	func testNonlinearClassification()
 	{
+		srand48(time(nil))
 		let network = NeuralNetwork(
 			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 6), activationFunction: tanh, activationDerivative: tanh_deriv),
 			         FullyConnectedLayer(weights: RandomWeightMatrix(width: 7, height: 1), activationFunction: tanh, activationDerivative: tanh_deriv)],

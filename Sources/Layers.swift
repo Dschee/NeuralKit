@@ -165,6 +165,25 @@ public struct FullyConnectedLayer: NeuralLayer
 	public let activationDerivative: ([Float]) -> [Float]
 	
 	
+	/// Initializes a fully connected neural layer using the given weight matrix, its activation function and derivative
+	///
+	/// The value at column n and row m of the weight matrix corresponds to the weight of the nth neuron 
+	/// towards the mth neuron of the next layer.
+	///
+	/// **Note:** The input size of the layer will be one neuron smaller than the width of the weight matrix
+	/// as the weight matrix will also store bias values of the layer
+	///
+	/// - Parameters:
+	///   - weights: Weights from the layer to the next layer
+	///   - activationFunction: Activation function with which the inputs should be activated
+	///   - activationDerivative: Derivative of the activation function used for training
+	public init(weights: Matrix, activationFunction: @escaping ([Float]) -> [Float], activationDerivative: @escaping ([Float]) -> [Float])
+	{
+		self.weights = weights
+		self.activationFunction = activationFunction
+		self.activationDerivative = activationDerivative
+	}
+	
 	
 	/// Calculates the activation function for all inputs of the layer
 	///
@@ -244,39 +263,30 @@ public struct ConvolutionLayer: NeuralLayer
 	public let activationFunction: ([Float]) -> [Float]
 	public let activationDerivative: ([Float]) -> [Float]
 	
-//	public func forward(_ input: Matrix3) -> Matrix3
-//	{
-//		precondition(!kernels.isEmpty, "Convolution layer must have at least one convolution kernel")
-//		
-//		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-//		
-//		for y in 0 ..< outputSize.height
-//		{
-//			let inputY = y * verticalStride + verticalInset
-//			for x in 0 ..< outputSize.width
-//			{
-//				let inputX = x * horizontalStride + horizontalInset
-//				let slice = input[x: inputX, y: inputY, z: 0, width: kernels.first!.width, height: kernels.first!.height, depth: input.depth]
-//				
-//				for (z, kernel) in kernels.enumerated()
-//				{
-//					output[x, y, z] = kernel.convolve(with: slice)
-//				}
-//			}
-//		}
-//		
-//		output.values = activationFunction(output.values)
-//		return output
-//	}
-	
+
 	public func activated(_ input: Matrix3) -> Matrix3
 	{
-		return Matrix3(values: activationFunction(input.values), width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
+		return input.mapv(activationFunction)
 	}
 	
-	public func weighted(_ output: Matrix3) -> Matrix3
+	public func weighted(_ activated: Matrix3) -> Matrix3
 	{
-		fatalError()
+		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
+		for y in 0 ..< outputSize.height
+		{
+			let inputY = y * verticalStride + verticalInset
+			for x in 0 ..< outputSize.width
+			{
+				let inputX = x * horizontalStride + horizontalInset
+				let slice = activated[x: inputX, y: inputY, z: 0, width: kernels.first?.width ?? 0, height: kernels.first?.height ?? 0, depth: activated.depth]
+
+				for (z, kernel) in kernels.enumerated()
+				{
+					output[x, y, z] = kernel.convolve(with: slice) + bias[z]
+				}
+			}
+		}
+		return output
 	}
 	
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
@@ -287,12 +297,15 @@ public struct ConvolutionLayer: NeuralLayer
 //		{
 //			for x in 0 ..< outputSize.width
 //			{
-//				
+//				for (z, kernel) in kernels.map({$0.reversed()}).enumerated()
+//				{
+//					
+//				}
 //			}
 //		}
 //		
 //		return errors
-		fatalError("TODO")
+		fatalError()
 	}
 }
 
@@ -300,14 +313,6 @@ public struct PoolingLayer: NeuralLayer
 {
 	public let inputSize: (width: Int, height: Int, depth: Int)
 	public let outputSize: (width: Int, height: Int, depth: Int)
-	
-//	public func forward(_ input: Matrix3) -> Matrix3
-//	{
-//		precondition(inputSize.width  % outputSize.width  == 0, "Scaling factor from output to input must be an integer")
-//		precondition(inputSize.height % outputSize.height == 0, "Scaling factor from output to input must be an integer")
-//		precondition(inputSize.depth  % outputSize.depth  == 0, "Scaling factor from output to input must be an integer")
-//		
-//	}
 	
 	public func activated(_ input: Matrix3) -> Matrix3
 	{
