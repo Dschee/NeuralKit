@@ -23,49 +23,21 @@
     },
     {
       "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
-      "line": 257,
-      "symbol": "ConvolutionLayer.horizontalStride",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
-      "line": 258,
-      "symbol": "ConvolutionLayer.verticalStride",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
-      "line": 260,
-      "symbol": "ConvolutionLayer.horizontalInset",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
-      "line": 261,
-      "symbol": "ConvolutionLayer.verticalInset",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
-      "line": 263,
+      "line": 264,
       "symbol": "ConvolutionLayer.activationFunction",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
-      "line": 264,
+      "line": 265,
       "symbol": "ConvolutionLayer.activationDerivative",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
-      "line": 312,
+      "line": 309,
       "symbol": "PoolingLayer",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"

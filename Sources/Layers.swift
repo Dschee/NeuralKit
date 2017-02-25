@@ -241,24 +241,25 @@ public struct FullyConnectedLayer: NeuralLayer
 
 public struct ConvolutionLayer: NeuralLayer
 {
-	public private(set) var kernels: [Matrix3]
+	public private(set) var kernels: [Matrix]
 	public var bias: [Float]
 	
 	public let inputSize: (width: Int, height: Int, depth: Int)
 	public var outputSize: (width: Int, height: Int, depth: Int)
 	{
 		return (
-			width: (inputSize.width - 2 * horizontalInset) / horizontalStride,
-			height: (inputSize.height - 2 * verticalInset) / verticalStride,
+			width: inputSize.width - (kernels.first?.width ?? 0),
+			height: inputSize.height - (kernels.first?.height ?? 0),
 			depth: kernels.count
 		)
 	}
-	
-	public let horizontalStride: Int
-	public let verticalStride: Int
-	
-	public let horizontalInset: Int
-	public let verticalInset: Int
+
+	// TODO: insets and strides
+//	public let horizontalStride: Int
+//	public let verticalStride: Int
+//	
+//	public let horizontalInset: Int
+//	public let verticalInset: Int
 	
 	public let activationFunction: ([Float]) -> [Float]
 	public let activationDerivative: ([Float]) -> [Float]
@@ -272,39 +273,35 @@ public struct ConvolutionLayer: NeuralLayer
 	public func weighted(_ activated: Matrix3) -> Matrix3
 	{
 		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		for y in 0 ..< outputSize.height
+		
+		for (x,y,z) in output.indices
 		{
-			let inputY = y * verticalStride + verticalInset
-			for x in 0 ..< outputSize.width
-			{
-				let inputX = x * horizontalStride + horizontalInset
-				let slice = activated[x: inputX, y: inputY, z: 0, width: kernels.first?.width ?? 0, height: kernels.first?.height ?? 0, depth: activated.depth]
-
-				for (z, kernel) in kernels.enumerated()
-				{
-					output[x, y, z] = kernel.convolve(with: slice) + bias[z]
-				}
-			}
+			let kernel = kernels[z]
+			output[x,y,z] = (0 ..< activated.depth)
+				.map{activated[x:x, y:y, z:$0, width:kernel.width, height:kernel.height, depth: 1]}
+				.map{$0.values}
+				.map{$0 * kernel.values}
+				.reduce(0,+)
 		}
+		
 		return output
 	}
 	
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
 	{
-//		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
-//		
-//		for y in 0 ..< outputSize.height
-//		{
-//			for x in 0 ..< outputSize.width
-//			{
-//				for (z, kernel) in kernels.map({$0.reversed()}).enumerated()
-//				{
-//					
-//				}
-//			}
-//		}
-//		
-//		return errors
+		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
+		
+		for z in 0 ..< inputSize.depth
+		{
+			for y in 0 ..< inputSize.height
+			{
+				for x in 0 ..< inputSize.width
+				{
+					
+				}
+			}
+		}
+		
 		fatalError()
 	}
 }
@@ -348,6 +345,7 @@ public struct PoolingLayer: NeuralLayer
 	
 	public func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
 	{
+		
 		fatalError()
 	}
 }
