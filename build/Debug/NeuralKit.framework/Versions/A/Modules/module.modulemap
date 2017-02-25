@@ -1,3 +1,0 @@
-framework module NeuralKit {
-    header "NeuralKit-Swift.h"
-}
