@@ -30,18 +30,22 @@ public struct NeuralNetwork
 {
 	public internal(set) var layers: [NeuralLayer]
 	
-	public let outputActivationFunction: (([Float]) -> [Float])?
-	public let outputActivationDerivative: (([Float]) -> [Float])?
+	public let outputActivationFunction: (([Float]) -> [Float])
+	public let outputActivationDerivative: (([Float]) -> [Float])
 	
 	public init(layers: [NeuralLayer], outputActivation: (([Float]) -> [Float])? = nil, outputActivationDerivative: (([Float]) -> [Float])? = nil)
 	{
 		for i in 1 ..< layers.count
 		{
-			precondition(layers[i-1].outputSize == layers[i].inputSize, "Layers \(i-1) and \(i) must have matching output and input size")
+			precondition(
+				layers[i-1].outputSize == layers[i].inputSize,
+				"Layers \(i-1) and \(i) must have matching output and input size. " +
+				"Note that fully connected layers may store bias values in the weight matrix reducing the actual input size by one."
+			)
 		}
 		self.layers = layers
-		self.outputActivationFunction = outputActivation
-		self.outputActivationDerivative = outputActivationDerivative
+		self.outputActivationFunction = outputActivation ?? identity(_:)
+		self.outputActivationDerivative = outputActivationDerivative ?? ones(_:)
 	}
 	
 	// Crashes the compiler
@@ -58,7 +62,7 @@ public struct NeuralNetwork
 			layer.forward(sample)
 		}
 		return Matrix3(
-			values: outputActivationFunction?(lastLayerOutput.values) ?? lastLayerOutput.values,
+			values: outputActivationFunction(lastLayerOutput.values),
 			width: lastLayerOutput.width,
 			height: lastLayerOutput.height,
 			depth: lastLayerOutput.depth
@@ -68,30 +72,27 @@ public struct NeuralNetwork
 	@discardableResult
 	public mutating func train(_ sample: TrainingSample, learningRate: Float) -> Float
 	{
+		
+		// Feed forward sample, keeping results of individual layers
+		
 		var partialResults = Array<Matrix3>(repeating: Matrix3(repeating: 0, width: 0, height: 0, depth: 0), count: layers.count)
-		var lastPartialResult:Matrix3 = sample.values
-		var lastWeightedResult:Matrix3 = sample.values
+		
+		var lastPartialResult = Matrix3(repeating: 0, width: 0, height: 0, depth: 0)
+		var lastWeightedResult = sample.values
+		
 		for (index, layer) in layers.enumerated()
 		{
-//			lastPartialResult = layer.forward(lastPartialResult)
 			lastPartialResult = layer.activated(lastWeightedResult)
 			lastWeightedResult = layer.weighted(lastPartialResult)
 			partialResults[index] = lastPartialResult
 		}
-		let lastResult = outputActivationFunction?(lastWeightedResult.values) ?? lastWeightedResult.values
 		
-		let errors:[Float]
-		if let outputActivationDerivative = self.outputActivationDerivative
-		{
-			errors = (sample.expected.values &- lastResult) &* outputActivationDerivative(lastResult)
-		}
-		else
-		{
-			errors = (sample.expected.values &- lastResult)
-		}
-		
+		let lastResult = outputActivationFunction(lastWeightedResult.values)
+
+		let errors = (sample.expected.values &- lastResult) &* outputActivationDerivative(lastResult)
+
 		let errorMatrix = Matrix3(
-			values: errors,
+			values: errors &* -1,
 			width: layers.last?.outputSize.width ?? 0,
 			height: layers.last?.outputSize.height ?? 0,
 			depth: layers.last?.outputSize.depth ?? 0

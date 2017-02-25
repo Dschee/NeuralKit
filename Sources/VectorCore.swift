@@ -29,8 +29,21 @@ import Accelerate
 /// Operator for component wise division of a vector.
 infix operator &/ : MultiplicationPrecedence
 
+//Mark: - Vector prefix functions
 
-// Vector - Vector arithmetic
+/// Negates every element of the input vector
+///
+/// - Parameter values: Input vector which should be negated
+/// - Returns: Vector containing the negated elements of the input vector
+public prefix func -(values: [Float]) -> [Float]
+{
+	var output = Array<Float>(repeating: 0, count: values.count)
+	vDSP_vneg(values, 1, &output, 1, UInt(values.count))
+	return output
+}
+
+
+//Mark: - Vector - Vector arithmetic
 
 /// Calculates the dot product of two vectors.
 ///
@@ -106,7 +119,7 @@ public func &/ (lhs: [Float], rhs: [Float]) -> [Float]
 }
 
 
-// Vector - Scalar arithmetic
+//Mark: - Vector - Scalar arithmetic
 
 
 /// Performs a component wise addition of an input vector with a scalar
@@ -165,7 +178,7 @@ public func &/ (lhs: [Float], rhs: Float) -> [Float]
 }
 
 
-// Scalar - Vector arithmetic
+//Mark: - Scalar - Vector arithmetic
 
 /// Performs a component wise addition of an input vector and a scalar
 ///
@@ -224,7 +237,7 @@ public func &/ (lhs: Float, rhs: [Float]) -> [Float]
 }
 
 
-// Vector functions commonly used in neural networks
+//Mark: - Vector functions commonly used in neural networks
 
 /// Calculates the element wise square root of an input vector
 ///
@@ -315,4 +328,47 @@ public func relu_deriv(_ values: [Float]) -> [Float]
 	vDSP_vclip(values, 1, [0], [1], &output, 1, UInt(values.count))
 	vvceilf(&output, output, [Int32(values.count)])
 	return output
+}
+
+
+/// Returns the unchanged input values
+///
+/// - Parameter values: Input values
+/// - Returns: The unchanged input values
+@inline(__always)
+public func identity(_ values: [Float]) -> [Float]
+{
+	return values
+}
+
+
+/// Returns a vector containing ones with the same length as the input vector
+///
+/// - Parameter values: Input vector
+/// - Returns: Vector of ones with the same length as the input vector
+@inline(__always)
+public func ones(_ values: [Float]) -> [Float]
+{
+	return Array<Float>(repeating: 1, count: values.count)
+}
+
+
+/// Calculates the sigmoid function for every element of the input vector
+///
+/// - Parameter values: Input vector
+/// - Returns: Vector containing the sigmoid function results of the values of the input values
+public func sigmoid(_ values: [Float]) -> [Float]
+{
+	return 1 &/ (exp(-values) &+ 1)
+}
+
+
+/// Calculates the derivative of the sigmoid function of the input vector.
+/// The input vector must contain values which are already outputs of the sigmoid function
+///
+/// - Parameter values: Sigmoid input value vector
+/// - Returns: Vector containing the derivatives of the sigmoid function for every sigmoid function value of the input vector
+public func sigmoid_deriv(_ values: [Float]) -> [Float]
+{
+	return values &* (1 &- values)
 }

@@ -25,6 +25,16 @@
 
 import Foundation
 
+
+/// Creates a three dimensional weight matrix 
+/// and fills it with small random values in the specified range
+///
+/// - Parameters:
+///   - width: Width of the weight matrix
+///   - height: Height of the weight matrix
+///   - depth: Depth of the weight matrix
+///   - range: Range in which the random values should be. Default: [-0.01; 0.01]
+/// - Returns: Weight matrix containing random values
 public func RandomWeightMatrix(width: Int, height: Int, depth: Int, range: ClosedRange<Float> = Float(-0.01) ... Float(0.01)) -> Matrix3
 {
 	var weightMatrix = Matrix3(repeating: 0, width: width, height: height, depth: depth)
@@ -37,6 +47,15 @@ public func RandomWeightMatrix(width: Int, height: Int, depth: Int, range: Close
 	return weightMatrix
 }
 
+
+/// Creates a weight matrix
+/// and fills it with small random values in the specified range
+///
+/// - Parameters:
+///   - width: Width of the weight matrix
+///   - height: Height of the weight matrix
+///   - range: Range in which the random values should be. Default: [-0.01; 0.01]
+/// - Returns: Weight matrix containing random values
 public func RandomWeightMatrix(width: Int, height: Int, range: ClosedRange<Float> = Float(-0.01) ... Float(0.01)) -> Matrix
 {
 	var weightMatrix = Matrix(repeating: 0, width: width, height: height)
@@ -49,83 +68,156 @@ public func RandomWeightMatrix(width: Int, height: Int, range: ClosedRange<Float
 	return weightMatrix
 }
 
+
+/// A layer of a feed forward neural network
 public protocol NeuralLayer
 {
+	
+	/// Input size of the layer.
+	/// Should not change after initialization
 	var inputSize: (width: Int, height: Int, depth: Int) { get }
+	
+	
+	/// Output size of the layer.
+	/// Should not change after initialization
 	var outputSize: (width: Int, height: Int, depth: Int) { get }
 	
+	
+	/// Calculates the activation function for all inputs of the layer
+	///
+	/// - Parameter input: Layer input
+	/// - Returns: Result of the activation function
 	func activated(_ input: Matrix3) -> Matrix3
+	
+	
+	/// Weighs the outputs of the activation function so it can be presented
+	/// to the next layer
+	///
+	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Returns: Weighted output of the layer
 	func weighted(_ output: Matrix3) -> Matrix3
 	
+	
+	/// Adjusts the weights of the layer to reduce the error of the network.
+	///
+	/// The errors of the next layer will be provided.
+	/// The function has to also calculate the errors of the layer.
+	///
+	///
+	/// - Parameters:
+	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - outputs: Outputs of the current layer
+	///   - learningRate: Learning rate at which the weights should be adjusted
+	/// - Returns: Error matrix of the current layer
 	mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
+	
 }
 
+// Feed forward function
 public extension NeuralLayer
 {
+	
+	/// Forwards an input through the layer.
+	/// 
+	/// The inputs will be fed through the activation function
+	/// and will be weighted.
+	///
+	/// - Parameter input: Layer input
+	/// - Returns: Next layer input
 	func forward(_ input: Matrix3) -> Matrix3
 	{
 		return weighted(activated(input))
 	}
 }
 
+
+/// A fully connected layer of a neural network.
+/// All neurons of the layer are connected to all neurons of the next layer
 public struct FullyConnectedLayer: NeuralLayer
 {
+	
+	/// Input size of the layer.
+	/// Should not change after initialization
 	public var inputSize: (width: Int, height: Int, depth: Int)
 	{
 		// The last neuron is an extra bias neuron and will not be counted in input depth
 		return (width: 1, height: 1, depth: weights.width - 1)
 	}
 	
+	
+	/// Output size of the layer.
+	/// Should not change after initialization
 	public var outputSize: (width: Int, height: Int, depth: Int)
 	{
 		return (width: 1, height: 1, depth: weights.height)
 	}
 	
+	
+	/// Weights with which outputs of the layer are weighted when presented to the next layer
 	public private(set) var weights: Matrix
+	
+	
+	/// Activation function which will be applied to the inputs of the layer
 	public let activationFunction: ([Float]) -> [Float]
+	
+	
+	/// Derivative of the activation function used for training the network.
 	public let activationDerivative: ([Float]) -> [Float]
 	
+	
+	
+	/// Calculates the activation function for all inputs of the layer
+	///
+	/// - Parameter input: Layer input
+	/// - Returns: Result of the activation function
 	public func activated(_ input: Matrix3) -> Matrix3
 	{
 		return Matrix3(values: (activationFunction(input.values) + [1]), width: inputSize.width, height: inputSize.height, depth: inputSize.depth+1)
 	}
 	
+	
+	/// Weighs the outputs of the activation function so it can be presented
+	/// to the next layer
+	///
+	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Returns: Weighted output of the layer
 	public func weighted(_ output: Matrix3) -> Matrix3
 	{
 		return Matrix3(values: weights * output.values, width: 1, height: 1, depth: weights.height)
 	}
 	
-//	public func forward(_ input: Matrix3) -> Matrix3
-//	{
-//		precondition(input.dimension == inputSize, "Size of input sample must match layer input size")
-//		// + [1] appends bias value to input vector
-//		return Matrix3(values: weights * (self.activationFunction(input.values) + [1]), width: 1, height: 1, depth: weights.height)
-//	}
 	
+	/// Adjusts the weights of the layer to reduce the error of the network.
+	///
+	/// The errors of the next layer will be provided.
+	/// The function has to also calculate the errors of the layer.
+	///
+	///
+	/// - Parameters:
+	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - outputs: Outputs of the current layer
+	///   - learningRate: Learning rate at which the weights should be adjusted
+	/// - Returns: Error matrix of the current layer
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
 	{
 		// Calculating signal errors
 		let weightedErrors = weights.transposed * nextLayerErrors.values
 		let errorsIncludingBias = weightedErrors &* (activationDerivative(outputs.values))
 		
+		// Transforming data for outer vector product
+		let nextLayerErrorVector = Matrix(values: nextLayerErrors.values, width: 1, height: nextLayerErrors.depth)
+		let outVector = Matrix(values: outputs.values, width: outputs.depth, height: 1)
 		
+		// Adjusting weights by calculating weight delta matrix
+		let weightDelta = (nextLayerErrorVector * outVector).mapv{$0 &* learningRate}
+		
+		// Applying weight change.
+		weights = weights + weightDelta
 		
 		// Bias error is dropped.
 		return Matrix3(values: Array<Float>(errorsIncludingBias.dropLast()), width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
 	}
-	
-//	func calculateSignalErrors(expectedOutputs: [Float], actualOutputs: [Float]) -> [Float]
-//	{
-//		return (expectedOutputs &- actualOutputs) &* activationDerivative(actualOutputs)
-//	}
-//	
-//	public func layerErrors(forNextLayerErrors nextLayerErrors: Matrix3, layerOutput: Matrix3) -> Matrix3
-//	{
-//		let weightedErrors = weights.transposed * nextLayerErrors.values
-//		let errors = weightedErrors &* activationDerivative(layerOutput.values)
-//		
-//		return Matrix3(values: errors, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
-//	}
+
 }
 
 public struct ConvolutionLayer: NeuralLayer

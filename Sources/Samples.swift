@@ -91,11 +91,11 @@ public extension Sample
 	///
 	/// - Parameter samples: Samples which should be normalized
 	/// - Returns: Normalized samples, normalization scale and offset at which the samples were normalized
-	public static func normalize(samples: [InputSample]) -> ([InputSample], scale: Float, offset: Float)
+	public static func normalize(samples: [Matrix3]) -> ([Matrix3], scale: Float, offset: Float)
 	{
 		guard
-			let min = samples.flatMap({$0.values.values.min()}).min(),
-			let max = samples.flatMap({$0.values.values.max()}).max()
+			let min = samples.flatMap({$0.values.min()}).min(),
+			let max = samples.flatMap({$0.values.max()}).max()
 		else
 		{
 			return (samples, scale: 1, offset: 0)
@@ -118,14 +118,13 @@ public extension Sample
 	///   - scale: Normalization scale
 	///   - offset: Normalization offset
 	/// - Returns: Normalized samples
-	public static func normalize(samples: [InputSample], scale: Float, offset: Float) -> [InputSample]
+	public static func normalize(samples: [Matrix3], scale: Float, offset: Float) -> [Matrix3]
 	{
 		return samples
-			.map { $0.values.values }
+			.map { $0.values }
 			.map { ($0 &+ offset) &* scale }
 			// Force unwrapping because if no first element exists, this code would not be executed anyway:
-			.map { Matrix3(values: $0, width: samples.first!.values.width, height: samples.first!.values.height, depth: samples.first!.values.depth) }
-			.map { InputSample(values: $0) }
+			.map { Matrix3(values: $0, width: samples.first!.width, height: samples.first!.height, depth: samples.first!.depth) }
 	}
 	
 	
@@ -136,7 +135,7 @@ public extension Sample
 	///   - scale: Scale with which the samples were normalized
 	///   - offset: Offset with which the samples were normalized
 	/// - Returns: Denormalized samples.
-	public static func denormalize(samples: [InputSample], scale: Float, offset: Float) -> [InputSample]
+	public static func denormalize(samples: [Matrix3], scale: Float, offset: Float) -> [Matrix3]
 	{
 		return Self.normalize(samples: samples, scale: 1 / scale, offset: -offset)
 	}
