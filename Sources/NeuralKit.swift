@@ -115,7 +115,7 @@ public struct NeuralNetwork
 	///   - learningRate: Rate at which the network should adapt to the sample
 	/// - Returns: The total error between the expected and actual output
 	@discardableResult
-	public mutating func train(_ sample: TrainingSample, learningRate: Float) -> Float
+	public mutating func train(_ sample: TrainingSample, learningRate: Float, annealingRate: Float = 0) -> Float
 	{
 		// Feed forward sample, keeping results of individual layers
 		
@@ -148,7 +148,7 @@ public struct NeuralNetwork
 		
 		_ = layers.indices.reversed().reduce(errorMatrix)
 		{ (errorMatrix, layerIndex) -> Matrix3 in
-			layers[layerIndex].adjustWeights(nextLayerErrors: errorMatrix, outputs: partialResults[layerIndex], learningRate: learningRate)
+			layers[layerIndex].adjustWeights(nextLayerErrors: errorMatrix, outputs: partialResults[layerIndex], learningRate: learningRate, annealingRate: annealingRate)
 		}
 		
 		// Calculate the total error

@@ -70,6 +70,24 @@ public func RandomWeightMatrix(width: Int, height: Int, range: ClosedRange<Float
 }
 
 
+/// Creates a pertubation matrix
+/// consisting of very small values around zero with a few randomly larger values
+///
+/// - Parameters:
+///   - width: Width of the perturbation matrix
+///   - height: Height of the perturbation matrix
+/// - Returns: Perturbation matrix
+public func RandomPertubationMatrix(width: Int, height: Int) -> Matrix
+{
+	let matA = RandomWeightMatrix(width: width, height: height, range: 0 ... 1)
+	let matB = RandomWeightMatrix(width: width, height: height, range: 0 ... 1)
+	
+	let transformed = matA.mapv{sqrt(-2 &* log($0))}
+	let randomNegated = zip(transformed.values, matB.values).map{$1 < 0.5 ? -$0 : $0}
+	return Matrix(values: randomNegated, width: width, height: height).mapv{pow($0, Array<Float>(repeating: 5, count: randomNegated.count)) &* 0.0003}
+}
+
+
 /// A layer of a feed forward neural network
 public protocol NeuralLayer
 {
@@ -110,7 +128,7 @@ public protocol NeuralLayer
 	///   - outputs: Outputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
 	/// - Returns: Error matrix of the current layer
-	mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
+	mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	
 }
 
@@ -218,7 +236,7 @@ public struct FullyConnectedLayer: NeuralLayer
 	///   - outputs: Outputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
 	/// - Returns: Error matrix of the current layer
-	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
+	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
 		// Calculating signal errors
 		let weightedErrors = weights.transposed * nextLayerErrors.values
@@ -233,6 +251,12 @@ public struct FullyConnectedLayer: NeuralLayer
 		
 		// Applying weight change.
 		weights = weights + weightDelta
+		
+		// Simulated annealing (helps overcome local minima)
+		if annealingRate != 0
+		{
+			weights = weights + RandomPertubationMatrix(width: weights.width, height: weights.height).mapv{$0 &* annealingRate}
+		}
 		
 		// Bias error is dropped.
 		return Matrix3(values: Array<Float>(errorsIncludingBias.dropLast()), width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
@@ -288,7 +312,7 @@ public struct ConvolutionLayer: NeuralLayer
 		return output
 	}
 	
-	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
+	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
 		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
 		
@@ -344,7 +368,7 @@ public struct PoolingLayer: NeuralLayer
 		return output
 	}
 	
-	public func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float) -> Matrix3
+	public func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
 		
 		fatalError()
