@@ -27,24 +27,58 @@
 import Foundation
 import Accelerate
 
+//public struct MatrixIndexCollection: Collection
+//{
+//	public typealias _Element = (Int,Int)
+//	public typealias SubSequence = MatrixIndexCollection
+//	public typealias Index = Int
+//	
+//	fileprivate let width: Int
+//	fileprivate let height: Int
+//	
+//	public let startIndex: Int = 0
+//	
+//	public var count: Int
+//	{
+//		return width * height * depth
+//	}
+//	
+//	subscript(index: Index) -> _Element
+//	{
+//		return (index % width, index / width % height)
+//	}
+//}
+
 
 /// A two dimensional matrix
 public struct Matrix
 {
 	
+	
 	/// Values stored in the matrix as a flattened array. 
 	/// The value of the nth row and mth column is at index `n * width + m`
-	var values: [Float]
+	public internal(set) var values: [Float]
 	
 	/// Width of the matrix
 	/// If the width is zero, the matrix is empty for any height
-	let width: Int
+	public let width: Int
 	
 	
 	/// Height of the matrix
 	/// If the height is zero, the matrix is empty for any width
-	let height: Int
+	public let height: Int
 	
+	
+	/// Indices of the matrix in the form (column,row)
+	///
+	/// This can be used to avoid nested loops on index based iteration:
+	///
+	///		for (column, row) in matrix.indices {
+	///			let value = matrix[column, row]
+	///			...
+	///		}
+	///
+	/// The number of possible indices is equal to width * height of the matrix
 	public var indices:[(Int,Int)]
 	{
 		func combine<BoundA: Comparable, BoundB: Comparable>(_ a: CountableRange<BoundA>, _ b: CountableRange<BoundB>) -> [(BoundA,BoundB)]
@@ -309,19 +343,19 @@ public struct Matrix3
 	
 	/// Values stored in the matrix.
 	/// The element at position column: n, row: m, slice: l will be at n + width * m + height * width * l
-	var values: [Float]
+	public internal(set) var values: [Float]
 	
 	
 	/// Width of the tensor
-	let width: Int
+	public let width: Int
 	
 	
 	/// Height of the tensor
-	let height: Int
+	public let height: Int
 	
 	
 	/// Depth of the tensor
-	let depth: Int
+	public let depth: Int
 	
 	
 	/// Dimension of the tensor

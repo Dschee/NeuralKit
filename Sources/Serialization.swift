@@ -1,8 +1,8 @@
 //
-//  NeuralKitTests.swift
+//  Serialization.swift
 //  NeuralKit
 //
-//  Created by Palle Klewitz on 19.02.17.
+//  Created by Palle Klewitz on 26.02.17.
 //	Copyright (c) 2017 Palle Klewitz
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,16 +23,36 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //	SOFTWARE.
 
-import XCTest
-@testable import NeuralKit
+import Foundation
+import SwiftyJSON
 
-class NeuralKitTests: XCTestCase
+public protocol Serializable
 {
-    static var allTests : [(String, (NeuralKitTests) -> () throws -> Void)]
-	{
-        return [
-			
-        ]
-    }
+	init?(_ json: JSON)
+	func serialize() -> JSON
 }
 
+extension Matrix: Serializable
+{
+	public init?(_ json: JSON)
+	{
+		guard
+			let width = json["width"].int,
+			let height = json["height"].int,
+			let values = json["values"].array?.flatMap({$0.float})
+		else
+		{
+			return nil
+		}
+		self.init(values: values, width: width, height: height)
+	}
+	
+	public func serialize() -> JSON
+	{
+		return [
+			"width" : self.width,
+			"height" : self.height,
+			"values" : self.values
+		]
+	}
+}
