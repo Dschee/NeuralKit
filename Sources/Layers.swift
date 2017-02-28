@@ -239,7 +239,8 @@ public struct FullyConnectedLayer: NeuralLayer
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
 		// Calculating signal errors
-		let weightedErrors = weights.transposed * nextLayerErrors.values
+//		let weightedErrors = weights.transposed * nextLayerErrors.values
+		let weightedErrors = Matrix.multiply(weights, nextLayerErrors.values, transpose: true)
 		let errorsIncludingBias = weightedErrors &* (activationDerivative(outputs.values))
 		
 		// Transforming data for outer vector product

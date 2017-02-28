@@ -106,10 +106,10 @@ public extension TrainingSample
 	///   - values: Input values
 	///   - outputCount: Number of output values of a network which can be trained with this sample
 	///   - targetIndex: Hot index which will be set to one.
-	public init(values: Matrix3, outputCount: Int, targetIndex: Int)
+	public init(values: Matrix3, outputCount: Int, targetIndex: Int, baseValue: Float = 0.0, hotValue: Float = 1.0)
 	{
 		self.values = values
-		self.expected = TrainingSample.encodeOneHot(count: outputCount, target: targetIndex)
+		self.expected = TrainingSample.encodeOneHot(count: outputCount, target: targetIndex, baseValue: baseValue, hotValue: hotValue)
 	}
 
 }
@@ -178,11 +178,11 @@ public extension Sample
 	///   - count: Depth of the one-hot-matrix
 	///   - target: Target index which should be set to one
 	/// - Returns: One-hot-matrix with a value of one at the given target index
-	public static func encodeOneHot(count: Int, target: Int) -> Matrix3
+	public static func encodeOneHot(count: Int, target: Int, baseValue: Float = 0.0, hotValue: Float = 1.0) -> Matrix3
 	{
 		precondition(count > target, "Target index greater than output length")
-		var oneHotVector = [Float](repeating: 0.0, count: count)
-		oneHotVector[target] = 1.0
+		var oneHotVector = [Float](repeating: baseValue, count: count)
+		oneHotVector[target] = hotValue
 		return Matrix3(values: oneHotVector, width: 1, height: 1, depth: count)
 	}
 	

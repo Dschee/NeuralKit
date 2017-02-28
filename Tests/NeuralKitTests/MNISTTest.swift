@@ -44,13 +44,13 @@ class MNISTTest: XCTestCase
 		{
 			let offset = imageOffset + imageWidth * imageHeight * i
 			let pixelData = bytes[offset ..< (offset + imageWidth * imageHeight)]
-				.map{Float($0)/128-1}
+				.map{Float($0)/256}
 			
 			let sampleMatrix = Matrix3(values: pixelData, width: imageWidth, height: imageHeight, depth: 1)
 			
 			let label = Int(labels[labelOffset + i])
 			
-			let sample = TrainingSample(values: sampleMatrix, outputCount: 10, targetIndex: label)
+			let sample = TrainingSample(values: sampleMatrix, outputCount: 10, targetIndex: label, baseValue: -1.0, hotValue: 1.0)
 			samples.append(sample)
 		}
 		
@@ -94,7 +94,7 @@ class MNISTTest: XCTestCase
 		
 		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputActivation: tanh, outputActivationDerivative: tanh_deriv)
 		
-		let epochs = 1_000_000
+		let epochs = 500_000
 		
 		for epoch in 0 ..< epochs
 		{
