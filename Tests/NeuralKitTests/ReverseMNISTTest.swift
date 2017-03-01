@@ -1,35 +1,19 @@
 //
-//  MNISTTest.swift
+//  ReverseMNISTTest.swift
 //  NeuralKit
 //
-//  Created by Palle Klewitz on 25.02.17.
-//	Copyright (c) 2017 Palle Klewitz
+//  Created by Palle Klewitz on 01.03.17.
 //
-//	Permission is hereby granted, free of charge, to any person obtaining a copy
-//	of this software and associated documentation files (the "Software"), to deal
-//	in the Software without restriction, including without limitation the rights
-//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//	copies of the Software, and to permit persons to whom the Software is
-//	furnished to do so, subject to the following conditions:
 //
-//	The above copyright notice and this permission notice shall be included in all
-//	copies or substantial portions of the Software.
-//
-//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//	SOFTWARE.
 
 import Foundation
 import XCTest
 import SwiftyJSON
 @testable import NeuralKit
 
-class MNISTTest: XCTestCase
+class ReverseMNISTTest: XCTestCase
 {
+
 	static func readSamples(from bytes: [UInt8], labels: [UInt8], count: Int) -> [TrainingSample]
 	{
 		let imageOffset = 16
@@ -44,21 +28,16 @@ class MNISTTest: XCTestCase
 		{
 			let offset = imageOffset + imageWidth * imageHeight * i
 			let pixelData = bytes[offset ..< (offset + imageWidth * imageHeight)]
-				.map{Float($0)/256}
+				.map{Float($0)/128-1}
 			
 			let sampleMatrix = Matrix3(values: pixelData, width: imageWidth, height: imageHeight, depth: 1)
 			
-			for _ in 0 ..< 8
-			{
-				let offsetX = Int(arc4random_uniform(16))-8
-				let offsetY = Int(arc4random_uniform(8))-4
-				let randomizedSampleMatrix = sampleMatrix[x: offsetX, y: offsetY, z: 0, width: 28, height: 28, depth: 1]
-				
-				let label = Int(labels[labelOffset + i])
-				
-				let sample = TrainingSample(values: randomizedSampleMatrix, outputCount: 10, targetIndex: label, baseValue: -1.0, hotValue: 1.0)
-				samples.append(sample)
-			}
+			let label = Int(labels[labelOffset + i])
+			
+			let input = TrainingSample.encodeOneHot(count: 10, target: label, baseValue: 0, hotValue: 1)
+			
+			let sample = TrainingSample(values: input, expected: sampleMatrix)
+			samples.append(sample)
 		}
 		
 		return samples
@@ -71,7 +50,7 @@ class MNISTTest: XCTestCase
 			let trainingLabelData = try? Data(contentsOf: URL(fileURLWithPath: path + "train-labels-idx1-ubyte")),
 			let testingData = try? Data(contentsOf: URL(fileURLWithPath: path + "t10k-images-idx3-ubyte")),
 			let testingLabelData = try? Data(contentsOf: URL(fileURLWithPath: path + "t10k-labels-idx1-ubyte"))
-		else
+			else
 		{
 			return ([],[])
 		}
@@ -90,19 +69,18 @@ class MNISTTest: XCTestCase
 		return (trainingSamples,testingSamples)
 	}
 	
-	func testMNISTClassification()
+	func testMNISTGeneration()
 	{
-		let (trainingSamples, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
+		let (trainingSamples, testSamples) = ReverseMNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
 		
-		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 1500), activationFunction: identity, activationDerivative: ones)
-		let hiddenLayer1 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 1501, height: 800), activationFunction: tanh, activationDerivative: tanh_deriv)
-		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 500), activationFunction: tanh, activationDerivative: tanh_deriv)
-		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 200), activationFunction: tanh, activationDerivative: tanh_deriv)
-		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10), activationFunction: tanh, activationDerivative: tanh_deriv)
+		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 11, height: 200), activationFunction: identity, activationDerivative: ones)
+		let hiddenLayer1 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 500), activationFunction: tanh, activationDerivative: tanh_deriv)
+		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 800), activationFunction: tanh, activationDerivative: tanh_deriv)
+		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 784), activationFunction: tanh, activationDerivative: tanh_deriv)
 		
-		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3, hiddenLayer4], outputActivation: tanh, outputActivationDerivative: tanh_deriv)
+		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputActivation: tanh, outputActivationDerivative: tanh_deriv)
 		
-		let epochs = 500_000
+		let epochs = 300_000
 		
 		for epoch in 0 ..< epochs
 		{
@@ -140,7 +118,7 @@ class MNISTTest: XCTestCase
 		
 		let json:JSON =
 		[
-			"layers": trainedLayerMatrices
+				"layers": trainedLayerMatrices
 		]
 		
 		guard let rawString = json.rawString() else
@@ -150,11 +128,12 @@ class MNISTTest: XCTestCase
 		
 		do
 		{
-			try rawString.write(toFile: "/Users/Palle/Desktop/mnist.network", atomically: true, encoding: .ascii)
+			try rawString.write(toFile: "/Users/Palle/Desktop/mnist_reverse.network", atomically: true, encoding: .ascii)
 		}
 		catch
 		{
 			fatalError(String(describing: error))
 		}
 	}
+
 }

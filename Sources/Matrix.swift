@@ -338,25 +338,21 @@ public struct Matrix
 	{
 		get
 		{
-			var result = [Float](repeating: 0, count: width * height)
-			for y in 0 ..< height
+			var result = Matrix(repeating: 0, width: width, height: height)
+			
+			for (x,y) in result.indices where 0 ..< self.width ~= x + column && 0 ..< self.height ~= y + row
 			{
-				for x in 0 ..< width
-				{
-					result[width * y + x] = values[self.width * (row + y) + column + x]
-				}
+				result[x,y] = self[x+column, y+row]
 			}
-			return Matrix(values: result, width: width, height: height)
+			
+			return result
 		}
 		
 		set (new)
 		{
-			for y in 0 ..< height
+			for (x,y) in new.indices where 0 ..< self.width ~= x + column && 0 ..< self.height ~= y + row
 			{
-				for x in 0 ..< width
-				{
-					values[self.width * (row + y) + column + x] = new.values[width * y + x]
-				}
+				self[x+column, y+row] = new[x,y]
 			}
 		}
 	}

@@ -30,7 +30,7 @@ import Accelerate
 /// Operator for component wise division of a vector.
 infix operator &/ : MultiplicationPrecedence
 
-//Mark: - Vector prefix functions
+//MARK: Vector prefix functions
 
 /// Negates every element of the input vector
 ///
@@ -44,7 +44,7 @@ public prefix func -(values: [Float]) -> [Float]
 }
 
 
-//Mark: - Vector - Vector arithmetic
+//MARK: Vector - Vector arithmetic
 
 /// Calculates the dot product of two vectors.
 ///
@@ -120,7 +120,7 @@ public func &/ (lhs: [Float], rhs: [Float]) -> [Float]
 }
 
 
-//Mark: - Vector - Scalar arithmetic
+//MARK: Vector - Scalar arithmetic
 
 
 /// Performs a component wise addition of an input vector with a scalar
@@ -179,7 +179,7 @@ public func &/ (lhs: [Float], rhs: Float) -> [Float]
 }
 
 
-//Mark: - Scalar - Vector arithmetic
+//MARK: Scalar - Vector arithmetic
 
 /// Performs a component wise addition of an input vector and a scalar
 ///
@@ -238,7 +238,7 @@ public func &/ (lhs: Float, rhs: [Float]) -> [Float]
 }
 
 
-//Mark: - Vector functions commonly used in neural networks
+//MARK: Vector functions commonly used in neural networks
 
 /// Calculates the element wise square root of an input vector
 ///
@@ -389,7 +389,7 @@ public func sigmoid_deriv(_ values: [Float]) -> [Float]
 }
 
 
-//Mark: - Maxima and minima
+//MARK: Maxima and minima
 
 
 /// Finds the maximum value and its index of a vector
