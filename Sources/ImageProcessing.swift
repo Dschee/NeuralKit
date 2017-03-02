@@ -264,8 +264,38 @@ extension CGImage : PixelDataConvertible
 	*/
 	public var normalizedPixelData: [Float]?
 	{
-		//mapping from UInt8 (0 ... 255) to Double (-1.0 ... 1.0)
+		//mapping from UInt8 (0 ... 255) to Float (-1.0 ... 1.0)
 		return self.pixelData?.map { Float($0) / 128.0 - 1.0 }
+	}
+	
+	
+	/**
+
+	Color matrix of the image.
+	
+	The width and height of the matrix is equal to the width and height of the image.
+	The depth of the matrix is 3, where the z index 0 contains the red color data, 1 green and 2 blue.
+	
+	The alpha channel of the image is ignored.
+	
+	- returns: Color matrix of the image.
+	
+	*/
+	public var colorMatrix: Matrix3?
+	{
+		var matrix = Matrix3(repeating: 0, width: self.width, height: self.height, depth: 3)
+		
+		guard let pixelData = normalizedPixelData else
+		{
+			return nil
+		}
+		
+		for (x,y,z) in matrix.indices
+		{
+			matrix[x,y,z] = pixelData[x*4 + y*4*width + z]
+		}
+		
+		return matrix
 	}
 	
 	
