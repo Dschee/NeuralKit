@@ -37,11 +37,7 @@ public struct NeuralNetwork
 	
 	
 	/// Activation function at the output layer
-	public let outputActivationFunction: (([Float]) -> [Float])
-	
-	
-	/// Activation function derivative at the output layer
-	public let outputActivationDerivative: (([Float]) -> [Float])
+	public let outputActivationFunction: Activation
 	
 	
 	/// Creates a new neural network using the given layers and an activation function for the output layer.
@@ -52,7 +48,7 @@ public struct NeuralNetwork
 	///   - layers: Layers of the neural network.
 	///   - outputActivation: Activation function which should be applied at the output or nil if a linear activation function should be used
 	///   - outputActivationDerivative: Derivative of the output activation function or nil if a linear activation function should be used
-	public init(layers: [NeuralLayer], outputActivation: (([Float]) -> [Float])? = nil, outputActivationDerivative: (([Float]) -> [Float])? = nil)
+	public init(layers: [NeuralLayer], outputActivation: Activation = .linear)
 	{
 		for i in 1 ..< layers.count
 		{
@@ -63,8 +59,7 @@ public struct NeuralNetwork
 			)
 		}
 		self.layers = layers
-		self.outputActivationFunction = outputActivation ?? identity(_:)
-		self.outputActivationDerivative = outputActivationDerivative ?? ones(_:)
+		self.outputActivationFunction = outputActivation
 	}
 	
 	// Crashes the compiler
@@ -92,12 +87,7 @@ public struct NeuralNetwork
 			sample, layer in
 			layer.forward(sample)
 		}
-		return Matrix3(
-			values: outputActivationFunction(lastLayerOutput.values),
-			width: lastLayerOutput.width,
-			height: lastLayerOutput.height,
-			depth: lastLayerOutput.depth
-		)
+		return lastLayerOutput.mapv(outputActivationFunction.function)
 	}
 	
 	
@@ -131,11 +121,11 @@ public struct NeuralNetwork
 			partialResults[index] = lastPartialResult
 		}
 		
-		let lastResult = outputActivationFunction(lastWeightedResult.values)
+		let lastResult = outputActivationFunction.function(lastWeightedResult.values)
 
 		// Calculate the errors at the output layer
 		
-		let errors = (lastResult &- sample.expected.values) &* outputActivationDerivative(lastResult)
+		let errors = (lastResult &- sample.expected.values) &* outputActivationFunction.derivative(lastResult)
 
 		let errorMatrix = Matrix3(
 			values: errors,

@@ -621,6 +621,8 @@ public struct Matrix3
 }
 
 
+//MARK: String convertible extensions
+
 extension Matrix: CustomStringConvertible
 {
 	
@@ -704,3 +706,46 @@ extension Matrix3: CustomStringConvertible
 	
 }
 
+//MARK: Equatable extensions
+
+extension Matrix: Equatable
+{
+
+	/// Returns a Boolean value indicating whether two values are equal.
+	///
+	/// Equality is the inverse of inequality. For any values `a` and `b`,
+	/// `a == b` implies that `a != b` is `false`.
+	///
+	/// - Parameters:
+	///   - lhs: A value to compare.
+	///   - rhs: Another value to compare.
+	public static func ==(lhs: Matrix, rhs: Matrix) -> Bool
+	{
+		return (lhs.width == rhs.width) &&
+			   (lhs.height == rhs.height) &&
+			   zip(lhs.values, rhs.values).map(==).reduce(true, {$0 && $1})
+	}
+	
+}
+
+
+extension Matrix3: Equatable
+{
+	
+	/// Returns a Boolean value indicating whether two values are equal.
+	///
+	/// Equality is the inverse of inequality. For any values `a` and `b`,
+	/// `a == b` implies that `a != b` is `false`.
+	///
+	/// - Parameters:
+	///   - lhs: A value to compare.
+	///   - rhs: Another value to compare.
+	public static func ==(lhs: Matrix3, rhs: Matrix3) -> Bool
+	{
+		return (lhs.width == rhs.width) &&
+			(lhs.height == rhs.height) &&
+			(lhs.depth == rhs.depth) &&
+			zip(lhs.values, rhs.values).map(==).reduce(true, {$0 && $1})
+	}
+	
+}

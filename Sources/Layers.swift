@@ -27,6 +27,72 @@
 import Foundation
 
 
+/// Activation functions for a neural network
+///
+/// - sigmoid: logistic growth from 0 to 1
+/// - tanh: logistic growth from -1 to 1
+/// - relu: 0 for negative inputs, identity for positive inputs
+/// - linear: identity
+public enum Activation
+{
+	/// Logistic growth from 0 to 1
+	case sigmoid
+	
+	/// Logistic growth from -1 to 1
+	case tanh
+	
+	/// max(0, input)
+	case relu
+	
+	/// identity (output = input)
+	case linear
+}
+
+
+// Extension for retrieving the actual function or its derivative
+internal extension Activation
+{
+	
+	/// Returns a vectorized activation function
+	var function: ([Float]) -> [Float]
+	{
+		switch self
+		{
+		case .sigmoid:
+			return NeuralKit.sigmoid
+			
+		case .tanh:
+			return NeuralKit.tanh
+			
+		case .relu:
+			return NeuralKit.relu
+			
+		case .linear:
+			return NeuralKit.identity
+		}
+	}
+	
+	/// Returns a vectorized derivative of the activation function
+	var derivative: ([Float]) -> [Float]
+	{
+		switch self
+		{
+		case .sigmoid:
+			return NeuralKit.sigmoid_deriv
+			
+		case .tanh:
+			return NeuralKit.tanh_deriv
+			
+		case .relu:
+			return NeuralKit.relu_deriv
+			
+		case .linear:
+			return NeuralKit.ones
+		}
+	}
+}
+
+
 /// Creates a three dimensional weight matrix 
 /// and fills it with small random values in the specified range
 ///
@@ -173,15 +239,11 @@ public struct FullyConnectedLayer: NeuralLayer
 	
 	
 	/// Weights with which outputs of the layer are weighted when presented to the next layer
-	public private(set) var weights: Matrix
+	public internal(set) var weights: Matrix
 	
 	
 	/// Activation function which will be applied to the inputs of the layer
-	public let activationFunction: ([Float]) -> [Float]
-	
-	
-	/// Derivative of the activation function used for training the network.
-	public let activationDerivative: ([Float]) -> [Float]
+	public let activationFunction: Activation
 	
 	
 	/// Initializes a fully connected neural layer using the given weight matrix, its activation function and derivative
@@ -196,11 +258,10 @@ public struct FullyConnectedLayer: NeuralLayer
 	///   - weights: Weights from the layer to the next layer
 	///   - activationFunction: Activation function with which the inputs should be activated
 	///   - activationDerivative: Derivative of the activation function used for training
-	public init(weights: Matrix, activationFunction: @escaping ([Float]) -> [Float], activationDerivative: @escaping ([Float]) -> [Float])
+	public init(weights: Matrix, activationFunction: Activation)
 	{
 		self.weights = weights
 		self.activationFunction = activationFunction
-		self.activationDerivative = activationDerivative
 	}
 	
 	
@@ -210,7 +271,7 @@ public struct FullyConnectedLayer: NeuralLayer
 	/// - Returns: Result of the activation function
 	public func activated(_ input: Matrix3) -> Matrix3
 	{
-		return Matrix3(values: (activationFunction(input.values) + [1]), width: inputSize.width, height: inputSize.height, depth: inputSize.depth+1)
+		return Matrix3(values: (activationFunction.function(input.values) + [1]), width: inputSize.width, height: inputSize.height, depth: inputSize.depth+1)
 	}
 	
 	
@@ -241,7 +302,7 @@ public struct FullyConnectedLayer: NeuralLayer
 		// Calculating signal errors
 //		let weightedErrors = weights.transposed * nextLayerErrors.values
 		let weightedErrors = Matrix.multiply(weights, nextLayerErrors.values, transpose: true)
-		let errorsIncludingBias = weightedErrors &* (activationDerivative(outputs.values))
+		let errorsIncludingBias = weightedErrors &* (activationFunction.derivative(outputs.values))
 		
 		// Transforming data for outer vector product
 		let nextLayerErrorVector = Matrix(values: nextLayerErrors.values, width: 1, height: nextLayerErrors.depth)
@@ -287,13 +348,12 @@ public struct ConvolutionLayer: NeuralLayer
 //	public let horizontalInset: Int
 //	public let verticalInset: Int
 	
-	public let activationFunction: ([Float]) -> [Float]
-	public let activationDerivative: ([Float]) -> [Float]
+	public let activationFunction: Activation
 	
 
 	public func activated(_ input: Matrix3) -> Matrix3
 	{
-		return input.mapv(activationFunction)
+		return input.mapv(activationFunction.function)
 	}
 	
 	public func weighted(_ activated: Matrix3) -> Matrix3
@@ -315,18 +375,18 @@ public struct ConvolutionLayer: NeuralLayer
 	
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
-		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
-		
-		for z in 0 ..< inputSize.depth
-		{
-			for y in 0 ..< inputSize.height
-			{
-				for x in 0 ..< inputSize.width
-				{
-					
-				}
-			}
-		}
+//		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
+//		
+//		for z in 0 ..< inputSize.depth
+//		{
+//			for y in 0 ..< inputSize.height
+//			{
+//				for x in 0 ..< inputSize.width
+//				{
+//					
+//				}
+//			}
+//		}
 		
 		fatalError()
 	}

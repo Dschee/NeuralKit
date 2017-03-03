@@ -16,17 +16,19 @@ class SerializationTests: XCTestCase
 	func testSerialization()
 	{
 		let matrix = RandomWeightMatrix(width: 10, height: 10)
-		let data = matrix.serialize()
+		let layer = FullyConnectedLayer(weights: matrix, activationFunction: .tanh)
+		let network = NeuralNetwork.init(layers: [layer], outputActivation: .linear)
 		
-		print(data)
-		
-		guard let deserialized = Matrix(data) else
+		let encoded = try! JSONCoder.encode(network)
+
+		do
 		{
-			XCTFail()
-			return
+			let decoded: NeuralNetwork = try JSONCoder.decode(encoded)
+			print(String(reflecting: decoded))
 		}
-		XCTAssertEqual(matrix.width, deserialized.width)
-		XCTAssertEqual(matrix.height, deserialized.height)
-		XCTAssertEqual(matrix.values, deserialized.values)
+		catch
+		{
+			print(error)
+		}
 	}
 }
