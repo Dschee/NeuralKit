@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           NeuralKit Docs
         </a>
-         (96% documented)
+         (97% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -245,7 +245,16 @@
         <section class="section">
           <div class="section-content">
             <h1>NeuralLayerEncoder</h1>
-            <p>Undocumented</p>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">NeuralLayerEncoder</span></code></pre>
+
+                </div>
+              </div>
+            <p>Utility for encoding neural layers.</p>
+
+<p>Encodes the type of a layer next to it, so it can be correctly restored 
+during deserialization</p>
 
           </div>
         </section>
@@ -257,9 +266,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFV9NeuralKit18NeuralLayerEncoder17registerLayerTypeFT9layerTypePMPS_11NeuralLayerS_12Serializable__T_"></a>
-                    <a name="//apple_ref/swift/Method/registerLayerType(layerType:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFV9NeuralKit18NeuralLayerEncoder17registerLayerTypeFT9layerTypePMPS_11NeuralLayerS_12Serializable__T_">registerLayerType(layerType:)</a>
+                    <a name="/s:ZFV9NeuralKit18NeuralLayerEncoder17registerLayerTypeFPMPS_11NeuralLayerS_12Serializable_T_"></a>
+                    <a name="//apple_ref/swift/Method/registerLayerType(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFV9NeuralKit18NeuralLayerEncoder17registerLayerTypeFPMPS_11NeuralLayerS_12Serializable_T_">registerLayerType(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -267,7 +276,156 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Registers a custom layer type</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">registerLayerType</span><span class="p">(</span><span class="n">_</span> <span class="nv">layerType</span><span class="p">:</span> <span class="p">(</span><span class="kt"><a href="../Protocols/NeuralLayer.html">NeuralLayer</a></span> <span class="o">&amp;</span> <span class="kt"><a href="../Protocols/Serializable.html">Serializable</a></span><span class="p">)</span><span class="o">.</span><span class="k">Type</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>layerType</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Type of the layer which the encoder should be able to decode.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFV9NeuralKit18NeuralLayerEncoder9serializeFPS_11NeuralLayerS_12Serializable_P_"></a>
+                    <a name="//apple_ref/swift/Method/serialize(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFV9NeuralKit18NeuralLayerEncoder9serializeFPS_11NeuralLayerS_12Serializable_P_">serialize(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Serializes a layer and also stores its type for deserialization.</p>
+
+<p>If the layer is not included in the set of default layers
+(fully connected layer, convolutional layer, pooling layer)
+it must be registered before deserialization using the
+<code>NeuralLayerEncoder.registerLayerType(:)</code> method.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">serialize</span><span class="p">(</span><span class="n">_</span> <span class="nv">layer</span><span class="p">:</span> <span class="kt"><a href="../Protocols/NeuralLayer.html">NeuralLayer</a></span> <span class="o">&amp;</span> <span class="kt"><a href="../Protocols/Serializable.html">Serializable</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>layer</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Layer which should be serialized</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Serialized layer</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFV9NeuralKit18NeuralLayerEncoder11deserializeFzP_PS_11NeuralLayer_"></a>
+                    <a name="//apple_ref/swift/Method/deserialize(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFV9NeuralKit18NeuralLayerEncoder11deserializeFzP_PS_11NeuralLayer_">deserialize(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deserializes a layer which was encoded using the encode function.</p>
+
+<p>If the layer is not included in the set of default layers
+(fully connected layer, convolutional layer, pooling layer)
+it must be registered before deserialization using the
+<code>NeuralLayerEncoder.registerLayerType(:)</code> method.</p>
+
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An error if the data is in the incorrect format or is
+missing required values.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">deserialize</span><span class="p">(</span><span class="n">_</span> <span class="nv">json</span><span class="p">:</span> <span class="kt">Any</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/NeuralLayer.html">NeuralLayer</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>json</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Serialized representation of the layer</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Deserialized layer</p>
 
                       </div>
                     </section>

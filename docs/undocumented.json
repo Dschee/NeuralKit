@@ -34,20 +34,6 @@
       "symbol": "PoolingLayer",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
-    },
-    {
-      "file": "/Users/Palle/Developer/NeuralKit/Sources/NetworkSerialization.swift",
-      "line": 173,
-      "symbol": "NeuralLayerEncoder",
-      "symbol_kind": "source.lang.swift.decl.struct",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/Palle/Developer/NeuralKit/Sources/NetworkSerialization.swift",
-      "line": 185,
-      "symbol": "NeuralLayerEncoder.registerLayerType(layerType:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
     }
   ],
   "source_directory": "/Users/Palle/Developer/NeuralKit"

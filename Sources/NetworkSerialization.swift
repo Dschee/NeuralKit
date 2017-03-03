@@ -27,6 +27,7 @@
 
 extension Matrix: Serializable
 {
+	
 	public init(json: Any) throws
 	{
 		guard let data = json as? [String: Any] else
@@ -37,12 +38,13 @@ extension Matrix: Serializable
 			let width = data["width"] as? Int,
 			let height = data["height"] as? Int,
 			let values = data["values"] as? [Float]
-			else
+		else
 		{
 			throw DecodingError.missingKey(key: "width|height|values", data: json)
 		}
 		self.init(values: values, width: width, height: height)
 	}
+	
 	
 	public func serialized() -> Any
 	{
@@ -52,11 +54,13 @@ extension Matrix: Serializable
 			"values" : self.values
 		]
 	}
+	
 }
 
 
 extension Matrix3: Serializable
 {
+	
 	public init(json: Any) throws
 	{
 		guard let data = json as? [String: Any] else
@@ -68,12 +72,13 @@ extension Matrix3: Serializable
 			let height = data["height"] as? Int,
 			let depth = data["depth"] as? Int,
 			let values = data["values"] as? [Float]
-			else
+		else
 		{
 			throw DecodingError.missingKey(key: "width|height|values", data: json)
 		}
 		self.init(values: values, width: width, height: height, depth: depth)
 	}
+	
 	
 	public func serialized() -> Any
 	{
@@ -84,6 +89,7 @@ extension Matrix3: Serializable
 			"values" : self.values
 		]
 	}
+	
 }
 
 
@@ -92,6 +98,7 @@ extension Matrix3: Serializable
 
 extension Activation: Serializable
 {
+	
 	public func serialized() -> Any
 	{
 		switch self
@@ -109,6 +116,7 @@ extension Activation: Serializable
 			return "tanh"
 		}
 	}
+	
 	
 	public init(json: Any) throws
 	{
@@ -134,6 +142,7 @@ extension Activation: Serializable
 			throw DecodingError.invalidValue(expected: "linear|relu|sigmoid|tanh", actual: activationName)
 		}
 	}
+	
 }
 
 
@@ -142,6 +151,7 @@ extension Activation: Serializable
 
 extension FullyConnectedLayer: Serializable
 {
+	
 	public func serialized() -> Any
 	{
 		return [
@@ -149,6 +159,7 @@ extension FullyConnectedLayer: Serializable
 			"weights": weights.serialized()
 		]
 	}
+	
 	
 	public init(json: Any) throws
 	{
@@ -167,22 +178,37 @@ extension FullyConnectedLayer: Serializable
 		self.activationFunction = activation
 		self.weights = weights
 	}
+	
 }
 
 
+/// Utility for encoding neural layers.
+/// 
+/// Encodes the type of a layer next to it, so it can be correctly restored 
+/// during deserialization
 public struct NeuralLayerEncoder
 {
+	
+	/// Do not use this.
 	private init(){}
 	
+	
+	/// Registered layer types which the encoder can decode.
 	fileprivate static var layerTypes:[String: (NeuralLayer & Serializable).Type] = [:]
 	
+	
+	/// Registers the default layer types (fully connected, convolutional, etc...)
 	private static func registerDefaults()
 	{
 		layerTypes["\(FullyConnectedLayer.self)"] = FullyConnectedLayer.self
 		//TODO: TODO: Other layer types
 	}
 	
-	public static func registerLayerType(layerType: (NeuralLayer & Serializable).Type)
+	
+	/// Registers a custom layer type
+	///
+	/// - Parameter layerType: Type of the layer which the encoder should be able to decode.
+	public static func registerLayerType(_ layerType: (NeuralLayer & Serializable).Type)
 	{
 		if layerTypes.isEmpty
 		{
@@ -192,7 +218,17 @@ public struct NeuralLayerEncoder
 		layerTypes["\(layerType)"] = layerType
 	}
 	
-	static func serialize(_ layer: NeuralLayer & Serializable) -> Any
+	
+	/// Serializes a layer and also stores its type for deserialization.
+	///
+	/// If the layer is not included in the set of default layers
+	/// (fully connected layer, convolutional layer, pooling layer)
+	/// it must be registered before deserialization using the
+	/// `NeuralLayerEncoder.registerLayerType(:)` method.
+	///
+	/// - Parameter layer: Layer which should be serialized
+	/// - Returns: Serialized layer
+	public static func serialize(_ layer: NeuralLayer & Serializable) -> Any
 	{
 		return [
 			"data": layer.serialized(),
@@ -200,7 +236,19 @@ public struct NeuralLayerEncoder
 		]
 	}
 	
-	static func deserialize(_ json: Any) throws -> NeuralLayer
+	
+	/// Deserializes a layer which was encoded using the encode function.
+	///
+	/// If the layer is not included in the set of default layers
+	/// (fully connected layer, convolutional layer, pooling layer)
+	/// it must be registered before deserialization using the
+	/// `NeuralLayerEncoder.registerLayerType(:)` method.
+	///
+	/// - Parameter json: Serialized representation of the layer
+	/// - Returns: Deserialized layer
+	/// - Throws: An error if the data is in the incorrect format or is
+	/// missing required values.
+	public static func deserialize(_ json: Any) throws -> NeuralLayer
 	{
 		if layerTypes.isEmpty
 		{
@@ -233,6 +281,7 @@ public struct NeuralLayerEncoder
 
 extension NeuralNetwork: Serializable
 {
+	
 	public func serialized() -> Any
 	{
 		return [
@@ -240,6 +289,7 @@ extension NeuralNetwork: Serializable
 			"output_activation": outputActivationFunction.serialized()
 		]
 	}
+	
 	
 	public init(json: Any) throws
 	{
@@ -255,7 +305,7 @@ extension NeuralNetwork: Serializable
 		{
 			throw DecodingError.missingKey(key: "output_activation", data: data)
 		}
-		self.layers = layers
-		self.outputActivationFunction = outputActivation
+		self.init(layers: layers, outputActivation: outputActivation)
 	}
+	
 }
