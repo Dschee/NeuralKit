@@ -335,8 +335,8 @@ public struct ConvolutionLayer: NeuralLayer
 	public var outputSize: (width: Int, height: Int, depth: Int)
 	{
 		return (
-			width: inputSize.width - (kernels.first?.width ?? 0),
-			height: inputSize.height - (kernels.first?.height ?? 0),
+			width: inputSize.width - (kernels.first?.width ?? 0) + 1,
+			height: inputSize.height - (kernels.first?.height ?? 0) + 1,
 			depth: kernels.count
 		)
 	}
@@ -359,15 +359,17 @@ public struct ConvolutionLayer: NeuralLayer
 	public func weighted(_ activated: Matrix3) -> Matrix3
 	{
 		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		
-		for (x,y,z) in output.indices
+
+		for (z, kernel) in kernels.enumerated()
 		{
-			let kernel = kernels[z]
-			output[x,y,z] = (0 ..< activated.depth)
-				.map{activated[x:x, y:y, z:$0, width:kernel.width, height:kernel.height, depth: 1]}
-				.map{$0.values}
-				.map{$0 * kernel.values}
-				.reduce(0,+)
+			var sliceResult = Matrix(repeating: 0, width: outputSize.width, height: outputSize.depth)
+			for sourceZ in 0 ..< inputSize.depth
+			{
+				let source = Matrix(activated[x: 0,y: 0,z: sourceZ, width: activated.width, height: activated.height, depth: 1])
+				let convolved = source.convolve(with: kernel)
+				sliceResult = sliceResult + convolved
+			}
+			output[x: 0, y: 0, z: z, width: output.width, height: output.height, depth: 1] = Matrix3(sliceResult)
 		}
 		
 		return output
