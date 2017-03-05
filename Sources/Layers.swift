@@ -328,7 +328,7 @@ public struct FullyConnectedLayer: NeuralLayer
 
 public struct ConvolutionLayer: NeuralLayer
 {
-	public private(set) var kernels: [Matrix]
+	public private(set) var kernels: [Matrix3]
 	public var bias: [Float]
 	
 	public let inputSize: (width: Int, height: Int, depth: Int)
@@ -360,17 +360,21 @@ public struct ConvolutionLayer: NeuralLayer
 	{
 		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
 
-		for (z, kernel) in kernels.enumerated()
-		{
-			var sliceResult = Matrix(repeating: 0, width: outputSize.width, height: outputSize.depth)
-			for sourceZ in 0 ..< inputSize.depth
-			{
-				let source = Matrix(activated[x: 0,y: 0,z: sourceZ, width: activated.width, height: activated.height, depth: 1])
-				let convolved = source.convolve(with: kernel)
-				sliceResult = sliceResult + convolved
-			}
-			output[x: 0, y: 0, z: z, width: output.width, height: output.height, depth: 1] = Matrix3(sliceResult)
-		}
+//		for (z, kernel) in kernels.enumerated()
+//		{
+//			var sliceResult = Matrix(repeating: 0, width: outputSize.width, height: outputSize.depth)
+//			for sourceZ in 0 ..< inputSize.depth
+//			{
+//				let source = Matrix(activated[x: 0,y: 0,z: sourceZ, width: activated.width, height: activated.height, depth: 1])
+//				let convolved = source.convolve(with: kernel)
+//				sliceResult = sliceResult + convolved
+//			}
+//			output[x: 0, y: 0, z: z, width: output.width, height: output.height, depth: 1] = Matrix3(sliceResult)
+//		}
+//		
+//		return output
+		
+		
 		
 		return output
 	}
@@ -378,18 +382,13 @@ public struct ConvolutionLayer: NeuralLayer
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
 //		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
-//		
-//		for z in 0 ..< inputSize.depth
+//
+//		for (z, kernel) in kernels.enumerated()
 //		{
-//			for y in 0 ..< inputSize.height
-//			{
-//				for x in 0 ..< inputSize.width
-//				{
-//					
-//				}
-//			}
+//			
 //		}
-		
+//		
+//		return errors
 		fatalError()
 	}
 }

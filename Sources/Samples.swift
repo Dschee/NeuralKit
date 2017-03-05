@@ -186,5 +186,31 @@ public extension Sample
 		return Matrix3(values: oneHotVector, width: 1, height: 1, depth: count)
 	}
 	
+	
+	/// Splits a set of training samples randomly into a training and a testing set.
+	///
+	/// The ratio determines how many of the samples will be in the training set.
+	///
+	/// - Parameters:
+	///   - samples: Training set to split
+	///   - ratio: Ratio of samples which will be in the training set
+	/// - Returns: Two sample sets. The first contains `ratio*samples.count` elements,
+	/// the second contains `(1-ratio)*samples.count` elements.
+	public static func split(samples: [TrainingSample], ratio: Float) -> ([TrainingSample], [TrainingSample])
+	{
+		let trainingSetCount = Int(Float(samples.count) * ratio)
+		
+		var trainingSamples:[TrainingSample] = []
+		var testingSamples = samples
+		
+		for _ in 0 ..< trainingSetCount
+		{
+			let index = Int(arc4random_uniform(UInt32(testingSamples.count)))
+			trainingSamples.append(testingSamples.remove(at: index))
+		}
+		
+		return (trainingSamples, testingSamples)
+	}
+	
 }
 

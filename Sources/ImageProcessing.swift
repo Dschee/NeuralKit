@@ -322,6 +322,36 @@ extension CGImage : PixelDataConvertible
 	
 	/**
 	
+	Greyscale matrix of the image.
+	
+	The width and height of the matrix is equal to the width and height of the image.
+	The depth of the matrix is 1.
+	
+	The alpha channel of the image is ignored.
+	
+	- returns: Greyscale matrix of the image.
+	
+	*/
+	public var greyscaleMatrix: Matrix3?
+	{
+		var matrix = Matrix3(repeating: 0, width: self.width, height: self.height, depth: 1)
+		
+		guard let pixelData = normalizedGreyscalePixelData else
+		{
+			return nil
+		}
+		
+		for (x,y,z) in matrix.indices
+		{
+			matrix[x,y,z] = pixelData[x + y*width]
+		}
+		
+		return matrix
+	}
+	
+	
+	/**
+	
 	vImage buffer containing the pixel data
 	
 	Used for accelerated image processing

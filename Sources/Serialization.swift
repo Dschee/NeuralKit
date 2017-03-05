@@ -81,7 +81,7 @@ public protocol Serializable
 
 
 /// Utility for encoding serializable values as JSON.
-struct JSONCoder
+public struct JSONCoder
 {
 	
 	/// This initializer should not be used and has no effect.
@@ -96,7 +96,7 @@ struct JSONCoder
 	/// This may happen if a value does not implement Serializable correctly and 
 	/// generates a serializable expression which does contain types other than
 	/// primitive types (int, float, double, etc...), strings, arrays or dictionaries.
-	static func encode(_ value: Serializable) throws -> Data
+	public static func encode(_ value: Serializable) throws -> Data
 	{
 		let serialized = value.serialized()
 		return try JSONSerialization.data(withJSONObject: serialized, options: .prettyPrinted)
@@ -109,7 +109,7 @@ struct JSONCoder
 	/// - Returns: Deserialized value of the required type.
 	/// - Throws: An error if the JSON data is syntactically incorrect,
 	/// contains invalid values or is incomplete.
-	static func decode<Deserialized: Serializable>(_ data: Data) throws -> Deserialized
+	public static func decode<Deserialized: Serializable>(_ data: Data) throws -> Deserialized
 	{
 		let jsonData = try JSONSerialization.jsonObject(with: data, options: [])
 		return try Deserialized(json: jsonData)

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Cocoa
 
 // Extension providing a function to partition an array into a tuple of two arrays
 fileprivate extension Array
@@ -27,28 +28,34 @@ fileprivate extension Array
 }
 
 
-/// A protocol defining methods required for importing a training set used for classification.
-protocol ClassificationTrainingSetImporter
-{
-	/// Label of a training sample
-	associatedtype Label
-	
-	/// Imports all training samples from the given directory.
-	///
-	/// - Parameters:
-	///   - directory: Directory to import samples from
-	///   - baseOutputValue: Output in the training samples used if an output does not correspond to the label of a sample
-	///   - hotOutputValue: Output in the training samples used if an output represents the label of a sample
-	/// - Returns: List of samples and their corresponding label
-	/// - Throws: Throws an error if the contents of the directory, its subdirectories or files could not be read.
-	static func `import`(from directory: String, baseOutputValue: Float, hotOutputValue: Float) throws -> [(TrainingSample, Label)]
-}
+// /// A protocol defining methods required for importing a training set used for classification.
+//public protocol ClassificationTrainingSetImporter
+//{
+//	/// Label of a training sample
+//	associatedtype Label
+//	
+//	/// Imports all training samples from the given directory.
+//	///
+//	/// - Parameters:
+//	///   - directory: Directory to import samples from
+//	///   - baseOutputValue: Output in the training samples used if an output does not correspond to the label of a sample
+//	///   - hotOutputValue: Output in the training samples used if an output represents the label of a sample
+//	/// - Returns: List of samples and their corresponding label
+//	/// - Throws: Throws an error if the contents of the directory, its subdirectories or files could not be read.
+//	static func `import`(
+//		from directory: URL,
+//		baseOutputValue: Float,
+//		hotOutputValue: Float,
+//		includeFile: @escaping (URL) throws -> Bool,
+//		label: @escaping (URL) throws -> String
+//	) throws -> [(TrainingSample, Label)]
+//}
 
-struct DirectoryImageSetImporter: ClassificationTrainingSetImporter
+public struct DirectoryImageSetImporter//: ClassificationTrainingSetImporter
 {
 	/// Label of a training sample.
 	/// The label will be equal to the path of the folder it is contained in
-	typealias Label = String
+	public typealias Label = String
 	
 	/// Imports all training samples from the given directory.
 	///
@@ -60,17 +67,23 @@ struct DirectoryImageSetImporter: ClassificationTrainingSetImporter
 	///   - hotOutputValue: Output in the training samples used if an output represents the label of a sample
 	/// - Returns: List of samples and their corresponding label
 	/// - Throws: Throws an error if the contents of the directory, its subdirectories or files could not be read.
-	static func `import`(from directory: String, baseOutputValue: Float = 0, hotOutputValue: Float = 1) throws -> [(TrainingSample, Label)]
+	public static func `import`(
+		from directory: URL,
+		baseOutputValue: Float = 0,
+		hotOutputValue: Float = 1,
+		includeFile: @escaping (URL) throws -> Bool = {_ in true},
+		label: @escaping (URL) throws -> String = {$0.path}
+	) throws -> [(TrainingSample, Label)]
 	{
 		
 		/// Determines if a file exists at the given path and is a directory
 		///
 		/// - Parameter file: File path to check
 		/// - Returns: True, if a directory exists at the given path
-		func isDirectory(file: String) throws -> Bool
+		func isDirectory(file: URL) -> Bool
 		{
 			var isDirectory = ObjCBool(false)
-			guard FileManager.default.fileExists(atPath: directory, isDirectory: &isDirectory) else { return false }
+			guard FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory) else { return false }
 			return isDirectory.boolValue
 		}
 		
@@ -79,25 +92,23 @@ struct DirectoryImageSetImporter: ClassificationTrainingSetImporter
 		///
 		/// - Parameter directory: Directory to scan
 		/// - Returns: List of samples and their labels contained in the directory and its subdirectories
-		func loadContents(of directory: String) throws -> [(Matrix3, String)]
+		func loadContents(of directory: URL) throws -> [(Matrix3, String)]
 		{
 			let (directories, files) = try FileManager
 				.default
-				.contentsOfDirectory(atPath: directory)
+				.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+				.filter(includeFile)
 				.partition(by: isDirectory)
 			
-			let images = files
-				.map(URL.init(fileURLWithPath:))
-				.map{$0 as CFURL}
-				.flatMap(CGDataProvider.init(url:))
-				.flatMap
-				{ dataProvider -> CGImage? in
-					CGImage(pngDataProviderSource: dataProvider, decode: nil, shouldInterpolate: false, intent: .defaultIntent) ??
-					CGImage(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
-				}
-				.flatMap{$0.colorMatrix}
+			let images = try files
+				.map{try Data(contentsOf: $0)}
+				.flatMap{NSBitmapImageRep(data: $0)}
+				.flatMap{$0.cgImage}
+				.flatMap{$0.greyscaleMatrix}
 			
-			let labelledImages = images.map{($0, directory)}
+			let directoryLabel = try label(directory)
+			
+			let labelledImages = images.map{($0, directoryLabel)}
 			let subdirectoryImages = try directories.flatMap(loadContents(of:))
 			
 			return labelledImages + subdirectoryImages
