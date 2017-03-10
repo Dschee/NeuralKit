@@ -1,6 +1,13 @@
 {
   "warnings": [
     {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/DataImport.swift",
+      "line": 54,
+      "symbol": "DirectoryImageSetImporter",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
       "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
       "line": 329,
       "symbol": "ConvolutionLayer",
@@ -23,16 +30,51 @@
     },
     {
       "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
+      "line": 350,
+      "symbol": "ConvolutionLayer.horizontalStride",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
       "line": 351,
+      "symbol": "ConvolutionLayer.verticalStride",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
+      "line": 353,
+      "symbol": "ConvolutionLayer.horizontalInset",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
+      "line": 354,
+      "symbol": "ConvolutionLayer.verticalInset",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
+      "line": 356,
       "symbol": "ConvolutionLayer.activationFunction",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/Palle/Developer/NeuralKit/Sources/Layers.swift",
-      "line": 395,
+      "line": 415,
       "symbol": "PoolingLayer",
       "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/Matrix.swift",
+      "line": 698,
+      "symbol": "Matrix3.+=(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
       "warning": "undocumented"
     }
   ],

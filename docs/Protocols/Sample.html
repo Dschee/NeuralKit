@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           NeuralKit Docs
         </a>
-         (97% documented)
+         (94% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -205,10 +205,16 @@
                 <a class="nav-group-task-link" href="../Structs/ConvolutionLayer.html">ConvolutionLayer</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/DirectoryImageSetImporter.html">DirectoryImageSetImporter</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Structs/FullyConnectedLayer.html">FullyConnectedLayer</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Structs/InputSample.html">InputSample</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/JSONCoder.html">JSONCoder</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Structs/Matrix.html">Matrix</a>
@@ -576,6 +582,76 @@
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFE9NeuralKitPS_6Sample5splitFT7samplesGSaVS_14TrainingSample_5ratioSf_TGSaS1__GSaS1___"></a>
+                    <a name="//apple_ref/swift/Method/split(samples:ratio:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFE9NeuralKitPS_6Sample5splitFT7samplesGSaVS_14TrainingSample_5ratioSf_TGSaS1__GSaS1___">split(samples:ratio:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Splits a set of training samples randomly into a training and a testing set.</p>
+
+<p>The ratio determines how many of the samples will be in the training set.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">split</span><span class="p">(</span><span class="nv">samples</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Structs/TrainingSample.html">TrainingSample</a></span><span class="p">],</span> <span class="nv">ratio</span><span class="p">:</span> <span class="kt">Float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">([</span><span class="kt"><a href="../Structs/TrainingSample.html">TrainingSample</a></span><span class="p">],</span> <span class="p">[</span><span class="kt"><a href="../Structs/TrainingSample.html">TrainingSample</a></span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>samples</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Training set to split</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ratio</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Ratio of samples which will be in the training set</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Two sample sets. The first contains <code>ratio*samples.count</code> elements, the second contains <code>(1-ratio)*samples.count</code> elements.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </div>
@@ -584,7 +660,7 @@
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2017 <a class="link" href="https://github.com/palle-k" target="_blank" rel="external">palle-k</a>. All rights reserved. (Last updated: 2017-03-03)</p>
+      <p>&copy; 2017 <a class="link" href="https://github.com/palle-k" target="_blank" rel="external">palle-k</a>. All rights reserved. (Last updated: 2017-03-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.7.4</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

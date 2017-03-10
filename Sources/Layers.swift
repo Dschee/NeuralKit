@@ -326,83 +326,170 @@ public struct FullyConnectedLayer: NeuralLayer
 
 }
 
+
+/// A layer which is connected to the next layer using convolution kernels.
 public struct ConvolutionLayer: NeuralLayer
 {
+	
+	/// The convolution kernels which are applied to input values
 	public private(set) var kernels: [Matrix3]
+	
+	
+	/// The bias values which are applied after convolutions
 	public var bias: [Float]
 	
-	public let inputSize: (width: Int, height: Int, depth: Int)
+	
+	/// Input size of the layer.
+	/// Should not change after initialization
+	public let inputSize:  (width: Int, height: Int, depth: Int)
+	
+	
+	/// Output size of the layer.
+	/// Should not change after initialization
 	public var outputSize: (width: Int, height: Int, depth: Int)
 	{
+		let kernelWidth = kernels.first?.width ?? 0
+		let kernelHeight = kernels.first?.height ?? 0
+		
+		let stridedWidth = inputSize.width / horizontalStride
+		let stridedHeight = inputSize.height / verticalStride
+		
 		return (
-			width: inputSize.width - (kernels.first?.width ?? 0) + 1,
-			height: inputSize.height - (kernels.first?.height ?? 0) + 1,
-			depth: kernels.count
+			width:  stridedWidth  - kernelWidth + 1 - (2 * horizontalInset),
+			height: stridedHeight - kernelHeight + 1 - (2 * verticalInset),
+			depth:  kernels.count
 		)
 	}
 
-	// TODO: insets and strides
-//	public let horizontalStride: Int
-//	public let verticalStride: Int
-//	
-//	public let horizontalInset: Int
-//	public let verticalInset: Int
 	
+	/// Stride at which the input matrix is traversed horizontally
+	public let horizontalStride: Int
+	
+	
+	/// Stride at which the input matrix is traversed vertically
+	public let verticalStride: Int
+	
+	
+	/// Horizontal inset at which the traversion of the input matrix begins and ends
+	public let horizontalInset: Int
+	
+	
+	/// Vertical inset at which the traversion of the input matrix begins and ends
+	public let verticalInset: Int
+	
+	
+	/// Activation function applied on each neuron
 	public let activationFunction: Activation
 	
-
+	
+	/// Calculates the activation function for all inputs of the layer
+	///
+	/// - Parameter input: Layer input
+	/// - Returns: Result of the activation function
 	public func activated(_ input: Matrix3) -> Matrix3
 	{
 		return input.mapv(activationFunction.function)
 	}
 	
+	
+	/// Weighs the outputs of the activation function so it can be presented
+	/// to the next layer
+	///
+	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Returns: Weighted output of the layer
 	public func weighted(_ activated: Matrix3) -> Matrix3
 	{
 		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
 
-//		for (z, kernel) in kernels.enumerated()
-//		{
-//			var sliceResult = Matrix(repeating: 0, width: outputSize.width, height: outputSize.depth)
-//			for sourceZ in 0 ..< inputSize.depth
-//			{
-//				let source = Matrix(activated[x: 0,y: 0,z: sourceZ, width: activated.width, height: activated.height, depth: 1])
-//				let convolved = source.convolve(with: kernel)
-//				sliceResult = sliceResult + convolved
-//			}
-//			output[x: 0, y: 0, z: z, width: output.width, height: output.height, depth: 1] = Matrix3(sliceResult)
-//		}
-//		
-//		return output
-		
-		
+		for (z, kernel) in kernels.enumerated()
+		{
+			let convolved = activated.convolved(
+				with: kernel,
+				horizontalStride: horizontalStride,
+				verticalStride: verticalStride,
+				lateralStride: 1,
+				horizontalInset: horizontalInset,
+				verticalInset: verticalInset,
+				lateralInset: 0
+			)
+			output[x: 0, y: 0, z: z, width: output.width, height: output.height, depth: output.depth] = convolved.mapv{$0 &+ bias[z]}
+		}
 		
 		return output
 	}
 	
+	
+	/// Adjusts the weights of the layer to reduce the error of the network.
+	///
+	/// The errors of the next layer will be provided.
+	/// The function has to also calculate the errors of the layer.
+	///
+	///
+	/// - Parameters:
+	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - outputs: Outputs of the current layer
+	///   - learningRate: Learning rate at which the weights should be adjusted
+	/// - Returns: Error matrix of the current layer
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
-//		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
-//
-//		for (z, kernel) in kernels.enumerated()
-//		{
-//			
-//		}
-//		
-//		return errors
-		fatalError()
+		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
+
+		for (z, kernel) in kernels.enumerated()
+		{
+			let source = nextLayerErrors[
+				x: 0,
+				y: 0,
+				z: z,
+				width: outputSize.width,
+				height: outputSize.height,
+				depth: 1
+			]
+			let correlated = source.correlated(
+				with: kernel,
+				horizontalStride: horizontalStride,
+				verticalStride: verticalStride,
+				lateralStride: 1,
+				horizontalInset: horizontalInset,
+				verticalInset: verticalInset,
+				lateralInset: 0
+			)
+			errors += correlated
+		}
+		
+		return errors
 	}
+	
 }
 
+/// A pooling layer for reducing dimensionality using max pooling.
 public struct PoolingLayer: NeuralLayer
 {
+	
+	/// Input size of the layer.
+	/// Should not change after initialization
 	public let inputSize: (width: Int, height: Int, depth: Int)
+	
+	
+	/// Output size of the layer.
+	/// Should not change after initialization
 	public let outputSize: (width: Int, height: Int, depth: Int)
 	
+	
+	/// Calculates the activation function for all inputs of the layer
+	///
+	/// - Parameter input: Layer input
+	/// - Returns: Result of the activation function
 	public func activated(_ input: Matrix3) -> Matrix3
 	{
 		return input
 	}
 	
+	
+	/// Weighs the outputs of the activation function so it can be presented
+	/// to the next layer
+	///
+	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Returns: Weighted output of the layer
 	public func weighted(_ activated: Matrix3) -> Matrix3
 	{
 		let xScale = inputSize.width / outputSize.width
@@ -430,9 +517,20 @@ public struct PoolingLayer: NeuralLayer
 		return output
 	}
 	
+	
+	/// Adjusts the weights of the layer to reduce the error of the network.
+	///
+	/// The errors of the next layer will be provided.
+	/// The function has to also calculate the errors of the layer.
+	///
+	///
+	/// - Parameters:
+	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - outputs: Outputs of the current layer
+	///   - learningRate: Learning rate at which the weights should be adjusted
+	/// - Returns: Error matrix of the current layer
 	public func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
-		
-		fatalError()
+		fatalError("TODO")
 	}
 }

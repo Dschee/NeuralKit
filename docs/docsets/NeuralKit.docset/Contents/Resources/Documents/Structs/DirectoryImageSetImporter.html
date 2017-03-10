@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ConvolutionLayer Struct Reference</title>
+    <title>DirectoryImageSetImporter Struct Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Struct/ConvolutionLayer" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Struct/DirectoryImageSetImporter" class="dashAnchor"></a>
 
-    <a title="ConvolutionLayer Struct Reference"></a>
+    <a title="DirectoryImageSetImporter Struct Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -44,7 +44,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">NeuralKit Reference</a>
       <img class="carat" src="../img/carat.png" />
-      ConvolutionLayer Struct Reference
+      DirectoryImageSetImporter Struct Reference
     </p>
 
     <div class="content-wrapper">
@@ -250,7 +250,7 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>ConvolutionLayer</h1>
+            <h1>DirectoryImageSetImporter</h1>
             <p>Undocumented</p>
 
           </div>
@@ -263,9 +263,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:vV9NeuralKit16ConvolutionLayer7kernelsGSaVS_7Matrix3_"></a>
-                    <a name="//apple_ref/swift/Property/kernels" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vV9NeuralKit16ConvolutionLayer7kernelsGSaVS_7Matrix3_">kernels</a>
+                    <a name="/s:ZFV9NeuralKit25DirectoryImageSetImporter6importFzT4fromV10Foundation3URL15baseOutputValueSf14hotOutputValueSf11includeFileFzS2_Sb5labelFzS2_SS_GSaTVS_14TrainingSampleSS__"></a>
+                    <a name="//apple_ref/swift/Method/import(from:baseOutputValue:hotOutputValue:includeFile:label:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFV9NeuralKit25DirectoryImageSetImporter6importFzT4fromV10Foundation3URL15baseOutputValueSf14hotOutputValueSf11includeFileFzS2_Sb5labelFzS2_SS_GSaTVS_14TrainingSampleSS__">import(from:baseOutputValue:hotOutputValue:includeFile:label:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -273,198 +273,28 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Imports all training samples from the given directory.</p>
 
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:vV9NeuralKit16ConvolutionLayer4biasGSaSf_"></a>
-                    <a name="//apple_ref/swift/Property/bias" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vV9NeuralKit16ConvolutionLayer4biasGSaSf_">bias</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
+<p>The training samples must be stored as images in either PNG or JPG format.</p>
 
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:vP9NeuralKit11NeuralLayer9inputSizeT5widthSi6heightSi5depthSi_"></a>
-                    <a name="//apple_ref/swift/Property/inputSize" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vP9NeuralKit11NeuralLayer9inputSizeT5widthSi6heightSi5depthSi_">inputSize</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    Throws an error if the contents of the directory, its subdirectories or files could not be read.
+
+</div>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">inputSize</span><span class="p">:</span>  <span class="p">(</span><span class="nv">width</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">depth</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:vP9NeuralKit11NeuralLayer10outputSizeT5widthSi6heightSi5depthSi_"></a>
-                    <a name="//apple_ref/swift/Property/outputSize" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vP9NeuralKit11NeuralLayer10outputSizeT5widthSi6heightSi5depthSi_">outputSize</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">outputSize</span><span class="p">:</span> <span class="p">(</span><span class="nv">width</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">depth</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:vV9NeuralKit16ConvolutionLayer16horizontalStrideSi"></a>
-                    <a name="//apple_ref/swift/Property/horizontalStride" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vV9NeuralKit16ConvolutionLayer16horizontalStrideSi">horizontalStride</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:vV9NeuralKit16ConvolutionLayer14verticalStrideSi"></a>
-                    <a name="//apple_ref/swift/Property/verticalStride" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vV9NeuralKit16ConvolutionLayer14verticalStrideSi">verticalStride</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:vV9NeuralKit16ConvolutionLayer15horizontalInsetSi"></a>
-                    <a name="//apple_ref/swift/Property/horizontalInset" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vV9NeuralKit16ConvolutionLayer15horizontalInsetSi">horizontalInset</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:vV9NeuralKit16ConvolutionLayer13verticalInsetSi"></a>
-                    <a name="//apple_ref/swift/Property/verticalInset" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vV9NeuralKit16ConvolutionLayer13verticalInsetSi">verticalInset</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:vV9NeuralKit16ConvolutionLayer18activationFunctionOS_10Activation"></a>
-                    <a name="//apple_ref/swift/Property/activationFunction" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vV9NeuralKit16ConvolutionLayer18activationFunctionOS_10Activation">activationFunction</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:FP9NeuralKit11NeuralLayer9activatedFVS_7Matrix3S1_"></a>
-                    <a name="//apple_ref/swift/Method/activated(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FP9NeuralKit11NeuralLayer9activatedFVS_7Matrix3S1_">activated(_:)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">activated</span><span class="p">(</span><span class="n">_</span> <span class="nv">input</span><span class="p">:</span> <span class="kt"><a href="../Structs/Matrix3.html">Matrix3</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/Matrix3.html">Matrix3</a></span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="err">`</span><span class="kd">import</span><span class="err">`</span><span class="p">(</span>
+		<span class="n">from</span> <span class="nv">directory</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span>
+		<span class="nv">baseOutputValue</span><span class="p">:</span> <span class="kt">Float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+		<span class="nv">hotOutputValue</span><span class="p">:</span> <span class="kt">Float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+		<span class="nv">includeFile</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="p">{</span><span class="n">_</span> <span class="k">in</span> <span class="kc">true</span><span class="p">},</span>
+		<span class="nv">label</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">String</span> <span class="o">=</span> <span class="p">{</span><span class="nv">$0</span><span class="o">.</span><span class="n">path</span><span class="p">}</span>
+	<span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">[(</span><span class="kt"><a href="../Structs/TrainingSample.html">TrainingSample</a></span><span class="p">,</span> <span class="kt"><a href="../Structs/DirectoryImageSetImporter.html#/s:V9NeuralKit25DirectoryImageSetImporter5Label">Label</a></span><span class="p">)]</span></code></pre>
 
                         </div>
                       </div>
@@ -475,12 +305,38 @@
                             <tr>
                               <td>
                                 <code>
-                                <em>input</em>
+                                <em>directory</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>Layer input</p>
+                                  <p>Directory to import samples from</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>baseOutputValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Output in the training samples used if an output does not correspond to the label of a sample</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>hotOutputValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Output in the training samples used if an output represents the label of a sample</p>
 
                                 </div>
                               </td>
@@ -490,7 +346,7 @@
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>Result of the activation function</p>
+                        <p>List of samples and their corresponding label</p>
 
                       </div>
                     </section>
@@ -499,9 +355,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FP9NeuralKit11NeuralLayer8weightedFVS_7Matrix3S1_"></a>
-                    <a name="//apple_ref/swift/Method/weighted(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FP9NeuralKit11NeuralLayer8weightedFVS_7Matrix3S1_">weighted(_:)</a>
+                    <a name="/s:V9NeuralKit25DirectoryImageSetImporter5Label"></a>
+                    <a name="//apple_ref/swift/Alias/Label" class="dashAnchor"></a>
+                    <a class="token" href="#/s:V9NeuralKit25DirectoryImageSetImporter5Label">Label</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -509,117 +365,17 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Label of a training sample.
+The label will be equal to the path of the folder it is contained in</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">weighted</span><span class="p">(</span><span class="n">_</span> <span class="nv">activated</span><span class="p">:</span> <span class="kt"><a href="../Structs/Matrix3.html">Matrix3</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/Matrix3.html">Matrix3</a></span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">Label</span> <span class="o">=</span> <span class="kt">String</span></code></pre>
 
                         </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>output</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Output of the activation function which should be forwarded</p>
-
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>Weighted output of the layer</p>
-
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:FP9NeuralKit11NeuralLayer13adjustWeightsFT15nextLayerErrorsVS_7Matrix37outputsS1_12learningRateSf13annealingRateSf_S1_"></a>
-                    <a name="//apple_ref/swift/Method/adjustWeights(nextLayerErrors:outputs:learningRate:annealingRate:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FP9NeuralKit11NeuralLayer13adjustWeightsFT15nextLayerErrorsVS_7Matrix37outputsS1_12learningRateSf13annealingRateSf_S1_">adjustWeights(nextLayerErrors:outputs:learningRate:annealingRate:)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">mutating</span> <span class="kd">func</span> <span class="nf">adjustWeights</span><span class="p">(</span><span class="nv">nextLayerErrors</span><span class="p">:</span> <span class="kt"><a href="../Structs/Matrix3.html">Matrix3</a></span><span class="p">,</span> <span class="nv">outputs</span><span class="p">:</span> <span class="kt"><a href="../Structs/Matrix3.html">Matrix3</a></span><span class="p">,</span> <span class="nv">learningRate</span><span class="p">:</span> <span class="kt">Float</span><span class="p">,</span> <span class="nv">annealingRate</span><span class="p">:</span> <span class="kt">Float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/Matrix3.html">Matrix3</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>nextLayerErrors</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Error matrix from the input of the next layer</p>
-
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>outputs</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Outputs of the current layer</p>
-
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>learningRate</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Learning rate at which the weights should be adjusted</p>
-
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>Error matrix of the current layer</p>
-
                       </div>
                     </section>
                   </div>
