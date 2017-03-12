@@ -44,30 +44,26 @@ public struct NeuralNetwork
 	/// 
 	/// The input size of all layers must match the output size of their anterior layers.
 	///
+	/// The initialization will fail if the input and output sizes of successive layers do not match.
+	///
 	/// - Parameters:
 	///   - layers: Layers of the neural network.
 	///   - outputActivation: Activation function which should be applied at the output or nil if a linear activation function should be used
 	///   - outputActivationDerivative: Derivative of the output activation function or nil if a linear activation function should be used
-	public init(layers: [NeuralLayer], outputActivation: Activation = .linear)
+	public init?(layers: [NeuralLayer], outputActivation: Activation = .linear)
 	{
-		for i in 1 ..< layers.count
+		guard (1..<layers.count)
+			.map({layers[$0-1].outputSize == layers[$0].inputSize})
+			.reduce(true, {$0 && $1})
+		else
 		{
-			precondition(
-				layers[i-1].outputSize == layers[i].inputSize,
-				"Layers \(i-1) and \(i) must have matching output and input size. " +
-				"Note that fully connected layers may store bias values in the weight matrix reducing the actual input size by one."
-			)
+			return nil
 		}
+		
 		self.layers = layers
 		self.outputActivationFunction = outputActivation
 	}
-	
-	// Crashes the compiler
-//	public init(layers: NeuralLayer..., outputActivation: (([Float]) -> [Float])? = nil, outputActivationDerivative: (([Float]) -> [Float])? = nil)
-//	{
-//		self.init(layers: layers, outputActivation: outputActivation, outputActivationDerivative: outputActivationDerivative)
-//	}
-	
+
 	
 	/// Feeds a sample forward through the network.
 	///

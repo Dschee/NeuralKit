@@ -181,6 +181,7 @@ public extension Sample
 	public static func encodeOneHot(count: Int, target: Int, baseValue: Float = 0.0, hotValue: Float = 1.0) -> Matrix3
 	{
 		precondition(count > target, "Target index greater than output length")
+		
 		var oneHotVector = [Float](repeating: baseValue, count: count)
 		oneHotVector[target] = hotValue
 		return Matrix3(values: oneHotVector, width: 1, height: 1, depth: count)

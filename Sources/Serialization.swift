@@ -40,11 +40,13 @@ public enum DecodingError: Error
 	/// - actual: Actual expression type
 	case invalidType(expected: String, actual: Any)
 	
+	
 	/// The value is not in the set of allowed values
 	///
 	/// - expected: Expected value or set of values described by a String
 	/// - actual: Actual expression
 	case invalidValue(expected: String, actual: Any)
+	
 	
 	/// The data does not contain a required key.
 	///

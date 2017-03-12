@@ -305,7 +305,11 @@ extension NeuralNetwork: Serializable
 		{
 			throw DecodingError.missingKey(key: "output_activation", data: data)
 		}
-		self.init(layers: layers, outputActivation: outputActivation)
+		guard let network = NeuralNetwork(layers: layers, outputActivation: outputActivation) else
+		{
+			throw DecodingError.invalidValue(expected: "Layer must have matching input size to precedent layer.", actual: data)
+		}
+		self = network
 	}
 	
 }

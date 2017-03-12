@@ -238,6 +238,7 @@ public struct Matrix
 	public static func add(_ lhs: Matrix, _ rhs: Matrix, secondScale: Float = 1.0) -> Matrix
 	{
 		precondition(lhs.width == rhs.width && lhs.height == rhs.height, "Matrices must have equal dimensions")
+		
 		var result = lhs.values
 		vDSP_vsma(rhs.values, 1, [secondScale], lhs.values, 1, &result, 1, UInt(lhs.values.count))
 		return Matrix(values: result, width: lhs.width, height: rhs.height)
@@ -253,6 +254,7 @@ public struct Matrix
 	public static func + (lhs: Matrix, rhs: Matrix) -> Matrix
 	{
 		precondition(lhs.width == rhs.width && lhs.height == rhs.height, "Matrices must have equal dimensions")
+		
 		return Matrix(values: lhs.values &+ rhs.values, width: lhs.width, height: lhs.height)
 	}
 	
@@ -266,6 +268,7 @@ public struct Matrix
 	public static func += (lhs: inout Matrix, rhs: Matrix)
 	{
 		precondition(lhs.width == rhs.width && lhs.height == rhs.height, "Matrices must have equal dimensions")
+		
 		lhs.values = lhs.values &+ rhs.values
 	}
 	

@@ -8,7 +8,6 @@
 
 import Foundation
 import XCTest
-import SwiftyJSON
 @testable import NeuralKit
 
 class SerializationTests: XCTestCase
@@ -17,7 +16,7 @@ class SerializationTests: XCTestCase
 	{
 		let matrix = RandomWeightMatrix(width: 10, height: 10)
 		let layer = FullyConnectedLayer(weights: matrix, activationFunction: .tanh)
-		let network = NeuralNetwork.init(layers: [layer], outputActivation: .linear)
+		let network = NeuralNetwork.init(layers: [layer], outputActivation: .linear)!
 		
 		let encoded = try! JSONCoder.encode(network)
 

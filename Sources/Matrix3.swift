@@ -89,6 +89,7 @@ public struct Matrix3
 	public init(values: [Float], width: Int, height: Int, depth: Int)
 	{
 		precondition(width * height * depth == values.count, "Matrix dimensions are incorrect")
+		
 		self.values = values
 		self.width = width
 		self.height = height
@@ -215,6 +216,7 @@ public struct Matrix3
 	public static func + (lhs: Matrix3, rhs: Matrix3) -> Matrix3
 	{
 		precondition(lhs.dimension == rhs.dimension, "Dimensions of source matrices must be equal.")
+		
 		return Matrix3(values: lhs.values &+ rhs.values, width: lhs.width, height: lhs.height, depth: lhs.depth)
 	}
 	
@@ -222,6 +224,7 @@ public struct Matrix3
 	public static func += (lhs: inout Matrix3, rhs: Matrix3)
 	{
 		precondition(lhs.dimension == rhs.dimension, "Dimensions of source matrices must be equal.")
+		
 		lhs.values = lhs.values &* rhs.values
 	}
 	
@@ -261,6 +264,7 @@ public struct Matrix3
 			width * height * depth == self.width * self.height * self.depth,
 			"Number of values in reshaped matrix must be equal to number of values in source matrix"
 		)
+		
 		return Matrix3(values: self.values, width: width, height: height, depth: depth)
 	}
 	

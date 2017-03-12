@@ -300,7 +300,6 @@ public struct FullyConnectedLayer: NeuralLayer
 	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
 	{
 		// Calculating signal errors
-//		let weightedErrors = weights.transposed * nextLayerErrors.values
 		let weightedErrors = Matrix.multiply(weights, nextLayerErrors.values, transpose: true)
 		let errorsIncludingBias = weightedErrors &* (activationFunction.derivative(outputs.values))
 		
@@ -533,4 +532,79 @@ public struct PoolingLayer: NeuralLayer
 	{
 		fatalError("TODO")
 	}
+}
+
+
+/// A layer which reshapes the output of one layer to fit the input of another layer
+public struct ReshapingLayer: NeuralLayer
+{
+	
+	/// Output size of the layer.
+	/// Should not change after initialization
+	public var outputSize: (width: Int, height: Int, depth: Int)
+	
+	
+	/// Input size of the layer.
+	/// Should not change after initialization
+	public var inputSize: (width: Int, height: Int, depth: Int)
+
+	
+	/// Initializes a reshaping layer which
+	/// reshapes the output of one layer to fit the input of another layer.
+	///
+	/// The number of values stored in the input to this layer must match
+	/// the number of outputs of this layer
+	///
+	/// - Parameters:
+	///   - inputSize: Size of the input matrix
+	///   - outputSize: Size of the output matrix
+	public init(inputSize: (width: Int, height: Int, depth: Int), outputSize: (width: Int, height: Int, depth: Int))
+	{
+		precondition(
+			inputSize.width * inputSize.height * inputSize.depth ==
+			outputSize.width * outputSize.height * outputSize.depth,
+			"Input and outputs size must have matching size."
+		)
+		self.inputSize = inputSize
+		self.outputSize = outputSize
+	}
+	
+	
+	/// Calculates the activation function for all inputs of the layer
+	///
+	/// - Parameter input: Layer input
+	/// - Returns: Result of the activation function
+	public func activated(_ input: Matrix3) -> Matrix3
+	{
+		return input
+	}
+	
+	
+	/// Weighs the outputs of the activation function so it can be presented
+	/// to the next layer
+	///
+	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Returns: Weighted output of the layer
+	public func weighted(_ output: Matrix3) -> Matrix3
+	{
+		return output.reshaped(width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
+	}
+	
+	
+	/// Adjusts the weights of the layer to reduce the error of the network.
+	///
+	/// The errors of the next layer will be provided.
+	/// The function has to also calculate the errors of the layer.
+	///
+	///
+	/// - Parameters:
+	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - outputs: Outputs of the current layer
+	///   - learningRate: Learning rate at which the weights should be adjusted
+	/// - Returns: Error matrix of the current layer
+	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
+	{
+		return nextLayerErrors.reshaped(width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
+	}
+	
 }

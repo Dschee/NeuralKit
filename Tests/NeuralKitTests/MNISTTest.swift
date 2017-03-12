@@ -25,7 +25,6 @@
 
 import Foundation
 import XCTest
-import SwiftyJSON
 @testable import NeuralKit
 
 class MNISTTest: XCTestCase
@@ -100,7 +99,7 @@ class MNISTTest: XCTestCase
 		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 200), activationFunction: .tanh)
 		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10), activationFunction: .tanh)
 		
-		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3, hiddenLayer4], outputActivation: .tanh)
+		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3, hiddenLayer4], outputActivation: .tanh)!
 		
 		let epochs = 500_000
 		
@@ -131,30 +130,5 @@ class MNISTTest: XCTestCase
 		}
 		
 		print("\(correctCount) correct, \(wrongCount) wrong, \(Float(correctCount) / Float(wrongCount + correctCount) * 100)% accuracy")
-		
-//		let trainedLayerMatrices = network.layers
-//			.flatMap{$0 as? FullyConnectedLayer}
-//			.map{$0.weights}
-//			.map{$0.serialize()}
-//			.map{$0.object}
-//		
-//		let json:JSON =
-//		[
-//			"layers": trainedLayerMatrices
-//		]
-//		
-//		guard let rawString = json.rawString() else
-//		{
-//			return
-//		}
-//		
-//		do
-//		{
-//			try rawString.write(toFile: "/Users/Palle/Desktop/mnist.network", atomically: true, encoding: .ascii)
-//		}
-//		catch
-//		{
-//			fatalError(String(describing: error))
-//		}
 	}
 }

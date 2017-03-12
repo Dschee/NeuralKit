@@ -92,11 +92,13 @@ class FullyConnectedLayerTests: XCTestCase
 			)
 		}
 		
-		let inputSamples = inputSampleRange
+		let inputSampleValues = inputSampleRange
 			.map {lines[$0]}
 			.map {$0.components(separatedBy: ",")}
 			.map {$0.flatMap{Float($0)}}
 			.filter {$0.count > 0}
+			
+		let inputSamples = inputSampleValues
 			.map {Matrix3(values: $0, width: 1, height: 1, depth: $0.count)}
 			.map(InputSample.init)
 		
@@ -170,7 +172,7 @@ class FullyConnectedLayerTests: XCTestCase
 		srand48(time(nil))
 		let network = NeuralNetwork(layers: [
 			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 1), activationFunction: .tanh)
-		])
+		])!
 		for x in ["a", "b", "c", "d"]
 		{
 			let (trainingSamples, inputSamples, expectedOutputs) = regressionSamples(from: TestSetBase + "Regression/Linear/\(x)")
@@ -184,7 +186,7 @@ class FullyConnectedLayerTests: XCTestCase
 		let	network = NeuralNetwork(layers: [
 			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 4), activationFunction: .tanh),
 			FullyConnectedLayer(weights: RandomWeightMatrix(width: 5, height: 1), activationFunction: .tanh)
-		])
+		])!
 		
 		for x in ["a", "b", "c"]
 		{
@@ -199,7 +201,7 @@ class FullyConnectedLayerTests: XCTestCase
 		let network = NeuralNetwork(
 			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 1), activationFunction: .tanh)],
 			outputActivation: .tanh
-		)
+		)!
 		for x in ["a", "b", "c"]
 		{
 			let (trainingSamples, inputSamples, expectedOutputs) = binaryClassificationSamples(from: TestSetBase + "Classification/Linear/\(x)")
@@ -214,7 +216,7 @@ class FullyConnectedLayerTests: XCTestCase
 			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 6), activationFunction: .tanh),
 			         FullyConnectedLayer(weights: RandomWeightMatrix(width: 7, height: 1), activationFunction: .tanh)],
 			outputActivation: .tanh
-		)
+		)!
 		for x in ["a", "b", "c"]
 		{
 			let (trainingSamples, inputSamples, expectedOutputs) = binaryClassificationSamples(from: TestSetBase + "Classification/Nonlinear/\(x)")

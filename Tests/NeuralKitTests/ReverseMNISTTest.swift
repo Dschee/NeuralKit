@@ -8,7 +8,6 @@
 
 import Foundation
 import XCTest
-import SwiftyJSON
 @testable import NeuralKit
 
 class ReverseMNISTTest: XCTestCase
@@ -78,7 +77,7 @@ class ReverseMNISTTest: XCTestCase
 		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 800), activationFunction: .tanh)
 		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 784), activationFunction: .tanh)
 		
-		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputActivation: .tanh)
+		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputActivation: .tanh)!
 		
 		let epochs = 300_000
 		
