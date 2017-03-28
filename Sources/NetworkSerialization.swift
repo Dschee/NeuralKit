@@ -114,6 +114,9 @@ extension Activation: Serializable
 			
 		case .tanh:
 			return "tanh"
+			
+		case .softmax:
+			return "softmax"
 		}
 	}
 	
@@ -137,6 +140,9 @@ extension Activation: Serializable
 			
 		case "tanh":
 			self = .tanh
+			
+		case "softmax":
+			self = .softmax
 			
 		default:
 			throw DecodingError.invalidValue(expected: "linear|relu|sigmoid|tanh", actual: activationName)
@@ -175,10 +181,113 @@ extension FullyConnectedLayer: Serializable
 			throw DecodingError.missingKey(key: "activation|weights", data: data)
 		}
 		
-		self.activationFunction = activation
-		self.weights = weights
+		self.init(weights: weights, activationFunction: activation)
 	}
 	
+}
+
+
+extension PoolingLayer: Serializable
+{
+	public func serialized() -> Any
+	{
+		return [
+			"input_size": [
+				"width": inputSize.width,
+				"height": inputSize.height,
+				"depth": inputSize.depth
+			],
+			"output_size": [
+				"width": outputSize.width,
+				"height": outputSize.height,
+				"depth": outputSize.depth
+			]
+		]
+	}
+	
+	public init(json: Any) throws
+	{
+		guard let data = json as? [String: Any] else
+		{
+			throw DecodingError.invalidType(expected: "[String: Any]", actual: json)
+		}
+		guard
+			let inputSize = data["input_size"] as? [String: Int],
+			let outputSize = data["output_size"] as? [String: Int]
+		else
+		{
+			throw DecodingError.missingKey(key: "input_size|output_size", data: data)
+		}
+		
+		guard
+			let inputWidth = inputSize["width"],
+			let inputHeight = inputSize["height"],
+			let inputDepth = inputSize["depth"],
+			let outputWidth = outputSize["width"],
+			let outputHeight = outputSize["height"],
+			let outputDepth = outputSize["depth"]
+		else
+		{
+			throw DecodingError.missingKey(key: "(input_size|output_size).(width|height|depth)", data: data)
+		}
+		
+		self.init(
+			inputSize: (width: inputWidth, height: inputHeight, depth: inputDepth),
+			outputSize: (width: outputWidth, height: outputHeight, depth: outputDepth)
+		)
+	}
+}
+
+
+extension ReshapingLayer: Serializable
+{
+	public func serialized() -> Any
+	{
+		return [
+			"input_size": [
+				"width": inputSize.width,
+				"height": inputSize.height,
+				"depth": inputSize.depth
+			],
+			"output_size": [
+				"width": outputSize.width,
+				"height": outputSize.height,
+				"depth": outputSize.depth
+			]
+		]
+	}
+	
+	public init(json: Any) throws
+	{
+		guard let data = json as? [String: Any] else
+		{
+			throw DecodingError.invalidType(expected: "[String: Any]", actual: json)
+		}
+		guard
+			let inputSize = data["input_size"] as? [String: Int],
+			let outputSize = data["output_size"] as? [String: Int]
+			else
+		{
+			throw DecodingError.missingKey(key: "input_size|output_size", data: data)
+		}
+		
+		guard
+			let inputWidth = inputSize["width"],
+			let inputHeight = inputSize["height"],
+			let inputDepth = inputSize["depth"],
+			let outputWidth = outputSize["width"],
+			let outputHeight = outputSize["height"],
+			let outputDepth = outputSize["depth"]
+			else
+		{
+			throw DecodingError.missingKey(key: "(input_size|output_size).(width|height|depth)", data: data)
+		}
+		
+		self.init(
+			inputSize: (width: inputWidth, height: inputHeight, depth: inputDepth),
+			outputSize: (width: outputWidth, height: outputHeight, depth: outputDepth)
+		)
+	}
 }
 
 
@@ -201,6 +310,8 @@ public struct NeuralLayerEncoder
 	private static func registerDefaults()
 	{
 		layerTypes["\(FullyConnectedLayer.self)"] = FullyConnectedLayer.self
+		layerTypes["\(PoolingLayer.self)"] = PoolingLayer.self
+		layerTypes["\(ReshapingLayer.self)"] = ReshapingLayer.self
 		//TODO: TODO: Other layer types
 	}
 	
@@ -279,7 +390,7 @@ public struct NeuralLayerEncoder
 //MARK: Network
 
 
-extension NeuralNetwork: Serializable
+extension FeedForwardNeuralNetwork: Serializable
 {
 	
 	public func serialized() -> Any
@@ -305,7 +416,7 @@ extension NeuralNetwork: Serializable
 		{
 			throw DecodingError.missingKey(key: "output_activation", data: data)
 		}
-		guard let network = NeuralNetwork(layers: layers, outputActivation: outputActivation) else
+		guard let network = FeedForwardNeuralNetwork(layers: layers, outputActivation: outputActivation) else
 		{
 			throw DecodingError.invalidValue(expected: "Layer must have matching input size to precedent layer.", actual: data)
 		}

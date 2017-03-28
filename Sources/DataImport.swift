@@ -82,6 +82,11 @@ public struct DirectoryImageSetImporter//: ClassificationTrainingSetImporter
 	///   - directory: Directory to import samples from
 	///   - baseOutputValue: Output in the training samples used if an output does not correspond to the label of a sample
 	///   - hotOutputValue: Output in the training samples used if an output represents the label of a sample
+	///   - includeFile: Decides if a file should be imported. True by default.
+	///   - label: Label for a sample. By default, the path to the file excluding the filename itself will be used.
+	///			   Samples with equal labels will be grouped together.
+	///   - pixelDataOfImage: Retrieves the pixel data of an image and converts it to a Matrix3. 
+	///			   By default, the greyscale image of the matrix will be used.
 	/// - Returns: List of samples and their corresponding label
 	/// - Throws: Throws an error if the contents of the directory, its subdirectories or files could not be read.
 	public static func `import`(
@@ -89,7 +94,8 @@ public struct DirectoryImageSetImporter//: ClassificationTrainingSetImporter
 		baseOutputValue: Float = 0,
 		hotOutputValue: Float = 1,
 		includeFile: @escaping (URL) throws -> Bool = {_ in true},
-		label: @escaping (URL) throws -> String = {$0.path}
+		label: @escaping (URL) throws -> String = {$0.path},
+		pixelDataOfImage: @escaping (CGImage) throws -> Matrix3? = {$0.greyscaleMatrix}
 	) throws -> [(TrainingSample, Label)]
 	{
 		
@@ -118,15 +124,21 @@ public struct DirectoryImageSetImporter//: ClassificationTrainingSetImporter
 				.partition(by: isDirectory)
 			
 			let images = try files
+				.lazy
 				.map{try Data(contentsOf: $0)}
 				.flatMap{NSBitmapImageRep(data: $0)}
 				.flatMap{$0.cgImage}
-				.flatMap{$0.greyscaleMatrix}
+				.flatMap(pixelDataOfImage)
+			
+			let subdirectoryImages = try directories.flatMap(loadContents(of:))
+			
+			if files.isEmpty
+			{
+				return subdirectoryImages
+			}
 			
 			let directoryLabel = try label(directory)
-			
 			let labelledImages = images.map{($0, directoryLabel)}
-			let subdirectoryImages = try directories.flatMap(loadContents(of:))
 			
 			return labelledImages + subdirectoryImages
 		}

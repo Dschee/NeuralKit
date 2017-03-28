@@ -25,6 +25,7 @@
 
 
 import Foundation
+import Accelerate
 
 
 /// Activation functions for a neural network
@@ -46,6 +47,9 @@ public enum Activation
 	
 	/// identity (output = input)
 	case linear
+	
+	/// softmax activation function
+	case softmax
 }
 
 
@@ -69,6 +73,9 @@ internal extension Activation
 			
 		case .linear:
 			return NeuralKit.identity
+			
+		case .softmax:
+			return NeuralKit.softmax
 		}
 	}
 	
@@ -88,6 +95,9 @@ internal extension Activation
 			
 		case .linear:
 			return NeuralKit.ones
+			
+		case .softmax:
+			return NeuralKit.softmax_deriv
 		}
 	}
 }
@@ -183,18 +193,29 @@ public protocol NeuralLayer
 	func weighted(_ output: Matrix3) -> Matrix3
 	
 	
-	/// Adjusts the weights of the layer to reduce the error of the network.
+	/// Adjusts the weights of the layer to reduce the total error of the network 
+	/// using gradient descent.
 	///
-	/// The errors of the next layer will be provided.
-	/// The function has to also calculate the errors of the layer.
-	///
+	/// The gradients of the posterior layer will be provided.
+	/// The function has to also calculate the errors of the layer 
+	/// for the anterior layer to use.
 	///
 	/// - Parameters:
-	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - nextLayerGradients: Error matrix from the input of the next layer
 	///   - outputs: Outputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
+	///   - momentum: Momentum of weight updates
+	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
+	mutating func adjustWeights(
+		nextLayerGradients: Matrix3,
+		inputs: Matrix3,
+		outputs: Matrix3,
+		learningRate: Float,
+		annealingRate: Float,
+		momentum: Float,
+		decay: Float
+	) -> Matrix3
 	
 }
 
@@ -241,6 +262,9 @@ public struct FullyConnectedLayer: NeuralLayer
 	/// Weights with which outputs of the layer are weighted when presented to the next layer
 	public internal(set) var weights: Matrix
 	
+	/// Weight delta for momentum training
+	private var weightDelta: Matrix
+	
 	
 	/// Activation function which will be applied to the inputs of the layer
 	public let activationFunction: Activation
@@ -261,6 +285,7 @@ public struct FullyConnectedLayer: NeuralLayer
 	public init(weights: Matrix, activationFunction: Activation)
 	{
 		self.weights = weights
+		self.weightDelta = Matrix(repeating: 0, width: weights.width, height: weights.height)
 		self.activationFunction = activationFunction
 	}
 	
@@ -286,37 +311,74 @@ public struct FullyConnectedLayer: NeuralLayer
 	}
 	
 	
-	/// Adjusts the weights of the layer to reduce the error of the network.
+	/// Adjusts the weights of the layer to reduce the total error of the network
+	/// using gradient descent.
 	///
-	/// The errors of the next layer will be provided.
-	/// The function has to also calculate the errors of the layer.
-	///
+	/// The gradients of the posterior layer will be provided.
+	/// The function has to also calculate the errors of the layer
+	/// for the anterior layer to use.
 	///
 	/// - Parameters:
-	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - nextLayerGradients: Error matrix from the input of the next layer
 	///   - outputs: Outputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
+	///   - momentum: Momentum of weight updates
+	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
+	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
 	{
 		// Calculating signal errors
-		let weightedErrors = Matrix.multiply(weights, nextLayerErrors.values, transpose: true)
+		let weightedErrors = Matrix.multiply(weights, nextLayerGradients.values, transpose: true)
 		let errorsIncludingBias = weightedErrors &* (activationFunction.derivative(outputs.values))
 		
 		// Transforming data for outer vector product
-		let nextLayerErrorVector = Matrix(values: nextLayerErrors.values, width: 1, height: nextLayerErrors.depth)
-		let outVector = Matrix(values: outputs.values, width: outputs.depth, height: 1)
+//		let nextLayerErrorVector = Matrix(values: nextLayerGradients.values, width: 1, height: nextLayerGradients.depth)
+//		let outVector = Matrix(values: outputs.values, width: outputs.depth, height: 1)
+//		
+//		// Adjusting weights by calculating weight delta matrix
+//		let weightDelta = (nextLayerErrorVector * outVector).mapv{$0 &* learningRate}
+//		
+//		// Applying weight change.
+//		weights = weights + weightDelta
 		
-		// Adjusting weights by calculating weight delta matrix
-		let weightDelta = (nextLayerErrorVector * outVector).mapv{$0 &* learningRate}
+		weights.addMultiplied(
+			Matrix(
+				nextLayerGradients.reshaped(
+					width: 1,
+					height: nextLayerGradients.depth,
+					depth: 1
+				)
+			),
+			Matrix(
+				outputs.reshaped(
+					width: outputs.depth,
+					height: 1,
+					depth: 1
+				)
+			),
+			factor: learningRate
+		)
 		
-		// Applying weight change.
-		weights = weights + weightDelta
+		// Applying momentum (helps overcome local minima)
+		if momentum != 0
+		{
+			self.weights += self.weightDelta
+			self.weightDelta.add(weightDelta, factor: momentum)
+		}
 		
 		// Simulated annealing (helps overcome local minima)
 		if annealingRate != 0
 		{
-			weights = weights + RandomPertubationMatrix(width: weights.width, height: weights.height).mapv{$0 &* annealingRate}
+			weights.add(
+				RandomPertubationMatrix(width: weights.width, height: weights.height),
+				factor: annealingRate
+			)
+		}
+		
+		// Applying weight decay to keep weights small
+		if decay != 0
+		{
+			weights *= (1 - decay)
 		}
 		
 		// Bias error is dropped.
@@ -418,24 +480,27 @@ public struct ConvolutionLayer: NeuralLayer
 	}
 	
 	
-	/// Adjusts the weights of the layer to reduce the error of the network.
+	/// Adjusts the weights of the layer to reduce the total error of the network
+	/// using gradient descent.
 	///
-	/// The errors of the next layer will be provided.
-	/// The function has to also calculate the errors of the layer.
-	///
+	/// The gradients of the posterior layer will be provided.
+	/// The function has to also calculate the errors of the layer
+	/// for the anterior layer to use.
 	///
 	/// - Parameters:
-	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - nextLayerGradients: Error matrix from the input of the next layer
 	///   - outputs: Outputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
+	///   - momentum: Momentum of weight updates
+	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
+	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
 	{
-		var errors = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
+		var gradient = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
 
 		for (z, kernel) in kernels.enumerated()
 		{
-			let source = nextLayerErrors[
+			let source = nextLayerGradients[
 				x: 0,
 				y: 0,
 				z: z,
@@ -452,10 +517,10 @@ public struct ConvolutionLayer: NeuralLayer
 				verticalInset: verticalInset,
 				lateralInset: 0
 			)
-			errors += correlated
+			gradient += correlated
 		}
 		
-		return errors
+		return gradient
 	}
 	
 }
@@ -472,6 +537,19 @@ public struct PoolingLayer: NeuralLayer
 	/// Output size of the layer.
 	/// Should not change after initialization
 	public let outputSize: (width: Int, height: Int, depth: Int)
+	
+	
+	/// Creates a new Max-Pooling layer with the given input and output size.
+	/// Scaling factors are determined automatically from the input and output size.
+	///
+	/// - Parameters:
+	///   - inputSize: Size of the layer input
+	///   - outputSize: Size of the layer output
+	public init(inputSize: (width: Int, height: Int, depth: Int), outputSize: (width: Int, height: Int, depth: Int))
+	{
+		self.inputSize = inputSize
+		self.outputSize = outputSize
+	}
 	
 	
 	/// Calculates the activation function for all inputs of the layer
@@ -497,41 +575,52 @@ public struct PoolingLayer: NeuralLayer
 		
 		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
 		
-		for z in 0 ..< outputSize.depth
+		for (x,y,z) in output.indices
 		{
+			let xOffset = x * xScale
+			let yOffset = y * yScale
 			let zOffset = z * zScale
-			for y in 0 ..< outputSize.height
-			{
-				let yOffset = y * yScale
-				for x in 0 ..< outputSize.width
-				{
-					let xOffset = x * xScale
-					
-					let submatrix = activated[x: xOffset, y: yOffset, z: zOffset, width: xScale, height: yScale, depth: zScale]
-					let max = submatrix.values.max() ?? 0
-					output[x, y, z] = max
-				}
-			}
+			
+			let submatrix = activated[x: xOffset, y: yOffset, z: zOffset, width: xScale, height: yScale, depth: zScale]
+			let max = submatrix.values.max() ?? 0
+			output[x, y, z] = max
 		}
+		
 		return output
 	}
 	
 	
-	/// Adjusts the weights of the layer to reduce the error of the network.
+	/// Adjusts the weights of the layer to reduce the total error of the network
+	/// using gradient descent.
 	///
-	/// The errors of the next layer will be provided.
-	/// The function has to also calculate the errors of the layer.
-	///
+	/// The gradients of the posterior layer will be provided.
+	/// The function has to also calculate the errors of the layer
+	/// for the anterior layer to use.
 	///
 	/// - Parameters:
-	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - nextLayerGradients: Error matrix from the input of the next layer
 	///   - outputs: Outputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
+	///   - momentum: Momentum of weight updates
+	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
+	public func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
 	{
-		fatalError("TODO")
+		let xScale = inputSize.width / outputSize.width
+		let yScale = inputSize.height / outputSize.height
+		let zScale = inputSize.depth / outputSize.depth
+		
+		var gradients = Matrix3(repeating: 0, width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
+		
+		for (x, y, z) in gradients.indices where inputs[x, y, z] == outputs[x / xScale, y / yScale, z / zScale]
+		{
+			// Only the maximum inputs get the gradient from the next layer, everything else is zero.
+			gradients[x, y, z] = nextLayerGradients[x / xScale, y / yScale, z / zScale]
+		}
+		
+		return gradients
 	}
+	
 }
 
 
@@ -591,20 +680,23 @@ public struct ReshapingLayer: NeuralLayer
 	}
 	
 	
-	/// Adjusts the weights of the layer to reduce the error of the network.
+	/// Adjusts the weights of the layer to reduce the total error of the network
+	/// using gradient descent.
 	///
-	/// The errors of the next layer will be provided.
-	/// The function has to also calculate the errors of the layer.
-	///
+	/// The gradients of the posterior layer will be provided.
+	/// The function has to also calculate the errors of the layer
+	/// for the anterior layer to use.
 	///
 	/// - Parameters:
-	///   - nextLayerErrors: Error matrix from the input of the next layer
+	///   - nextLayerGradients: Error matrix from the input of the next layer
 	///   - outputs: Outputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
+	///   - momentum: Momentum of weight updates
+	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public mutating func adjustWeights(nextLayerErrors: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float) -> Matrix3
+	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
 	{
-		return nextLayerErrors.reshaped(width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
+		return nextLayerGradients.reshaped(width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
 	}
 	
 }

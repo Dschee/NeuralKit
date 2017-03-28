@@ -30,7 +30,7 @@ fileprivate let TestSetBase = "/Users/Palle/Developer/NeuralKit/Tests/NeuralKitT
 
 class FullyConnectedLayerTests: XCTestCase
 {
-	var network: NeuralNetwork!
+	var network: FeedForwardNeuralNetwork!
 	
 	func regressionSamples(from file: String) -> ([TrainingSample], [InputSample], [Matrix3])
 	{
@@ -126,7 +126,7 @@ class FullyConnectedLayerTests: XCTestCase
         super.tearDown()
     }
 	
-	func performRegressionTest(network net: NeuralNetwork, trainingSamples: [TrainingSample], testSamples: [InputSample], expected: [Matrix3])
+	func performRegressionTest(network net: FeedForwardNeuralNetwork, trainingSamples: [TrainingSample], testSamples: [InputSample], expected: [Matrix3])
 	{
 		var network = net
 		for _ in 0 ..< 10_000
@@ -149,7 +149,7 @@ class FullyConnectedLayerTests: XCTestCase
 	}
 	
 	
-	func performBinaryClassificationTest(network net: NeuralNetwork, trainingSamples: [TrainingSample], testSamples: [InputSample], expected: [Matrix3])
+	func performBinaryClassificationTest(network net: FeedForwardNeuralNetwork, trainingSamples: [TrainingSample], testSamples: [InputSample], expected: [Matrix3])
 	{
 		var network = net
 		for _ in 0 ..< 10_000
@@ -170,7 +170,7 @@ class FullyConnectedLayerTests: XCTestCase
 	func testLinearRegression()
 	{
 		srand48(time(nil))
-		let network = NeuralNetwork(layers: [
+		let network = FeedForwardNeuralNetwork(layers: [
 			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 1), activationFunction: .tanh)
 		])!
 		for x in ["a", "b", "c", "d"]
@@ -183,7 +183,7 @@ class FullyConnectedLayerTests: XCTestCase
 	func testNonlinearRegression()
 	{
 		srand48(time(nil))
-		let	network = NeuralNetwork(layers: [
+		let	network = FeedForwardNeuralNetwork(layers: [
 			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 4), activationFunction: .tanh),
 			FullyConnectedLayer(weights: RandomWeightMatrix(width: 5, height: 1), activationFunction: .tanh)
 		])!
@@ -198,7 +198,7 @@ class FullyConnectedLayerTests: XCTestCase
 	func testLinearClassification()
 	{
 		srand48(time(nil))
-		let network = NeuralNetwork(
+		let network = FeedForwardNeuralNetwork(
 			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 1), activationFunction: .tanh)],
 			outputActivation: .tanh
 		)!
@@ -212,7 +212,7 @@ class FullyConnectedLayerTests: XCTestCase
 	func testNonlinearClassification()
 	{
 		srand48(time(nil))
-		let network = NeuralNetwork(
+		let network = FeedForwardNeuralNetwork(
 			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 6), activationFunction: .tanh),
 			         FullyConnectedLayer(weights: RandomWeightMatrix(width: 7, height: 1), activationFunction: .tanh)],
 			outputActivation: .tanh

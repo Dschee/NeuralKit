@@ -29,7 +29,7 @@ import Accelerate
 
 
 /// A feed forward multi layer neural network
-public struct NeuralNetwork
+public struct FeedForwardNeuralNetwork
 {
 	
 	/// Neuron layers of the network
@@ -80,8 +80,8 @@ public struct NeuralNetwork
 	{
 		let lastLayerOutput = layers.reduce(sample)
 		{
-			sample, layer in
-			layer.forward(sample)
+			forwarded, layer in
+			layer.forward(forwarded)
 		}
 		return lastLayerOutput.mapv(outputActivationFunction.function)
 	}
@@ -101,7 +101,7 @@ public struct NeuralNetwork
 	///   - learningRate: Rate at which the network should adapt to the sample
 	/// - Returns: The total error between the expected and actual output
 	@discardableResult
-	public mutating func train(_ sample: TrainingSample, learningRate: Float, annealingRate: Float = 0) -> Float
+	public mutating func train(_ sample: TrainingSample, learningRate: Float, annealingRate: Float = 0, momentum: Float = 0, decay: Float = 0) -> Float
 	{
 		// Feed forward sample, keeping results of individual layers
 		
@@ -119,9 +119,17 @@ public struct NeuralNetwork
 		
 		let lastResult = outputActivationFunction.function(lastWeightedResult.values)
 
-		// Calculate the errors at the output layer
+		let errors: [Float]
 		
-		let errors = (lastResult &- sample.expected.values) &* outputActivationFunction.derivative(lastResult)
+		// Calculate the errors at the output layer
+		if outputActivationFunction == .softmax
+		{
+			errors = lastResult &- sample.expected.values
+		}
+		else
+		{
+			errors = (lastResult &- sample.expected.values) &* outputActivationFunction.derivative(lastResult)
+		}
 
 		let errorMatrix = Matrix3(
 			values: errors,
@@ -134,14 +142,23 @@ public struct NeuralNetwork
 		
 		_ = layers.indices.reversed().reduce(errorMatrix)
 		{ (errorMatrix, layerIndex) -> Matrix3 in
-			layers[layerIndex].adjustWeights(nextLayerErrors: errorMatrix, outputs: partialResults[layerIndex], learningRate: learningRate, annealingRate: annealingRate)
+			layers[layerIndex].adjustWeights(
+				nextLayerGradients: errorMatrix,
+				inputs: layerIndex > 0 ? partialResults[layerIndex-1] : sample.values,
+				outputs: partialResults[layerIndex],
+				learningRate: learningRate,
+				annealingRate: annealingRate,
+				momentum: momentum,
+				decay: decay
+			)
 		}
 		
 		// Calculate the total error
 		
 		var totalError:Float = 0
-		vDSP_svesq(errors, 1, &totalError, UInt(errors.count))
-		return totalError / 2
+		let logErrors = log(lastResult) &* sample.expected.values
+		vDSP_sve(logErrors, 1, &totalError, UInt(errors.count))
+		return -totalError
 	}
 	
 }

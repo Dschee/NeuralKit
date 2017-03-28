@@ -25,6 +25,7 @@
 
 import Foundation
 import XCTest
+import Cocoa
 @testable import NeuralKit
 
 class MNISTTest: XCTestCase
@@ -45,19 +46,23 @@ class MNISTTest: XCTestCase
 			let pixelData = bytes[offset ..< (offset + imageWidth * imageHeight)]
 				.map{Float($0)/256}
 			
-			let sampleMatrix = Matrix3(values: pixelData, width: imageWidth, height: imageHeight, depth: 1)
+			let label = Int(labels[labelOffset + i])
 			
-			for _ in 0 ..< 8
-			{
-				let offsetX = Int(arc4random_uniform(16))-8
-				let offsetY = Int(arc4random_uniform(8))-4
-				let randomizedSampleMatrix = sampleMatrix[x: offsetX, y: offsetY, z: 0, width: 28, height: 28, depth: 1]
-				
-				let label = Int(labels[labelOffset + i])
-				
-				let sample = TrainingSample(values: randomizedSampleMatrix, outputCount: 10, targetIndex: label, baseValue: -1.0, hotValue: 1.0)
-				samples.append(sample)
-			}
+			let sampleMatrix = Matrix3(values: pixelData, width: imageWidth, height: imageHeight, depth: 1)
+			let sample = TrainingSample(values: sampleMatrix, outputCount: 10, targetIndex: label, baseValue: 0.0, hotValue: 1.0)
+			samples.append(sample)
+			
+//			for _ in 0 ..< 8
+//			{
+//				let offsetX = Int(arc4random_uniform(16))-8
+//				let offsetY = Int(arc4random_uniform(8))-4
+//				let randomizedSampleMatrix = sampleMatrix[x: offsetX, y: offsetY, z: 0, width: 28, height: 28, depth: 1]
+//				
+//				let label = Int(labels[labelOffset + i])
+//				
+//				let sample = TrainingSample(values: randomizedSampleMatrix, outputCount: 10, targetIndex: label, baseValue: -1.0, hotValue: 1.0)
+//				samples.append(sample)
+//			}
 		}
 		
 		return samples
@@ -93,15 +98,16 @@ class MNISTTest: XCTestCase
 	{
 		let (trainingSamples, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
 		
-		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 1500), activationFunction: .linear)
-		let hiddenLayer1 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 1501, height: 800), activationFunction: .tanh)
+		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 800), activationFunction: .linear)
 		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 500), activationFunction: .tanh)
 		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 200), activationFunction: .tanh)
 		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10), activationFunction: .tanh)
 		
-		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3, hiddenLayer4], outputActivation: .tanh)!
+		var network = FeedForwardNeuralNetwork(layers: [inputLayer, hiddenLayer2, hiddenLayer3, hiddenLayer4], outputActivation: .softmax)!
 		
-		let epochs = 500_000
+		let epochs = 100_000
+		
+		var time = CACurrentMediaTime()
 		
 		for epoch in 0 ..< epochs
 		{
@@ -110,7 +116,9 @@ class MNISTTest: XCTestCase
 			
 			if epoch % 1000 == 0
 			{
-				print("epoch \(epoch) of \(epochs): \(error * 100)% error")
+				let newTime = CACurrentMediaTime()
+				print("epoch \(epoch) of \(epochs): \(error * 100)% error, duration: \(newTime - time) seconds.")
+				time = newTime
 			}
 		}
 		
@@ -121,8 +129,8 @@ class MNISTTest: XCTestCase
 		{
 			let result = network.feedForward(sample.values)
 			
-			let expectedIndex = maxi(sample.expected.values).1
-			let actualIndex = maxi(result.values).1
+			let expectedIndex = argmax(sample.expected.values).1
+			let actualIndex = argmax(result.values).1
 			
 			XCTAssertEqual(expectedIndex, actualIndex)
 			correctCount += expectedIndex == actualIndex ? 1 : 0

@@ -372,6 +372,17 @@ public func ones(_ values: [Float]) -> [Float]
 }
 
 
+/// Returns a vector containing zeros with the same length as the input vector
+///
+/// - Parameter values: Input vector
+/// - Returns: Vector of zeros with the same length as the input vector
+@inline(__always)
+public func zeros(_ values: [Float]) -> [Float]
+{
+	return Array<Float>(repeating: 0, count: values.count)
+}
+
+
 /// Calculates the sigmoid function for every element of the input vector
 ///
 /// - Parameter values: Input vector
@@ -393,14 +404,72 @@ public func sigmoid_deriv(_ values: [Float]) -> [Float]
 }
 
 
+/// Calculates the sum of all elements of a vector
+///
+/// - Parameter values: Vector of values to sum up
+/// - Returns: Sum of all elements of the input vector
+public func sum(_ values: [Float]) -> Float
+{
+	var sum: Float = 0
+	vDSP_sve(values, 1, &sum, UInt(values.count))
+	return sum
+}
+
+
+/// Calculates the softmax function for every element of the input vector
+///
+/// - Parameter values: Input vector
+/// - Returns: Result vector
+public func softmax(_ values: [Float]) -> [Float]
+{
+	// shifting to small number values for numerical stability
+	let shifted = values &- max(values)
+	let exponentiated = exp(shifted)
+	let summed = sum(exponentiated)
+	return exponentiated &/ summed
+}
+
+
+/// Calculates the derivative of the softmax function for every element of the input vector
+/// The input vector must contain values which are already outputs of the softmax function
+///
+/// - Parameter values: Input vector
+/// - Returns: Derivative of the softmax function for every softmax value of the input vector
+public func softmax_deriv(_ values: [Float]) -> [Float]
+{
+	fatalError()
+	
+//	var jacobian = Matrix(repeating: 0, width: values.count, height: values.count)
+//	
+//	for (x,y) in jacobian.indices
+//	{
+//		jacobian[x,y] = values[x] * ((x == y ? 1 : 0) - values[y])
+//	}
+//	
+//	return jacobian * values
+}
+
+
 //MARK: Maxima and minima
+
+
+/// Finds the maximum value of a vector
+///
+/// - Parameter values: Input vector
+/// - Returns: Maximum value of the vector
+public func max(_ values: [Float]) -> Float
+{
+	var max: Float = 0
+	vDSP_maxv(values, 1, &max, UInt(values.count))
+	return max
+}
 
 
 /// Finds the maximum value and its index of a vector
 ///
 /// - Parameter values: Input vector
 /// - Returns: Maximum value and its index
-public func maxi(_ values: [Float]) -> (Float, Int)
+public func argmax(_ values: [Float]) -> (Float, Int)
 {
 	var max:Float = 0
 	var ind:UInt = 0
@@ -409,14 +478,30 @@ public func maxi(_ values: [Float]) -> (Float, Int)
 }
 
 
+/// Finds the maximum value and its index of a vector
+///
+/// - Parameter values: Input vector
+/// - Returns: Maximum value and its index
+@available(*, unavailable, renamed: "argmax")
+public let maxi = argmax
+
+
 /// Finds the minimum value and its index of a vector
 ///
 /// - Parameter values: Input vector
 /// - Returns: Minimum value and its index
-public func mini(_ values: [Float]) -> (Float, Int)
+public func argmin(_ values: [Float]) -> (Float, Int)
 {
 	var min:Float = 0
 	var ind:UInt = 0
 	vDSP_minvi(values, 1, &min, &ind, UInt(values.count))
 	return (min, Int(ind))
 }
+
+
+/// Finds the minimum value and its index of a vector
+///
+/// - Parameter values: Input vector
+/// - Returns: Minimum value and its index
+@available(*, unavailable, renamed: "argmin")
+public let mini = argmin

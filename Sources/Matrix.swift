@@ -245,6 +245,58 @@ public struct Matrix
 	}
 	
 	
+	/// Adds the matrix to the base matrix in place.
+	///
+	/// - Parameter other: Matrix which should be added to the base matrix.
+	public mutating func add(_ other: Matrix)
+	{
+		precondition(self.width == other.width && self.height == other.height, "Matrices must have equal dimensions")
+		
+		vDSP_vadd(self.values, 1, other.values, 1, &self.values, 1, UInt(self.values.count))
+	}
+	
+	
+	/// Multiplies the matrix with the scalar factor and adds it onto the base matrix
+	/// in place
+	///
+	/// - Parameters:
+	///   - other: Matrix which should be added to the base matrix
+	///   - factor: Scale at which the matrix will be added
+	public mutating func add(_ other: Matrix, factor: Float)
+	{
+		vDSP_vsma(other.values, 1, [factor], self.values, 1, &self.values, 1, UInt(self.values.count))
+	}
+	
+	
+	/// Multiplies the two input matrices and adds them to the base matrix with the given factor
+	///
+	/// - Parameters:
+	///   - first: First matrix to multiply
+	///   - second: Second matrix to multiply
+	///   - transposeFirst: Specifies if the first matrix should be transposed
+	///   - transposeSecond: Specifies if the second matrix should be transposed
+	///   - factor: Factor applied to the result of the multiplication before adding it to the base matrix
+	public mutating func addMultiplied(_ first: Matrix, _ second: Matrix, transposeFirst: Bool = false, transposeSecond: Bool = false, factor: Float = 1.0)
+	{
+		cblas_sgemm(
+			CblasRowMajor,
+			transposeFirst ? CblasTrans : CblasNoTrans,
+			transposeSecond ? CblasTrans : CblasNoTrans,
+			Int32(first.height),
+			Int32(second.width),
+			Int32(first.width),
+			factor,
+			first.values,
+			Int32(first.width),
+			second.values,
+			Int32(second.width),
+			1.0,
+			&self.values,
+			Int32(self.width)
+		)
+	}
+	
+	
 	/// Performs an element wise addition of two matrices of equal dimensions
 	///
 	/// - Parameters:
@@ -267,9 +319,18 @@ public struct Matrix
 	///   - rhs: Second matrix
 	public static func += (lhs: inout Matrix, rhs: Matrix)
 	{
-		precondition(lhs.width == rhs.width && lhs.height == rhs.height, "Matrices must have equal dimensions")
-		
-		lhs.values = lhs.values &+ rhs.values
+		lhs.add(rhs)
+	}
+	
+	
+	/// Multiplies every element of the matrix with the scalar and writes it back to the matrix.
+	///
+	/// - Parameters:
+	///   - lhs: Matrix to multiply
+	///   - rhs: Scaling factor
+	public static func *= (lhs: inout Matrix, rhs: Float)
+	{
+		vDSP_vsmul(lhs.values, 1, [rhs], &lhs.values, 1, UInt(lhs.values.count))
 	}
 	
 	

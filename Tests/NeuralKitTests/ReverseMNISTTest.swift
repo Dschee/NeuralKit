@@ -77,7 +77,7 @@ class ReverseMNISTTest: XCTestCase
 		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 800), activationFunction: .tanh)
 		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 784), activationFunction: .tanh)
 		
-		var network = NeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputActivation: .tanh)!
+		var network = FeedForwardNeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputActivation: .tanh)!
 		
 		let epochs = 300_000
 		
@@ -99,8 +99,8 @@ class ReverseMNISTTest: XCTestCase
 		{
 			let result = network.feedForward(sample.values)
 			
-			let expectedIndex = maxi(sample.expected.values).1
-			let actualIndex = maxi(result.values).1
+			let expectedIndex = argmax(sample.expected.values).1
+			let actualIndex = argmax(result.values).1
 			
 			XCTAssertEqual(expectedIndex, actualIndex)
 			correctCount += expectedIndex == actualIndex ? 1 : 0
