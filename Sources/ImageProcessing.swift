@@ -265,7 +265,7 @@ extension CGImage : PixelDataConvertible
 	public var normalizedPixelData: [Float]?
 	{
 		//mapping from UInt8 (0 ... 255) to Float (0.0 ... 1.0)
-		return self.pixelData?.map { Float($0) / 256 }
+		return self.pixelData?.map { Float($0) / 255 }
 	}
 	
 	
@@ -314,7 +314,8 @@ extension CGImage : PixelDataConvertible
 		var result = [Float](repeating: 0, count: pixelData.count / 4)
 		for i in result.indices
 		{
-			result[i] = sqrt(pixelData[4*i] * pixelData[4*i] + pixelData[4*i+1] * pixelData[4*i+1] + pixelData[4*i+2] * pixelData[4*i+2]) * pixelData[4*i+3] / sqrtf(3)
+			result[i] = (pixelData[4*i] * 0.2990 + pixelData[4*i+1] * 0.5870 + pixelData[4*i+2] * 0.1140) * pixelData[4*i+3]
+			//result[i] = sqrt(pixelData[4*i] * pixelData[4*i] + pixelData[4*i+1] * pixelData[4*i+1] + pixelData[4*i+2] * pixelData[4*i+2]) * pixelData[4*i+3] / sqrtf(3)
 		}
 		return result
 	}

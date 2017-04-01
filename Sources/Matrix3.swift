@@ -151,11 +151,19 @@ public struct Matrix3
 	{
 		get
 		{
+			guard 0 ..< width ~= x, 0 ..< height ~= y, 0 ..< depth ~= z else
+			{
+				return 0
+			}
 			return values[width * (height * z + y) + x]
 		}
 		
 		set (new)
 		{
+			guard 0 ..< width ~= x, 0 ..< height ~= y, 0 ..< depth ~= z else
+			{
+				return
+			}
 			values[width * (height * z + y) + x] = new
 		}
 	}
@@ -179,7 +187,9 @@ public struct Matrix3
 		{
 			var result = Matrix3(repeating: 0, width: width, height: height, depth: depth)
 			for (x,y,z) in result.indices
-				where 0 ..< self.depth ~= z + slice && 0 ..< self.height ~= y + row && 0 ..< self.width ~= x + column
+				where 0 ..< self.depth  ~= z + slice &&
+					  0 ..< self.height ~= y + row   &&
+					  0 ..< self.width  ~= x + column
 			{
 				result[x,y,z] = self[x+column, y+row, z+slice]
 			}
@@ -189,7 +199,9 @@ public struct Matrix3
 		set (new)
 		{
 			for (x,y,z) in new.indices
-				where 0 ..< self.depth ~= z + slice && 0 ..< self.height ~= y + row && 0 ..< self.width ~= x + column
+				where 0 ..< self.depth  ~= z + slice &&
+					  0 ..< self.height ~= y + row   &&
+					  0 ..< self.width  ~= x + column
 			{
 				values[self.width * (self.height * (slice + z) + row + y) + column + x] = new.values[width * (height * z + y) + x]
 			}

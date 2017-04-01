@@ -344,11 +344,19 @@ public struct Matrix
 	{
 		get
 		{
+			guard 0 ..< width ~= x, 0 ..< height ~= y else
+			{
+				return 0
+			}
 			return values[width * y + x]
 		}
 		
 		set (new)
 		{
+			guard 0 ..< width ~= x, 0 ..< height ~= y else
+			{
+				return
+			}
 			values[width * y + x] = new
 		}
 	}

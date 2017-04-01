@@ -498,26 +498,46 @@ public struct ConvolutionLayer: NeuralLayer
 	{
 		var gradient = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
 
-		for (z, kernel) in kernels.enumerated()
+//		for (z, kernel) in kernels.enumerated()
+//		{
+//			let source = nextLayerGradients[
+//				x: 0,
+//				y: 0,
+//				z: z,
+//				width: outputSize.width,
+//				height: outputSize.height,
+//				depth: 1
+//			]
+//			let correlated = source.correlated(
+//				with: kernel,
+//				horizontalStride: horizontalStride,
+//				verticalStride: verticalStride,
+//				lateralStride: 1,
+//				horizontalInset: horizontalInset,
+//				verticalInset: verticalInset,
+//				lateralInset: 0
+//			)
+//			gradient += correlated
+//		}
+		
+		for (outputZ, kernel) in kernels.enumerated()
 		{
-			let source = nextLayerGradients[
-				x: 0,
-				y: 0,
-				z: z,
-				width: outputSize.width,
-				height: outputSize.height,
-				depth: 1
-			]
-			let correlated = source.correlated(
-				with: kernel,
-				horizontalStride: horizontalStride,
-				verticalStride: verticalStride,
-				lateralStride: 1,
-				horizontalInset: horizontalInset,
-				verticalInset: verticalInset,
-				lateralInset: 0
-			)
-			gradient += correlated
+			var kernelGradient = Matrix3.init(repeating: 0, width: kernel.width, height: kernel.height, depth: kernel.depth)
+			
+			for outputY in 0 ..< outputSize.height
+			{
+				for outputX in 0 ..< outputSize.width
+				{
+					let outputGradient = nextLayerGradients[outputX, outputY, outputZ]
+					
+					for (x,y,z) in kernel.indices
+					{
+						
+					}
+				}
+			}
+			
+			kernels[outputZ] += kernelGradient.mapv{$0 &* learningRate}
 		}
 		
 		return gradient

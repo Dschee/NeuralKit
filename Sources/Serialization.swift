@@ -101,7 +101,7 @@ public struct JSONCoder
 	public static func encode(_ value: Serializable) throws -> Data
 	{
 		let serialized = value.serialized()
-		return try JSONSerialization.data(withJSONObject: serialized, options: .prettyPrinted)
+		return try JSONSerialization.data(withJSONObject: serialized, options: [])
 	}
 	
 	
