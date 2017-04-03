@@ -15,7 +15,7 @@ class SerializationTests: XCTestCase
 	func testSerialization()
 	{
 		let matrix = RandomWeightMatrix(width: 10, height: 10)
-		let layer = FullyConnectedLayer(weights: matrix, activationFunction: .tanh)
+		let layer = FullyConnectedLayer(weights: matrix)
 		let network = FeedForwardNeuralNetwork(layers: [layer], outputActivation: .linear)!
 		
 		let encoded = try! JSONCoder.encode(network)

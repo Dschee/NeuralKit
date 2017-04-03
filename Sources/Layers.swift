@@ -25,7 +25,6 @@
 
 
 import Foundation
-import Accelerate
 
 
 /// Activation functions for a neural network
@@ -158,6 +157,7 @@ public func RandomPertubationMatrix(width: Int, height: Int) -> Matrix
 	let matA = RandomWeightMatrix(width: width, height: height, range: 0 ... 1)
 	let matB = RandomWeightMatrix(width: width, height: height, range: 0 ... 1)
 	
+	// generating a normal distribution from uniformly distributed random values
 	let transformed = matA.mapv{sqrt(-2 &* log($0))}
 	let randomNegated = zip(transformed.values, matB.values).map{$1 < 0.5 ? -$0 : $0}
 	return Matrix(values: randomNegated, width: width, height: height).mapv{pow($0, Array<Float>(repeating: 5, count: randomNegated.count)) &* 0.0003}
@@ -178,19 +178,11 @@ public protocol NeuralLayer
 	var outputSize: (width: Int, height: Int, depth: Int) { get }
 	
 	
-	/// Calculates the activation function for all inputs of the layer
+	/// Performs data transformations for feed forward operation
 	///
-	/// - Parameter input: Layer input
-	/// - Returns: Result of the activation function
-	func activated(_ input: Matrix3) -> Matrix3
-	
-	
-	/// Weighs the outputs of the activation function so it can be presented
-	/// to the next layer
-	///
-	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Parameter output: Input of the layer which should be forwarded
 	/// - Returns: Weighted output of the layer
-	func weighted(_ output: Matrix3) -> Matrix3
+	func forward(_ input: Matrix3) -> Matrix3
 	
 	
 	/// Adjusts the weights of the layer to reduce the total error of the network 
@@ -202,7 +194,7 @@ public protocol NeuralLayer
 	///
 	/// - Parameters:
 	///   - nextLayerGradients: Error matrix from the input of the next layer
-	///   - outputs: Outputs of the current layer
+	///   - inputs: Inputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
 	///   - momentum: Momentum of weight updates
 	///   - decay: Decay rate at which weights should be decreased
@@ -210,30 +202,12 @@ public protocol NeuralLayer
 	mutating func adjustWeights(
 		nextLayerGradients: Matrix3,
 		inputs: Matrix3,
-		outputs: Matrix3,
 		learningRate: Float,
 		annealingRate: Float,
 		momentum: Float,
 		decay: Float
 	) -> Matrix3
 	
-}
-
-// Feed forward function
-public extension NeuralLayer
-{
-	
-	/// Forwards an input through the layer.
-	/// 
-	/// The inputs will be fed through the activation function
-	/// and will be weighted.
-	///
-	/// - Parameter input: Layer input
-	/// - Returns: Next layer input
-	func forward(_ input: Matrix3) -> Matrix3
-	{
-		return weighted(activated(input))
-	}
 }
 
 
@@ -262,12 +236,9 @@ public struct FullyConnectedLayer: NeuralLayer
 	/// Weights with which outputs of the layer are weighted when presented to the next layer
 	public internal(set) var weights: Matrix
 	
+	
 	/// Weight delta for momentum training
 	private var weightDelta: Matrix
-	
-	
-	/// Activation function which will be applied to the inputs of the layer
-	public let activationFunction: Activation
 	
 	
 	/// Initializes a fully connected neural layer using the given weight matrix, its activation function and derivative
@@ -282,32 +253,20 @@ public struct FullyConnectedLayer: NeuralLayer
 	///   - weights: Weights from the layer to the next layer
 	///   - activationFunction: Activation function with which the inputs should be activated
 	///   - activationDerivative: Derivative of the activation function used for training
-	public init(weights: Matrix, activationFunction: Activation)
+	public init(weights: Matrix)
 	{
 		self.weights = weights
 		self.weightDelta = Matrix(repeating: 0, width: weights.width, height: weights.height)
-		self.activationFunction = activationFunction
 	}
 	
 	
-	/// Calculates the activation function for all inputs of the layer
+	/// Performs data transformations for feed forward operation
 	///
-	/// - Parameter input: Layer input
-	/// - Returns: Result of the activation function
-	public func activated(_ input: Matrix3) -> Matrix3
-	{
-		return Matrix3(values: (activationFunction.function(input.values) + [1]), width: inputSize.width, height: inputSize.height, depth: inputSize.depth+1)
-	}
-	
-	
-	/// Weighs the outputs of the activation function so it can be presented
-	/// to the next layer
-	///
-	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Parameter output: Input of the layer which should be forwarded
 	/// - Returns: Weighted output of the layer
-	public func weighted(_ output: Matrix3) -> Matrix3
+	public func forward(_ input: Matrix3) -> Matrix3
 	{
-		return Matrix3(values: weights * output.values, width: 1, height: 1, depth: weights.height)
+		return Matrix3(values: weights * (input.values + [1]), width: 1, height: 1, depth: weights.height)
 	}
 	
 	
@@ -320,50 +279,57 @@ public struct FullyConnectedLayer: NeuralLayer
 	///
 	/// - Parameters:
 	///   - nextLayerGradients: Error matrix from the input of the next layer
-	///   - outputs: Outputs of the current layer
+	///   - inputs: Inputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
 	///   - momentum: Momentum of weight updates
 	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
+	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
 	{
-		// Calculating signal errors
-		let weightedErrors = Matrix.multiply(weights, nextLayerGradients.values, transpose: true)
-		let errorsIncludingBias = weightedErrors &* (activationFunction.derivative(outputs.values))
+		// Calculating signal errors for anterior layer
+		let errorsIncludingBias = Matrix.multiply(weights, nextLayerGradients.values, transpose: true)
 		
-		// Transforming data for outer vector product
-//		let nextLayerErrorVector = Matrix(values: nextLayerGradients.values, width: 1, height: nextLayerGradients.depth)
-//		let outVector = Matrix(values: outputs.values, width: outputs.depth, height: 1)
-//		
-//		// Adjusting weights by calculating weight delta matrix
-//		let weightDelta = (nextLayerErrorVector * outVector).mapv{$0 &* learningRate}
-//		
-//		// Applying weight change.
-//		weights = weights + weightDelta
-		
-		weights.addMultiplied(
-			Matrix(
-				nextLayerGradients.reshaped(
-					width: 1,
-					height: nextLayerGradients.depth,
-					depth: 1
-				)
-			),
-			Matrix(
-				outputs.reshaped(
-					width: outputs.depth,
-					height: 1,
-					depth: 1
-				)
-			),
-			factor: learningRate
-		)
-		
-		// Applying momentum (helps overcome local minima)
-		if momentum != 0
+		if momentum == 0
 		{
-			self.weights += self.weightDelta
-			self.weightDelta.add(weightDelta, factor: momentum)
+			// Updating weights: adding weight delta (i,j) = gradient (j) * input (i) directly to weight matrix
+			weights.addMultiplied(
+				Matrix(
+					nextLayerGradients.reshaped(
+						width: 1,
+						height: nextLayerGradients.depth,
+						depth: 1
+					)
+				),
+				Matrix(
+					values: inputs.values + [1],
+					width: inputSize.depth + 1,
+					height: 1
+				),
+				factor: learningRate
+			)
+		}
+		else
+		{
+			// Updating weights: weight delta (i,j) = gradient (j) * input (i) + momentum * old weight delta (i,j)
+			weightDelta.addMultiplied(
+				Matrix(
+					nextLayerGradients.reshaped(
+						width: 1,
+						height: nextLayerGradients.depth,
+						depth: 1
+					)
+				),
+				Matrix(
+					values: inputs.values + [1],
+					width: inputSize.depth + 1,
+					height: 1
+				),
+				factor: learningRate,
+				destinationFactor: momentum
+			)
+			
+			// Performing weight update
+			weights += weightDelta
 		}
 		
 		// Simulated annealing (helps overcome local minima)
@@ -382,7 +348,12 @@ public struct FullyConnectedLayer: NeuralLayer
 		}
 		
 		// Bias error is dropped.
-		return Matrix3(values: Array<Float>(errorsIncludingBias.dropLast()), width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
+		return Matrix3(
+			values: Array<Float>(errorsIncludingBias.dropLast()),
+			width: self.inputSize.width,
+			height: self.inputSize.height,
+			depth: self.inputSize.depth
+		)
 	}
 
 }
@@ -397,7 +368,7 @@ public struct ConvolutionLayer: NeuralLayer
 	
 	
 	/// The bias values which are applied after convolutions
-	public var bias: [Float]
+	public private(set) var bias: [Float]
 	
 	
 	/// Input size of the layer.
@@ -439,32 +410,51 @@ public struct ConvolutionLayer: NeuralLayer
 	public let verticalInset: Int
 	
 	
-	/// Activation function applied on each neuron
-	public let activationFunction: Activation
-	
-	
-	/// Calculates the activation function for all inputs of the layer
+	/// Initializes a new convolutional layer.
 	///
-	/// - Parameter input: Layer input
-	/// - Returns: Result of the activation function
-	public func activated(_ input: Matrix3) -> Matrix3
+	/// A convolutional layer applies a set of given convolution filters
+	/// to a provided input.
+	///
+	/// - Parameters:
+	///   - inputSize: Size of inputs of the layer for feed forward operations.
+	///   - kernels: Convolution filters which are applied to inputs.
+	///   - bias: Bias which is added onto the result of convolutions.
+	///           There should be one bias value for each convolution kernel.
+	///   - horizontalStride: Stride at which the input volume is traversed horizontally.
+	///   - verticalStride: Stride at which the input volume is traversed vertically.
+	///   - horizontalInset: Inset at which the horizontal traversion of the input volume begins.
+	///   - verticalInset: Inset at which the vertical traversion of the input volume begins.
+	public init(
+		inputSize: (width: Int, height: Int, depth: Int),
+		kernels: [Matrix3],
+		bias: [Float],
+		horizontalStride: Int,
+		verticalStride: Int,
+		horizontalInset: Int,
+		verticalInset: Int
+	)
 	{
-		return input.mapv(activationFunction.function)
+		self.inputSize = inputSize
+		self.kernels = kernels
+		self.bias = bias
+		self.horizontalStride = horizontalStride
+		self.verticalStride = verticalStride
+		self.horizontalInset = horizontalInset
+		self.verticalInset = verticalInset
 	}
 	
 	
-	/// Weighs the outputs of the activation function so it can be presented
-	/// to the next layer
+	/// Performs data transformations for feed forward operation
 	///
-	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Parameter output: Input of the layer which should be forwarded
 	/// - Returns: Weighted output of the layer
-	public func weighted(_ activated: Matrix3) -> Matrix3
+	public func forward(_ input: Matrix3) -> Matrix3
 	{
 		var output = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
 
 		for (z, kernel) in kernels.enumerated()
 		{
-			let convolved = activated.convolved(
+			let convolved = input.convolved(
 				with: kernel,
 				horizontalStride: horizontalStride,
 				verticalStride: verticalStride,
@@ -489,40 +479,19 @@ public struct ConvolutionLayer: NeuralLayer
 	///
 	/// - Parameters:
 	///   - nextLayerGradients: Error matrix from the input of the next layer
-	///   - outputs: Outputs of the current layer
+	///   - inputs: Inputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
 	///   - momentum: Momentum of weight updates
 	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
+	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
 	{
 		var gradient = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
 
-//		for (z, kernel) in kernels.enumerated()
-//		{
-//			let source = nextLayerGradients[
-//				x: 0,
-//				y: 0,
-//				z: z,
-//				width: outputSize.width,
-//				height: outputSize.height,
-//				depth: 1
-//			]
-//			let correlated = source.correlated(
-//				with: kernel,
-//				horizontalStride: horizontalStride,
-//				verticalStride: verticalStride,
-//				lateralStride: 1,
-//				horizontalInset: horizontalInset,
-//				verticalInset: verticalInset,
-//				lateralInset: 0
-//			)
-//			gradient += correlated
-//		}
-		
 		for (outputZ, kernel) in kernels.enumerated()
 		{
 			var kernelGradient = Matrix3.init(repeating: 0, width: kernel.width, height: kernel.height, depth: kernel.depth)
+			var biasGradient: Float = 0
 			
 			for outputY in 0 ..< outputSize.height
 			{
@@ -530,14 +499,29 @@ public struct ConvolutionLayer: NeuralLayer
 				{
 					let outputGradient = nextLayerGradients[outputX, outputY, outputZ]
 					
-					for (x,y,z) in kernel.indices
-					{
-						
-					}
+					kernelGradient += inputs[
+						x: outputX * horizontalStride + horizontalInset,
+						y: outputY * verticalStride + verticalInset,
+						z: 0,
+						width: kernel.width,
+						height: kernel.height,
+						depth: kernel.depth
+					].mapv{$0 &* outputGradient}
+					
+					gradient[
+						x: outputX * horizontalStride + horizontalInset,
+						y: outputY * verticalStride + verticalInset,
+						z: 0,
+						width: kernel.width,
+						height: kernel.height,
+						depth: kernel.depth
+					] += kernel.mapv{$0 &* outputGradient}
+					
+					biasGradient += outputGradient
 				}
 			}
-			
 			kernels[outputZ] += kernelGradient.mapv{$0 &* learningRate}
+			bias[outputZ] += biasGradient * learningRate
 		}
 		
 		return gradient
@@ -559,8 +543,13 @@ public struct PoolingLayer: NeuralLayer
 	public let outputSize: (width: Int, height: Int, depth: Int)
 	
 	
-	/// Creates a new Max-Pooling layer with the given input and output size.
+	/// Creates a new Max Pooling layer with the given input and output size.
 	/// Scaling factors are determined automatically from the input and output size.
+	///
+	/// A pooling layer can be used to reduce the size of the forwarded volume
+	/// and thereby reducing the computational cost of subsequent layers.
+	/// A pooling layer can also increase the size of the receptive field of subsequent convolution layers
+	/// and prevent overfitting.
 	///
 	/// - Parameters:
 	///   - inputSize: Size of the layer input
@@ -572,22 +561,11 @@ public struct PoolingLayer: NeuralLayer
 	}
 	
 	
-	/// Calculates the activation function for all inputs of the layer
+	/// Performs data transformations for feed forward operation
 	///
-	/// - Parameter input: Layer input
-	/// - Returns: Result of the activation function
-	public func activated(_ input: Matrix3) -> Matrix3
-	{
-		return input
-	}
-	
-	
-	/// Weighs the outputs of the activation function so it can be presented
-	/// to the next layer
-	///
-	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Parameter output: Input of the layer which should be forwarded
 	/// - Returns: Weighted output of the layer
-	public func weighted(_ activated: Matrix3) -> Matrix3
+	public func forward(_ input: Matrix3) -> Matrix3
 	{
 		let xScale = inputSize.width / outputSize.width
 		let yScale = inputSize.height / outputSize.height
@@ -601,9 +579,8 @@ public struct PoolingLayer: NeuralLayer
 			let yOffset = y * yScale
 			let zOffset = z * zScale
 			
-			let submatrix = activated[x: xOffset, y: yOffset, z: zOffset, width: xScale, height: yScale, depth: zScale]
-			let max = submatrix.values.max() ?? 0
-			output[x, y, z] = max
+			let submatrix = input[x: xOffset, y: yOffset, z: zOffset, width: xScale, height: yScale, depth: zScale]
+			output[x, y, z] = max(submatrix.values)
 		}
 		
 		return output
@@ -619,23 +596,41 @@ public struct PoolingLayer: NeuralLayer
 	///
 	/// - Parameters:
 	///   - nextLayerGradients: Error matrix from the input of the next layer
-	///   - outputs: Outputs of the current layer
+	///   - inputs: Inputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
 	///   - momentum: Momentum of weight updates
 	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
+	public func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
 	{
 		let xScale = inputSize.width / outputSize.width
 		let yScale = inputSize.height / outputSize.height
 		let zScale = inputSize.depth / outputSize.depth
 		
 		var gradients = Matrix3(repeating: 0, width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
-		
-		for (x, y, z) in gradients.indices where inputs[x, y, z] == outputs[x / xScale, y / yScale, z / zScale]
+
+		for z in 0 ..< outputSize.depth
 		{
-			// Only the maximum inputs get the gradient from the next layer, everything else is zero.
-			gradients[x, y, z] = nextLayerGradients[x / xScale, y / yScale, z / zScale]
+			for y in 0 ..< outputSize.height
+			{
+				for x in 0 ..< outputSize.width
+				{
+					let inputVolume = inputs[
+						x: x * xScale,
+						y: y * yScale,
+						z: z * zScale,
+						width: xScale,
+						height: yScale,
+						depth: zScale
+					]
+					let (maxX, maxY, maxZ) = inputVolume.maxIndex()
+					gradients[
+						x * xScale + maxX,
+						y * yScale + maxY,
+						z * zScale + maxZ
+					] = nextLayerGradients[x, y, z]
+				}
+			}
 		}
 		
 		return gradients
@@ -679,24 +674,13 @@ public struct ReshapingLayer: NeuralLayer
 	}
 	
 	
-	/// Calculates the activation function for all inputs of the layer
+	/// Performs data transformations for feed forward operation
 	///
-	/// - Parameter input: Layer input
-	/// - Returns: Result of the activation function
-	public func activated(_ input: Matrix3) -> Matrix3
-	{
-		return input
-	}
-	
-	
-	/// Weighs the outputs of the activation function so it can be presented
-	/// to the next layer
-	///
-	/// - Parameter output: Output of the activation function which should be forwarded
+	/// - Parameter output: Input of the layer which should be forwarded
 	/// - Returns: Weighted output of the layer
-	public func weighted(_ output: Matrix3) -> Matrix3
+	public func forward(_ input: Matrix3) -> Matrix3
 	{
-		return output.reshaped(width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
+		return input.reshaped(width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
 	}
 	
 	
@@ -709,14 +693,85 @@ public struct ReshapingLayer: NeuralLayer
 	///
 	/// - Parameters:
 	///   - nextLayerGradients: Error matrix from the input of the next layer
-	///   - outputs: Outputs of the current layer
+	///   - inputs: Inputs of the current layer
 	///   - learningRate: Learning rate at which the weights should be adjusted
 	///   - momentum: Momentum of weight updates
 	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
+	public mutating func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
 	{
 		return nextLayerGradients.reshaped(width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
 	}
 	
+}
+
+
+/// A layer which adds nonlinearity to forwarded data, which improves performance 
+/// on nonlinear classification and regression tasks
+public struct NonlinearityLayer: NeuralLayer
+{
+	/// Output size of the layer.
+	/// Should not change after initialization
+	public var outputSize: (width: Int, height: Int, depth: Int)
+	{
+		return inputSize
+	}
+
+	/// Input size of the layer.
+	/// Should not change after initialization
+	public let inputSize: (width: Int, height: Int, depth: Int)
+
+	
+	/// Activation function used for the layer
+	public let activation: Activation
+	
+	
+	/// Creates a new nonlinearity layer with a given nonlinearity function.
+	///
+	/// Nonlinearity is required for a network to perform nonlinear classification and regression.
+	///
+	/// - Parameters:
+	///   - inputSize: Input size of the layer. The output size will be equal to the input size.
+	///   - activation: Nonlinear activation function used by this layer.
+	public init(inputSize: (width: Int, height: Int, depth: Int), activation: Activation)
+	{
+		self.inputSize = inputSize
+		self.activation = activation
+	}
+	
+	
+	/// Performs data transformations for feed forward operation
+	///
+	/// - Parameter output: Input of the layer which should be forwarded
+	/// - Returns: Weighted output of the layer
+	public func forward(_ input: Matrix3) -> Matrix3
+	{
+		return input.mapv(activation.function)
+	}
+	
+	
+	/// Adjusts the weights of the layer to reduce the total error of the network
+	/// using gradient descent.
+	///
+	/// The gradients of the posterior layer will be provided.
+	/// The function has to also calculate the errors of the layer
+	/// for the anterior layer to use.
+	///
+	/// - Parameters:
+	///   - nextLayerGradients: Error matrix from the input of the next layer
+	///   - inputs: Inputs of the current layer
+	///   - learningRate: Learning rate at which the weights should be adjusted
+	///   - momentum: Momentum of weight updates
+	///   - decay: Decay rate at which weights should be decreased
+	/// - Returns: Error matrix of the current layer
+	public func adjustWeights(nextLayerGradients: Matrix3, inputs: Matrix3, learningRate: Float, annealingRate: Float, momentum: Float, decay: Float) -> Matrix3
+	{
+		// gradients for anterior layer = gradients of posterior layer * derivative of gradients of posterior layer
+		return Matrix3(
+			values: activation.derivative(nextLayerGradients.values) &* nextLayerGradients.values,
+			width: inputSize.width,
+			height: inputSize.height,
+			depth: inputSize.depth
+		)
+	}
 }

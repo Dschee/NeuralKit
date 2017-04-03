@@ -25,7 +25,6 @@
 
 
 import Foundation
-import Accelerate
 
 
 /// A feed forward multi layer neural network
@@ -107,28 +106,26 @@ public struct FeedForwardNeuralNetwork
 		
 		var partialResults = Array<Matrix3>(repeating: Matrix3(repeating: 0, width: 0, height: 0, depth: 0), count: layers.count)
 		
-		var lastPartialResult = Matrix3(repeating: 0, width: 0, height: 0, depth: 0)
-		var lastWeightedResult = sample.values
+		var lastResult = sample.values
 		
 		for (index, layer) in layers.enumerated()
 		{
-			lastPartialResult = layer.activated(lastWeightedResult)
-			lastWeightedResult = layer.weighted(lastPartialResult)
-			partialResults[index] = lastPartialResult
+			lastResult = layer.forward(lastResult)
+			partialResults[index] = lastResult
 		}
 		
-		let lastResult = outputActivationFunction.function(lastWeightedResult.values)
+		let networkOutput = outputActivationFunction.function(lastResult.values)
 
 		let errors: [Float]
 		
 		// Calculate the errors at the output layer
 		if outputActivationFunction == .softmax
 		{
-			errors = lastResult &- sample.expected.values
+			errors = networkOutput &- sample.expected.values
 		}
 		else
 		{
-			errors = (lastResult &- sample.expected.values) &* outputActivationFunction.derivative(lastResult)
+			errors = (networkOutput &- sample.expected.values) &* outputActivationFunction.derivative(networkOutput)
 		}
 
 		let errorMatrix = Matrix3(
@@ -145,7 +142,6 @@ public struct FeedForwardNeuralNetwork
 			layers[layerIndex].adjustWeights(
 				nextLayerGradients: errorMatrix,
 				inputs: layerIndex > 0 ? partialResults[layerIndex-1] : sample.values,
-				outputs: partialResults[layerIndex],
 				learningRate: learningRate,
 				annealingRate: annealingRate,
 				momentum: momentum,
@@ -154,11 +150,7 @@ public struct FeedForwardNeuralNetwork
 		}
 		
 		// Calculate the total error
-		
-		var totalError:Float = 0
-		let logErrors = log(lastResult) &* sample.expected.values
-		vDSP_sve(logErrors, 1, &totalError, UInt(errors.count))
-		return -totalError
+		return -sum(log(networkOutput) &* sample.expected.values)
 	}
 	
 }

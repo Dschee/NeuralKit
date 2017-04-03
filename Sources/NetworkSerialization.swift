@@ -161,7 +161,6 @@ extension FullyConnectedLayer: Serializable
 	public func serialized() -> Any
 	{
 		return [
-			"activation": activationFunction.serialized(),
 			"weights": weights.serialized()
 		]
 	}
@@ -174,16 +173,92 @@ extension FullyConnectedLayer: Serializable
 			throw DecodingError.invalidType(expected: "[String: Any]", actual: json)
 		}
 		guard
-			let activation = try data["activation"].flatMap(Activation.init(json:)),
 			let weights = try data["weights"].flatMap(Matrix.init(json:))
 		else
 		{
-			throw DecodingError.missingKey(key: "activation|weights", data: data)
+			throw DecodingError.missingKey(key: "weights", data: data)
 		}
 		
-		self.init(weights: weights, activationFunction: activation)
+		self.init(weights: weights)
 	}
 	
+}
+
+
+extension ConvolutionLayer: Serializable
+{
+	public func serialized() -> Any
+	{
+		return [
+			"input_size": [
+				"width": inputSize.width,
+				"height": inputSize.height,
+				"depth": inputSize.depth
+			],
+			"kernels": zip(kernels, bias).map
+			{[
+				"kernel": $0.serialized(),
+				"bias": $1
+			]},
+			"horizontal_stride": horizontalStride,
+			"vertical_stride": verticalStride,
+			"horizontal_inset": horizontalInset,
+			"vertical_inset": verticalInset
+		]
+	}
+	
+	public init(json: Any) throws
+	{
+		guard let data = json as? [String: Any] else
+		{
+			throw DecodingError.invalidType(expected: "[String: Any]", actual: json)
+		}
+		guard
+			let inputSize = data["input_size"] as? [String: Int],
+			let kernelData = data["kernels"] as? [String: Any]
+		else
+		{
+			throw DecodingError.missingKey(key: "input_size|kernels", data: data)
+		}
+		
+		guard
+			let inputWidth = inputSize["width"],
+			let inputHeight = inputSize["height"],
+			let inputDepth = inputSize["depth"]
+		else
+		{
+			throw DecodingError.missingKey(key: "input_size.(width|height|depth)", data: data)
+		}
+		
+		guard
+			let horizontalStride = data["horizontal_stride"] as? Int,
+			let verticalStride = data["vertical_stride"] as? Int,
+			let horizontalInset = data["horizontal_inset"] as? Int,
+			let verticalInset = data["vertical_inset"] as? Int
+		else
+		{
+			throw DecodingError.missingKey(key: "horizontal_stride|vertical_stride|horizontal_inset|vertical_inset", data: data)
+		}
+		
+		let bias = kernelData
+			.filter{$0.key == "bias"}
+			.flatMap{$0.value as? Float}
+		
+		let kernels = try kernelData
+			.filter{$0.key == "kernel"}
+			.flatMap{$0.value}
+			.flatMap(Matrix3.init(json: ))
+		
+		self.init(
+			inputSize: (width: inputWidth, height: inputHeight, depth: inputDepth),
+			kernels: kernels,
+			bias: bias,
+			horizontalStride: horizontalStride,
+			verticalStride: verticalStride,
+			horizontalInset: horizontalInset,
+			verticalInset: verticalInset
+		)
+	}
 }
 
 
@@ -287,6 +362,49 @@ extension ReshapingLayer: Serializable
 			inputSize: (width: inputWidth, height: inputHeight, depth: inputDepth),
 			outputSize: (width: outputWidth, height: outputHeight, depth: outputDepth)
 		)
+	}
+}
+
+extension NonlinearityLayer: Serializable
+{
+	public init(json: Any) throws
+	{
+		guard let data = json as? [String: Any] else
+		{
+			throw DecodingError.invalidType(expected: "[String: Any]", actual: json)
+		}
+		guard let activation = try data["activation"].flatMap(Activation.init(json: )) else
+		{
+			throw DecodingError.missingKey(key: "activation", data: data)
+		}
+		
+		guard let inputSize = data["input_size"] as? [String: Int] else
+		{
+			throw DecodingError.missingKey(key: "input_size", data: data)
+		}
+		
+		guard
+			let inputWidth = inputSize["width"],
+			let inputHeight = inputSize["height"],
+			let inputDepth = inputSize["depth"]
+			else
+		{
+			throw DecodingError.missingKey(key: "input_size.(width|height|depth)", data: data)
+		}
+		
+		self.init(inputSize: (width: inputWidth, height: inputHeight, depth: inputDepth), activation: activation)
+	}
+	
+	public func serialized() -> Any
+	{
+		return [
+			"activation": self.activation.serialized(),
+			"input_size": [
+				"width": inputSize.width,
+				"height": inputSize.height,
+				"depth": inputSize.depth
+			]
+		]
 	}
 }
 

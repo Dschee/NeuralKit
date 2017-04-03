@@ -27,6 +27,7 @@
 import Foundation
 import Accelerate
 
+
 /// Operator for component wise division of a vector.
 infix operator &/ : MultiplicationPrecedence
 

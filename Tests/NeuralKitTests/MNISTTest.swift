@@ -98,12 +98,16 @@ class MNISTTest: XCTestCase
 	{
 		let (trainingSamples, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
 		
-		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 800), activationFunction: .linear)
-		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 500), activationFunction: .tanh)
-		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 200), activationFunction: .tanh)
-		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10), activationFunction: .tanh)
+		let reshapingLayer = ReshapingLayer(inputSize: (width: 28, height: 28, depth: 1), outputSize: (width: 1, height: 1, depth: 28*28))
+		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 800))
+		let tanh1 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 800), activation: .tanh)
+		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 500))
+		let tanh2 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 500), activation: .tanh)
+		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 200))
+		let tanh3 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 200), activation: .tanh)
+		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10))
 		
-		var network = FeedForwardNeuralNetwork(layers: [inputLayer, hiddenLayer2, hiddenLayer3, hiddenLayer4], outputActivation: .softmax)!
+		var network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputActivation: .softmax)!
 		
 		let epochs = 100_000
 		
@@ -113,6 +117,77 @@ class MNISTTest: XCTestCase
 		{
 			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
 			let error = network.train(sample, learningRate: 0.005 * pow(0.999996, Float(epoch))/*, annealingRate: epoch % 300 == 0 ? 0.002 * pow(0.99999, Float(epoch)) : 0*/)
+			
+			if epoch % 1000 == 0
+			{
+				let newTime = CACurrentMediaTime()
+				print("epoch \(epoch) of \(epochs): \(error * 100)% error, duration: \(newTime - time) seconds.")
+				time = newTime
+			}
+		}
+		
+		var correctCount = 0
+		var wrongCount = 0
+		
+		for sample in testSamples
+		{
+			let result = network.feedForward(sample.values)
+			
+			let expectedIndex = argmax(sample.expected.values).1
+			let actualIndex = argmax(result.values).1
+			
+			XCTAssertEqual(expectedIndex, actualIndex)
+			correctCount += expectedIndex == actualIndex ? 1 : 0
+			wrongCount += expectedIndex == actualIndex ? 0 : 1
+		}
+		
+		print("\(correctCount) correct, \(wrongCount) wrong, \(Float(correctCount) / Float(wrongCount + correctCount) * 100)% accuracy")
+	}
+	
+	func testMNISTConvNet()
+	{
+		let (trainingSamples, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
+		
+		let conv1 = ConvolutionLayer(
+			inputSize: (width: 28, height: 28, depth: 1),
+			kernels: (0..<8).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 1, range: -0.001 ... 0.001)},
+			bias: (0..<8).map{_ in Float(drand48()) * 0.002 - 0.001},
+			horizontalStride: 1,
+			verticalStride: 1,
+			horizontalInset: 0,
+			verticalInset: 0
+		)
+		let nonlinear1 = NonlinearityLayer(inputSize: (width: 24, height: 24, depth: 8), activation: .relu)
+		
+		let pool1 = PoolingLayer(inputSize: (width: 24, height: 24, depth: 8), outputSize: (width: 12, height: 12, depth: 8))
+		
+		let conv2 = ConvolutionLayer(
+			inputSize: (width: 12, height: 12, depth: 8),
+			kernels: (0..<16).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 8, range: -0.001 ... 0.001)},
+			bias: (0..<16).map{_ in Float(drand48()) * 0.002 - 0.001},
+			horizontalStride: 1,
+			verticalStride: 1,
+			horizontalInset: -2,
+			verticalInset: -2
+		)
+		let nonlinear2 = NonlinearityLayer(inputSize: (width: 12, height: 12, depth: 16), activation: .relu)
+		
+		let pool2 = PoolingLayer(inputSize: (width: 12, height: 12, depth: 16), outputSize: (width: 4, height: 4, depth: 16))
+		
+		let reshape = ReshapingLayer(inputSize: (width: 4, height: 4, depth: 16), outputSize: (width: 1, height: 1, depth: 256))
+		
+		let fullyConnected = FullyConnectedLayer(weights: RandomWeightMatrix(width: 257, height: 10))
+		
+		var network = FeedForwardNeuralNetwork(layers: [conv1, nonlinear1, pool1, conv2, nonlinear2, pool2, reshape, fullyConnected], outputActivation: .softmax)!
+		
+		let epochs = 100_000
+		
+		var time = CACurrentMediaTime()
+		
+		for epoch in 0 ..< epochs
+		{
+			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
+			let error = network.train(sample, learningRate: 0.01, annealingRate: 0, momentum: 0, decay: 0)
 			
 			if epoch % 1000 == 0
 			{

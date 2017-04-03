@@ -26,6 +26,7 @@
 import Foundation
 import Accelerate
 
+
 /// A 3 dimensional matrix (tensor)
 public struct Matrix3
 {
@@ -186,24 +187,47 @@ public struct Matrix3
 		get
 		{
 			var result = Matrix3(repeating: 0, width: width, height: height, depth: depth)
-			for (x,y,z) in result.indices
-				where 0 ..< self.depth  ~= z + slice &&
-					  0 ..< self.height ~= y + row   &&
-					  0 ..< self.width  ~= x + column
+//			for (x,y,z) in result.indices
+//				where 0 ..< self.depth  ~= z + slice &&
+//					  0 ..< self.height ~= y + row   &&
+//					  0 ..< self.width  ~= x + column
+//			{
+//				result[x,y,z] = self[x+column, y+row, z+slice]
+//			}
+			
+			for z in 0 ..< result.depth where 0 ..< self.depth  ~= z + slice
 			{
-				result[x,y,z] = self[x+column, y+row, z+slice]
+				for y in 0 ..< result.height where 0 ..< self.height ~= y + row
+				{
+					for x in 0 ..< result.width where 0 ..< self.width  ~= x + column
+					{
+						result[x,y,z] = self[x+column, y+row, z+slice]
+					}
+				}
 			}
+			
 			return result
 		}
 		
 		set (new)
 		{
-			for (x,y,z) in new.indices
-				where 0 ..< self.depth  ~= z + slice &&
-					  0 ..< self.height ~= y + row   &&
-					  0 ..< self.width  ~= x + column
+//			for (x,y,z) in new.indices
+//				where 0 ..< self.depth  ~= z + slice &&
+//					  0 ..< self.height ~= y + row   &&
+//					  0 ..< self.width  ~= x + column
+//			{
+//				values[self.width * (self.height * (slice + z) + row + y) + column + x] = new.values[width * (height * z + y) + x]
+//			}
+			
+			for z in 0 ..< new.depth where 0 ..< self.depth  ~= z + slice
 			{
-				values[self.width * (self.height * (slice + z) + row + y) + column + x] = new.values[width * (height * z + y) + x]
+				for y in 0 ..< new.height where 0 ..< self.height ~= y + row
+				{
+					for x in 0 ..< new.width where 0 ..< self.width  ~= x + column
+					{
+						values[self.width * (self.height * (slice + z) + row + y) + column + x] = new.values[width * (height * z + y) + x]
+					}
+				}
 			}
 		}
 	}
@@ -309,17 +333,36 @@ public struct Matrix3
 			depth:  self.depth  / lateralStride    - kernel.depth  + 1 - 2 * lateralInset
 		)
 		
-		for (x,y,z) in output.indices
+//		for (x,y,z) in output.indices
+//		{
+//			let source = self[
+//				x:		x * horizontalStride + horizontalInset,
+//				y:		y * verticalStride	 + verticalInset,
+//				z:		z * lateralStride	 + lateralInset,
+//				width:	kernel.width,
+//				height: kernel.height,
+//				depth:	kernel.depth
+//			]
+//			output[x,y,z] = source.values * kernel.values
+//		}
+		
+		for z in 0 ..< output.depth
 		{
-			let source = self[
-				x:		x * horizontalStride + horizontalInset,
-				y:		y * verticalStride	 + verticalInset,
-				z:		z * lateralStride	 + lateralInset,
-				width:	kernel.width,
-				height: kernel.height,
-				depth:	kernel.depth
-			]
-			output[x,y,z] = source.values * kernel.values
+			for y in 0 ..< output.height
+			{
+				for x in 0 ..< output.width
+				{
+					let source = self[
+						x:		x * horizontalStride + horizontalInset,
+						y:		y * verticalStride	 + verticalInset,
+						z:		z * lateralStride	 + lateralInset,
+						width:	kernel.width,
+						height: kernel.height,
+						depth:	kernel.depth
+					]
+					output[x,y,z] = source.values * kernel.values
+				}
+			}
 		}
 		
 		return output
@@ -371,6 +414,16 @@ public struct Matrix3
 		}
 		
 		return result
+	}
+	
+	
+	/// Returns the index of the biggest value of the tensor
+	///
+	/// - Returns: (x,y,z) index of the biggest value of the tensor
+	func maxIndex() -> (x: Int, y: Int, z: Int)
+	{
+		let (_, maxIndex) = argmax(self.values)
+		return (x: maxIndex % width, y: (maxIndex / width) % height, z: maxIndex / width / height)
 	}
 	
 }

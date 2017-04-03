@@ -72,10 +72,10 @@ class ReverseMNISTTest: XCTestCase
 	{
 		let (trainingSamples, testSamples) = ReverseMNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
 		
-		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 11, height: 200), activationFunction: .linear)
-		let hiddenLayer1 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 500), activationFunction: .tanh)
-		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 800), activationFunction: .tanh)
-		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 784), activationFunction: .tanh)
+		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 11, height: 200))
+		let hiddenLayer1 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 500))
+		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 800))
+		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 784))
 		
 		var network = FeedForwardNeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputActivation: .tanh)!
 		

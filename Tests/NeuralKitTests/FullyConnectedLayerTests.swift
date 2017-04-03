@@ -171,7 +171,7 @@ class FullyConnectedLayerTests: XCTestCase
 	{
 		srand48(time(nil))
 		let network = FeedForwardNeuralNetwork(layers: [
-			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 1), activationFunction: .tanh)
+			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 1))
 		])!
 		for x in ["a", "b", "c", "d"]
 		{
@@ -184,8 +184,9 @@ class FullyConnectedLayerTests: XCTestCase
 	{
 		srand48(time(nil))
 		let	network = FeedForwardNeuralNetwork(layers: [
-			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 4), activationFunction: .tanh),
-			FullyConnectedLayer(weights: RandomWeightMatrix(width: 5, height: 1), activationFunction: .tanh)
+			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 4)),
+			NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 4), activation: .tanh),
+			FullyConnectedLayer(weights: RandomWeightMatrix(width: 5, height: 1))
 		])!
 		
 		for x in ["a", "b", "c"]
@@ -199,7 +200,7 @@ class FullyConnectedLayerTests: XCTestCase
 	{
 		srand48(time(nil))
 		let network = FeedForwardNeuralNetwork(
-			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 1), activationFunction: .tanh)],
+			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 1))],
 			outputActivation: .tanh
 		)!
 		for x in ["a", "b", "c"]
@@ -213,8 +214,8 @@ class FullyConnectedLayerTests: XCTestCase
 	{
 		srand48(time(nil))
 		let network = FeedForwardNeuralNetwork(
-			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 6), activationFunction: .tanh),
-			         FullyConnectedLayer(weights: RandomWeightMatrix(width: 7, height: 1), activationFunction: .tanh)],
+			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 6)),
+			         FullyConnectedLayer(weights: RandomWeightMatrix(width: 7, height: 1))],
 			outputActivation: .tanh
 		)!
 		for x in ["a", "b", "c"]
