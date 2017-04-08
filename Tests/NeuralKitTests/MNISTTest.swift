@@ -142,6 +142,125 @@ class MNISTTest: XCTestCase
 		}
 		
 		print("\(correctCount) correct, \(wrongCount) wrong, \(Float(correctCount) / Float(wrongCount + correctCount) * 100)% accuracy")
+		
+		let gpuNetwork = GPUFeedForwardNeuralNetwork(
+			layers: network.layers.flatMap
+			{ l in
+				if let layer = l as? ReshapingLayer
+				{
+					return GPUReshapingLayer(inputSize: layer.inputSize, outputSize: layer.outputSize)
+				}
+				else if let layer = l as? FullyConnectedLayer
+				{
+					return GPUFullyConnectedLayer(weights: layer.weights)
+				}
+				else if let layer = l as? NonlinearityLayer
+				{
+					return GPUNonlinearityLayer(inputSize: layer.inputSize, activation: layer.activation)
+				}
+				else
+				{
+					return nil
+				}
+			},
+			outputActivation: .softmax
+		)!
+		
+		let time1 = CACurrentMediaTime()
+		
+		let gpuSamples = testSamples.map{$0.values}.map{GPUMatrix3(on: gpuNetwork.device, matrix: $0)}
+		
+		let time2 = CACurrentMediaTime()
+		
+		print("Copy time: \(time2 - time1) seconds")
+		
+		var gpuCorrectCount = 0
+		var gpuWrongCount = 0
+		
+		for (sample, input) in zip(testSamples, gpuSamples)
+		{
+			let result = gpuNetwork.feedForward(input)
+//			print(result.values)
+			let expectedIndex = argmax(sample.expected.values).1
+			let actualIndex = argmax(result.values).1
+			
+//			XCTAssertEqual(expectedIndex, actualIndex)
+			gpuCorrectCount += expectedIndex == actualIndex ? 1 : 0
+			gpuWrongCount += expectedIndex == actualIndex ? 0 : 1
+		}
+		
+		let time3 = CACurrentMediaTime()
+		
+		print("Eval time: \(time3 - time2) seconds")
+		
+		XCTAssertEqual(gpuCorrectCount, correctCount)
+		XCTAssertEqual(gpuWrongCount, wrongCount)
+	}
+	
+	func testMNISTMetalFeedForwardPerformance()
+	{
+		let (_, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
+		
+		let reshapingLayer = ReshapingLayer(inputSize: (width: 28, height: 28, depth: 1), outputSize: (width: 1, height: 1, depth: 28*28))
+		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 800))
+		let tanh1 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 800), activation: .tanh)
+		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 500))
+		let tanh2 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 500), activation: .tanh)
+		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 200))
+		let tanh3 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 200), activation: .tanh)
+		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10))
+		
+		let network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputActivation: .softmax)!
+		
+		let gpuNetwork = GPUFeedForwardNeuralNetwork(
+			layers: network.layers.flatMap
+				{ l in
+					if let layer = l as? ReshapingLayer
+					{
+						return GPUReshapingLayer(inputSize: layer.inputSize, outputSize: layer.outputSize)
+					}
+					else if let layer = l as? FullyConnectedLayer
+					{
+						return GPUFullyConnectedLayer(weights: layer.weights)
+					}
+					else if let layer = l as? NonlinearityLayer
+					{
+						return GPUNonlinearityLayer(inputSize: layer.inputSize, activation: layer.activation)
+					}
+					else
+					{
+						return nil
+					}
+			},
+			outputActivation: .softmax
+			)!
+		
+		let time1 = CACurrentMediaTime()
+		
+		let gpuSamples = testSamples.map{$0.values}.map{GPUMatrix3(on: gpuNetwork.device, matrix: $0)}
+		
+		let time2 = CACurrentMediaTime()
+		
+		print("Copy time: \(time2 - time1) seconds")
+		
+		var gpuCorrectCount = 0
+		var gpuWrongCount = 0
+		
+		for (sample, input) in zip(testSamples, gpuSamples)
+		{
+			let result = gpuNetwork.feedForward(input)
+			//			print(result.values)
+			let expectedIndex = argmax(sample.expected.values).1
+			let actualIndex = argmax(result.values).1
+			
+			//			XCTAssertEqual(expectedIndex, actualIndex)
+			gpuCorrectCount += expectedIndex == actualIndex ? 1 : 0
+			gpuWrongCount += expectedIndex == actualIndex ? 0 : 1
+		}
+		
+		let time3 = CACurrentMediaTime()
+		
+		print("Eval time: \(time3 - time2) seconds")
 	}
 	
 	func testMNISTConvNet()

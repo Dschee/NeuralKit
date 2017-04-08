@@ -152,6 +152,16 @@ public struct GPUMatrix3
 		self.device = device
 	}
 	
+	private init(device: MTLDevice, descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer, descriptorBuffer: MTLBuffer)
+	{
+		self.buffer = buffer
+		
+		self.descriptor = descriptor
+		self.descriptorBuffer = descriptorBuffer
+		
+		self.device = device
+	}
+	
 	public func asMatrix() -> Matrix3
 	{
 		let values = Array<Float>(
@@ -172,6 +182,11 @@ public struct GPUMatrix3
 		)
 		
 		return GPUMatrix3(device: device, descriptor: (width: UInt32(width), height: UInt32(height), depth: UInt32(depth)), buffer: buffer)
+	}
+	
+	func reshaped(descriptor: (width: UInt32, height: UInt32, depth: UInt32), descriptorBuffer: MTLBuffer) -> GPUMatrix3
+	{
+		return GPUMatrix3(device: self.device, descriptor: descriptor, buffer: self.buffer, descriptorBuffer: descriptorBuffer)
 	}
 	
 	

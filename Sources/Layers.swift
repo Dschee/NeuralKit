@@ -260,6 +260,13 @@ public struct FullyConnectedLayer: NeuralLayer
 	}
 	
 	
+	public init(inputDepth: Int, outputDepth: Int)
+	{
+		self.weights = RandomWeightMatrix(width: inputDepth + 1, height: outputDepth)
+		self.weightDelta = Matrix(repeating: 0, width: weights.width, height: weights.height)
+	}
+	
+	
 	/// Performs data transformations for feed forward operation
 	///
 	/// - Parameter output: Input of the layer which should be forwarded
@@ -441,6 +448,24 @@ public struct ConvolutionLayer: NeuralLayer
 		self.verticalStride = verticalStride
 		self.horizontalInset = horizontalInset
 		self.verticalInset = verticalInset
+	}
+	
+	
+	public init(
+		inputSize: (width: Int, height: Int, depth: Int),
+		outputDepth: Int,
+		kernelSize: (width: Int, height: Int),
+		stride: (horizontal: Int, vertical: Int) = (1, 1),
+		inset: (horizontal: Int, vertical: Int) = (0, 0)
+	)
+	{
+		self.inputSize = inputSize
+		self.horizontalStride = stride.horizontal
+		self.verticalStride = stride.vertical
+		self.horizontalInset = inset.horizontal
+		self.verticalInset = inset.vertical
+		self.bias = RandomWeightMatrix(width: outputDepth, height: 1).values
+		self.kernels = (0 ..< outputDepth).map{_ in RandomWeightMatrix(width: kernelSize.width, height: kernelSize.height, depth: inputSize.depth)}
 	}
 	
 	
