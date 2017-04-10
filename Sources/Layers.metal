@@ -239,15 +239,18 @@ kernel void FullyConnectedLayer_backpropagate(const	device	float*		input						[[
 		matrix3_set(input_descriptor, gradient, 0, 0, column, grad);
 	}
 	
-	float in = column == weight_descriptor.width - 1 ? 1 : matrix3_get(input_descriptor, input, 0, 0, column);
+	float in = (column == (weight_descriptor.width - 1)) ? 1 : matrix3_get(input_descriptor, input, 0, 0, column);
 	
 	if (momentum != 0)
 	{
 		for (uint row = 0; row < weight_descriptor.height; row++)
 		{
 			float delta = matrix3_get(next_gradient_descriptor, next_gradient, 0, 0, row) * in;
-			float update_delta = learning_rate * delta + momentum * matrix_get(weight_descriptor, weight_delta, column, row);
+			float previous_delta = matrix_get(weight_descriptor, weight_delta, column, row);
+			float update_delta = learning_rate * delta + momentum * previous_delta;
+			
 			matrix_set(weight_descriptor, weight_delta, column, row, update_delta);
+			
 			float new_weight = matrix_get(weight_descriptor, weights, column, row) + update_delta;
 			matrix_set(weight_descriptor, weights, column, row, new_weight);
 		}
@@ -258,6 +261,7 @@ kernel void FullyConnectedLayer_backpropagate(const	device	float*		input						[[
 		{
 			float delta = matrix3_get(next_gradient_descriptor, next_gradient, 0, 0, row) * in;
 			float new_weight = delta * learning_rate + matrix_get(weight_descriptor, weights, column, row);
+			
 			matrix_set(weight_descriptor, weights, column, row, new_weight);
 		}
 	}
@@ -351,7 +355,7 @@ kernel void NonlinearityLayer_backpropagate_tanh(const	device	float*		next_gradi
 		return;
 	
 	float grad = matrix3_get(next_gradient_descriptor, next_gradient, pos[0], pos[1], pos[2]);
-	grad *= (1 - grad * grad);
+	grad = grad * (1 - grad * grad);
 	matrix3_set(next_gradient_descriptor, gradient, pos[0], pos[1], pos[2], grad);
 }
 
@@ -442,10 +446,10 @@ kernel void Loss_delta(const 	device 	float*		expected			[[buffer(0)]],
 					   			device	float*		loss				[[buffer(4)]],
 					   					uint3		pos					[[thread_position_in_grid]])
 {
-	float e = matrix3_get(size_descriptor, expected, pos[0], pos[1], pos[2]);
-	float a = matrix3_get(size_descriptor, actual, pos[0], pos[1], pos[2]);
+	float ex = matrix3_get(size_descriptor, expected, pos[0], pos[1], pos[2]);
+	float ac = matrix3_get(size_descriptor, actual, pos[0], pos[1], pos[2]);
 	
-	matrix3_set(size_descriptor, loss, pos[0], pos[1], pos[2], a - e);
+	matrix3_set(size_descriptor, loss, pos[0], pos[1], pos[2], ex - ac);
 }
 
 kernel void PoolingLayer_forward(const	device	float*		input				[[buffer(0)]],
@@ -543,40 +547,39 @@ kernel void ConvolutionLayer_forward(const	device	float*		input				[[buffer(0)]]
 									 constant		int			&vertical_stride	[[buffer(10)]],
 													uint3		pos					[[thread_position_in_grid]])
 {
-	if (pos[0] >= output_descriptor.width || pos[1] >= output_descriptor.height || pos[2] >= output_descriptor.depth)
-		return;
+//	if (pos[0] >= output_descriptor.width || pos[1] >= output_descriptor.height || pos[2] >= output_descriptor.depth)
+//		return;
 	
 	matrix3_t kernel_desc = kernel_descriptor;
 	kernel_desc.depth = input_descriptor.depth;
-	const device float* kernel_mat = &kernels[(kernel_desc.width + kernel_desc.height + kernel_desc.depth) * pos[3]];
+	const device float* kernel_mat = &kernels[(kernel_desc.width + kernel_desc.height + kernel_desc.depth) * pos[2]];
 	
-	int sourceX = pos[0] * horizontal_stride + horizontal_inset;
-	int sourceY = pos[1] * vertical_stride + vertical_inset;
+	int inputBaseX = pos[0] * horizontal_stride + horizontal_inset;
+	int inputBaseY = pos[1] * vertical_stride + vertical_inset;
 	
 	float convolution_sum = 0;
 	
 	for (uint y = 0; y < kernel_desc.height; y++)
 	{
-		if (((int) y) + sourceY < 0 || ((int) y) + sourceY >= (int) input_descriptor.height)
+		if ((int) y + inputBaseY < 0 || (int) y + inputBaseY >= (int) input_descriptor.height)
 			continue;
 		
 		for (uint x = 0; x < kernel_desc.width; x++)
 		{
-			if (((int) x) + sourceX < 0 || ((int) x) + sourceX >= (int) input_descriptor.width)
+			if ((int) x + inputBaseX < 0 || (int) x + inputBaseX >= (int) input_descriptor.width)
 				continue;
 			
-			for (uint z = 0; x < kernel_desc.depth; z++)
+			for (uint z = 0; z < kernel_desc.depth; z++)
 			{
-				convolution_sum += matrix3_get(kernel_desc, kernel_mat, x, y, z) * matrix3_get(input_descriptor, input, sourceX, sourceY, z);
+				convolution_sum +=
+					matrix3_get(kernel_desc,		kernel_mat, x,				y,				z) *
+					matrix3_get(input_descriptor,	input,		x + inputBaseX, y + inputBaseY, z);
 			}
 		}
-		
-		sourceX = pos[0] * horizontal_stride + horizontal_inset;
-		sourceY++;
 	}
 	
 	// Applying bias
-	convolution_sum += bias_values[pos[3]];
+	convolution_sum += bias_values[pos[2]];
 	
 	matrix3_set(output_descriptor, output, pos[0], pos[1], pos[2], convolution_sum);
 }
@@ -665,6 +668,7 @@ kernel void ConvolutionLayer_adjust_weights(const	device	float*		input						[[bu
 	const uint inputZ = pos[2] % input_descriptor.depth;
 	
 	float weightGradient = 0;
+	float biasGradient = 0;
 	
 	for (uint y = 0; y < next_gradient_descriptor.height; y++)
 	{
@@ -684,6 +688,7 @@ kernel void ConvolutionLayer_adjust_weights(const	device	float*		input						[[bu
 			float in_scale = matrix3_get(input_descriptor, input, horizontal_input_position, vertical_input_position, inputZ);
 			
 			weightGradient += next_grad * in_scale;
+			biasGradient += next_grad; // * 1 (bias neurons always output 1)
 		}
 	}
 	
@@ -693,17 +698,25 @@ kernel void ConvolutionLayer_adjust_weights(const	device	float*		input						[[bu
 		matrix3_set(kernel_descriptor, kernel_deltas, pos[0], pos[1], pos[2], delta);
 		float current = matrix3_get(kernel_descriptor, kernels, pos[0], pos[1], pos[2]);
 		matrix3_set(kernel_descriptor, kernels, pos[0], pos[1], pos[2], current + delta);
+		
+		float biasDelta = biasGradient * learning_rate + bias_deltas[pos[2]] * momentum;
+		bias_deltas[pos[2]] = biasDelta;
+		bias_values[pos[2]] += biasDelta;
 	}
 	else
 	{
 		float delta = weightGradient * learning_rate;
 		float current = matrix3_get(kernel_descriptor, kernels, pos[0], pos[1], pos[2]);
 		matrix3_set(kernel_descriptor, kernels, pos[0], pos[1], pos[2], current + delta);
+		
+		bias_values[pos[2]] += biasGradient * learning_rate;
 	}
 	
 	if (decay != 0)
 	{
 		float current = matrix3_get(kernel_descriptor, kernels, pos[0], pos[1], pos[2]);
 		matrix3_set(kernel_descriptor, kernels, pos[0], pos[1], pos[2], current * (1 - decay));
+		
+		bias_values[pos[2]] *= (1 - decay);
 	}
 }

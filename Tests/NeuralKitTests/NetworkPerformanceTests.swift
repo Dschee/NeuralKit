@@ -105,8 +105,6 @@ class NetworkPerformanceTests: XCTestCase
 					inputSize: (width: 128, height: 128, depth: 3),
 					kernels: (0..<8).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 3)},
 					bias: RandomWeightMatrix(width: 1, height: 1, depth: 8).values,
-					horizontalStride: 1,
-					verticalStride: 1,
 					horizontalInset: -2,
 					verticalInset: -2
 				),
@@ -117,8 +115,6 @@ class NetworkPerformanceTests: XCTestCase
 					inputSize: (width: 64, height: 64, depth: 8),
 					kernels: (0..<16).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 8)},
 					bias: RandomWeightMatrix(width: 1, height: 1, depth: 16).values,
-					horizontalStride: 1,
-					verticalStride: 1,
 					horizontalInset: -2,
 					verticalInset: -2
 				),
@@ -129,8 +125,6 @@ class NetworkPerformanceTests: XCTestCase
 					inputSize: (width: 32, height: 32, depth: 16),
 					kernels: (0..<25).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 16)},
 					bias: RandomWeightMatrix(width: 1, height: 1, depth: 25).values,
-					horizontalStride: 1,
-					verticalStride: 1,
 					horizontalInset: -2,
 					verticalInset: -2
 				),
@@ -141,8 +135,6 @@ class NetworkPerformanceTests: XCTestCase
 					inputSize: (width: 16, height: 16, depth: 25),
 					kernels: (0..<50).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 25)},
 					bias: RandomWeightMatrix(width: 1, height: 1, depth: 50).values,
-					horizontalStride: 1,
-					verticalStride: 1,
 					horizontalInset: -2,
 					verticalInset: -2
 				),
@@ -153,8 +145,6 @@ class NetworkPerformanceTests: XCTestCase
 					inputSize: (width: 8, height: 8, depth: 50),
 					kernels: (0..<100).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 25)},
 					bias: RandomWeightMatrix(width: 1, height: 1, depth: 100).values,
-					horizontalStride: 1,
-					verticalStride: 1,
 					horizontalInset: 0,
 					verticalInset: 0
 				),
@@ -168,10 +158,10 @@ class NetworkPerformanceTests: XCTestCase
 				
 				GPUFullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 100))
 			],
-			outputActivation: .softmax
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 100))
 		)!
 		
-		let samples = (0..<100).map{_ in RandomWeightMatrix(width: 128, height: 128, depth: 3)}.map{GPUMatrix3(on: network.device, matrix: $0)}
+		let samples = (0..<100).map{_ in RandomWeightMatrix(width: 128, height: 128, depth: 3)}.map{GPUMatrix3(matrix: $0)}
 		
 		self.measure
 		{

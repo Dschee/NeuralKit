@@ -10,6 +10,11 @@ import Foundation
 import Metal
 
 
+public let GPUGlobalDevice = MTLCreateSystemDefaultDevice()!
+public let GPUGlobalQueue = GPUGlobalDevice.makeCommandQueue()
+
+
+
 /// A feed forward multi layer neural network
 public struct GPUFeedForwardNeuralNetwork
 {
@@ -18,10 +23,6 @@ public struct GPUFeedForwardNeuralNetwork
 	public internal(set) var layers: [GPUNeuralLayer]
 	
 	public internal(set) var outputLayer: GPUOutputLayer
-	
-	public let device: MTLDevice
-	private let queue: MTLCommandQueue
-	
 	
 	/// Creates a new neural network using the given layers and an activation function for the output layer.
 	///
@@ -33,7 +34,7 @@ public struct GPUFeedForwardNeuralNetwork
 	///   - layers: Layers of the neural network.
 	///   - outputActivation: Activation function which should be applied at the output or nil if a linear activation function should be used
 	///   - outputActivationDerivative: Derivative of the output activation function or nil if a linear activation function should be used
-	public init?(layers: [GPUNeuralLayer], outputLayer: GPUOutputLayer)
+	public init?(layers: [GPUNeuralLayer], outputLayer: GPUOutputLayer, library: MTLLibrary? = nil)
 	{
 		guard (1..<layers.count)
 			.map({layers[$0-1].outputSize == layers[$0].inputSize})
@@ -43,28 +44,17 @@ public struct GPUFeedForwardNeuralNetwork
 			return nil
 		}
 		
-		guard let device = MTLCreateSystemDefaultDevice() else
-		{
-			fatalError("Could not create default Metal device.")
-		}
-		self.device = device
-		
-		guard let library = try? device.makeLibrary(filepath: "/Users/Palle/Library/Developer/Xcode/DerivedData/NeuralKit-gqvgbrxdpkclopbfiglfaeqqojot/Build/Products/Release/NeuralKit.framework/Versions/A/Resources/default.metallib") else
-		{
-			fatalError("Could not create default Metal library.")
-		}
-		
 		self.layers = layers
 		self.outputLayer = outputLayer
 		
+		let lib = library ?? GPUGlobalDevice.newDefaultLibrary()!
+		
 		for index in layers.indices
 		{
-			self.layers[index].initialize(device: device, library: library)
+			self.layers[index].initialize(library: lib, shareOutput: false)
 		}
 		
-		self.outputLayer.initialize(device: device, library: library)
-		
-		self.queue = device.makeCommandQueue()
+		self.outputLayer.initialize(library: lib, shareOutput: true)
 	}
 	
 	
@@ -81,7 +71,7 @@ public struct GPUFeedForwardNeuralNetwork
 	/// - Returns: Result of the feed forward operation on the last layer
 	public func feedForward(_ sample: GPUMatrix3) -> Matrix3
 	{
-		let buffer = queue.makeCommandBuffer()
+		let buffer = GPUGlobalQueue.makeCommandBuffer()
 		let encoder = buffer.makeComputeCommandEncoder()
 		
 		let lastHiddenLayerResult = layers.reduce(sample)
@@ -114,61 +104,50 @@ public struct GPUFeedForwardNeuralNetwork
 	///   - learningRate: Rate at which the network should adapt to the sample
 	/// - Returns: The total error between the expected and actual output
 	@discardableResult
-	public mutating func train(_ sample: TrainingSample, learningRate: Float, annealingRate: Float = 0, momentum: Float = 0, decay: Float = 0) -> Float
+	public mutating func train(
+		_ sample: (input: GPUMatrix3, expected: GPUMatrix3),
+		learningRate: Float,
+		momentum: Float = 0,
+		decay: Float = 0
+	) -> Float
 	{
-		fatalError()
+		let buffer = GPUGlobalQueue.makeCommandBuffer()
+		let encoder = buffer.makeComputeCommandEncoder()
 		
-		// Feed forward sample, keeping results of individual layers
+		var layerInputs = [sample.input]
 		
-//		var partialResults = Array<Matrix3>(repeating: Matrix3(repeating: 0, width: 0, height: 0, depth: 0), count: layers.count)
-//		
-//		var lastResult = sample.values
-//		
-//		for (index, layer) in layers.enumerated()
-//		{
-//			fatalError()
-//			//			lastResult = layer.forward(lastResult)
-//			//			partialResults[index] = lastResult
-//		}
-//		
-//		let networkOutput = outputActivationFunction.function(lastResult.values)
-//		
-//		let errors: [Float]
-//		
-//		// Calculate the errors at the output layer
-//		if outputActivationFunction == .softmax
-//		{
-//			errors = networkOutput &- sample.expected.values
-//		}
-//		else
-//		{
-//			errors = (networkOutput &- sample.expected.values) &* outputActivationFunction.derivative(networkOutput)
-//		}
-//		
-//		let errorMatrix = Matrix3(
-//			values: errors,
-//			width: layers.last?.outputSize.width ?? 0,
-//			height: layers.last?.outputSize.height ?? 0,
-//			depth: layers.last?.outputSize.depth ?? 0
-//		)
+		for layer in self.layers
+		{
+			layerInputs.append(layer.forward(layerInputs.last!, encoder: encoder))
+		}
+		
+		layerInputs.append(outputLayer.forward(layerInputs.last!, encoder: encoder))
+		
+//		print("GPU actual: \(layerInputs.last!.asMatrix().values.map(String.init).joined(separator: ", "))")
+		
+		var gradient = outputLayer.loss(expected: sample.expected, actual: layerInputs.last!, encoder: encoder)
+		
+//		print("GPU: \(gradient.asMatrix().values.map(String.init).joined(separator: ", "))")
+		
+		for index in layers.indices.reversed()
+		{
+			gradient = self.layers[index].adjustWeights(
+				nextLayerGradients: gradient,
+				inputs: layerInputs[index],
+				encoder: encoder,
+				learningRate: learningRate,
+				momentum: momentum,
+				decay: decay
+			)
+		}
+		
+		encoder.endEncoding()
+		buffer.commit()
+		buffer.waitUntilCompleted()
 		
 		
-		// Backpropagate the error through the network
-		
-//		_ = layers.indices.reversed().reduce(errorMatrix)
-//		{ (errorMatrix, layerIndex) -> Matrix3 in
-//			layers[layerIndex].adjustWeights(
-//				nextLayerGradients: errorMatrix,
-//				inputs: layerIndex > 0 ? partialResults[layerIndex-1] : sample.values,
-//				learningRate: learningRate,
-//				annealingRate: annealingRate,
-//				momentum: momentum,
-//				decay: decay
-//			)
-//		}
-		
-		// Calculate the total error
-//		return -sum(log(networkOutput) &* sample.expected.values)
+		return -sum(log(layerInputs.last!.asMatrix().values) &* sample.expected.asMatrix().values)
 	}
+	
 	
 }

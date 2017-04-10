@@ -31,51 +31,74 @@ public struct GPUMatrix
 {
 	public let descriptor: (width: UInt32, height: UInt32)
 	
-	private let buffer: MTLBuffer
-	private let descriptorBuffer: MTLBuffer
+	internal let buffer: MTLBuffer
+	internal let descriptorBuffer: MTLBuffer
 	
-	private unowned let device: MTLDevice
-	
-	public init(on device: MTLDevice, matrix: Matrix)
+	public init(matrix: Matrix, isShared: Bool = false)
 	{
-		buffer = device.makeBuffer(
+		buffer = GPUGlobalDevice.makeBuffer(
 			bytes: matrix.values,
 			length: MemoryLayout.size(ofValue: Float(0)) * matrix.values.count,
-			options: []
+			options: isShared ? .storageModeShared : .storageModePrivate
 		)
 		
 		descriptor = (
 			width: UInt32(matrix.width),
 			height: UInt32(matrix.height)
 		)
-		descriptorBuffer = device.makeBuffer(
+		descriptorBuffer = GPUGlobalDevice.makeBuffer(
 			bytes: [descriptor.width, descriptor.height],
 			length: MemoryLayout.size(ofValue: descriptor),
-			options: []
+			options: .storageModePrivate
 		)
-		
-		self.device = device
 	}
 	
-	private init(device: MTLDevice, descriptor: (width: UInt32, height: UInt32), buffer: MTLBuffer)
+	private init(descriptor: (width: UInt32, height: UInt32), buffer: MTLBuffer)
 	{
 		self.buffer = buffer
 		
 		self.descriptor = descriptor
-		descriptorBuffer = device.makeBuffer(
+		descriptorBuffer = GPUGlobalDevice.makeBuffer(
 			bytes: [descriptor.width, descriptor.height],
 			length: MemoryLayout.size(ofValue: descriptor),
-			options: []
+			options: .storageModePrivate
 		)
-		
-		self.device = device
 	}
 	
 	public func asMatrix() -> Matrix
 	{
+		
+		let destination: MTLBuffer
+		
+		if self.buffer.storageMode == .private
+		{
+			destination = GPUGlobalDevice.makeBuffer(
+				length: MemoryLayout<Float>.size * Int(descriptor.width) * Int(descriptor.height),
+				options: .storageModeShared
+			)
+			
+			let buffer = GPUGlobalQueue.makeCommandBuffer()
+			let encoder = buffer.makeBlitCommandEncoder()
+			encoder.copy(
+				from: self.buffer,
+				sourceOffset: 0,
+				to: destination,
+				destinationOffset: 0,
+				size: Int(descriptor.width) * Int(descriptor.height) * MemoryLayout<Float>.size
+			)
+			encoder.endEncoding()
+			buffer.commit()
+			buffer.waitUntilCompleted()
+		}
+		else
+		{
+			destination = self.buffer
+		}
+		
+		
 		let values = Array<Float>(
 			UnsafeBufferPointer(
-				start: buffer.contents().assumingMemoryBound(to: Float.self),
+				start: destination.contents().assumingMemoryBound(to: Float.self),
 				count: Int(descriptor.width) * Int(descriptor.height)
 			)
 		)
@@ -90,7 +113,7 @@ public struct GPUMatrix
 			"Number of values in matrix must be equal."
 		)
 		
-		return GPUMatrix(device: device, descriptor: (width: UInt32(width), height: UInt32(height)), buffer: buffer)
+		return GPUMatrix(descriptor: (width: UInt32(width), height: UInt32(height)), buffer: buffer)
 	}
 	
 	
@@ -111,17 +134,15 @@ public struct GPUMatrix3
 {
 	public let descriptor: (width: UInt32, height: UInt32, depth: UInt32)
 	
-	private let buffer: MTLBuffer
-	private let descriptorBuffer: MTLBuffer
+	internal let buffer: MTLBuffer
+	internal let descriptorBuffer: MTLBuffer
 	
-	private unowned let device: MTLDevice
-	
-	public init(on device: MTLDevice, matrix: Matrix3)
+	public init(matrix: Matrix3, isShared: Bool = false)
 	{
-		buffer = device.makeBuffer(
+		buffer = GPUGlobalDevice.makeBuffer(
 			bytes: matrix.values,
 			length: MemoryLayout.size(ofValue: Float(0)) * matrix.values.count,
-			options: []
+			options: isShared ? .storageModeShared : .storageModePrivate
 		)
 		
 		descriptor = (
@@ -129,44 +150,65 @@ public struct GPUMatrix3
 			height: UInt32(matrix.height),
 			depth: UInt32(matrix.depth)
 		)
-		descriptorBuffer = device.makeBuffer(
+		descriptorBuffer = GPUGlobalDevice.makeBuffer(
 			bytes: [descriptor.width, descriptor.height, descriptor.depth],
 			length: MemoryLayout.size(ofValue: descriptor),
-			options: []
+			options: .storageModePrivate
 		)
-		
-		self.device = device
 	}
 	
-	private init(device: MTLDevice, descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer)
+	private init(descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer)
 	{
 		self.buffer = buffer
 		
 		self.descriptor = descriptor
-		descriptorBuffer = device.makeBuffer(
+		descriptorBuffer = GPUGlobalDevice.makeBuffer(
 			bytes: [descriptor.width, descriptor.height, descriptor.depth],
 			length: MemoryLayout.size(ofValue: descriptor),
-			options: []
+			options: .storageModePrivate
 		)
-		
-		self.device = device
 	}
 	
-	private init(device: MTLDevice, descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer, descriptorBuffer: MTLBuffer)
+	private init(descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer, descriptorBuffer: MTLBuffer)
 	{
 		self.buffer = buffer
 		
 		self.descriptor = descriptor
 		self.descriptorBuffer = descriptorBuffer
-		
-		self.device = device
 	}
 	
 	public func asMatrix() -> Matrix3
 	{
+		let destination: MTLBuffer
+		
+		if self.buffer.storageMode == .private
+		{
+			destination = GPUGlobalDevice.makeBuffer(
+				length: MemoryLayout<Float>.size * Int(descriptor.width) * Int(descriptor.height) * Int(descriptor.depth),
+				options: .storageModeShared
+			)
+			
+			let buffer = GPUGlobalQueue.makeCommandBuffer()
+			let encoder = buffer.makeBlitCommandEncoder()
+			encoder.copy(
+				from: self.buffer,
+				sourceOffset: 0,
+				to: destination,
+				destinationOffset: 0,
+				size: Int(descriptor.width) * Int(descriptor.height) * Int(descriptor.depth) * MemoryLayout<Float>.size
+			)
+			encoder.endEncoding()
+			buffer.commit()
+			buffer.waitUntilCompleted()
+		}
+		else
+		{
+			destination = self.buffer
+		}
+		
 		let values = Array<Float>(
 			UnsafeBufferPointer(
-				start: buffer.contents().assumingMemoryBound(to: Float.self),
+				start: destination.contents().assumingMemoryBound(to: Float.self),
 				count: Int(descriptor.width) * Int(descriptor.height) * Int(descriptor.depth)
 			)
 		)
@@ -181,12 +223,12 @@ public struct GPUMatrix3
 			"Number of values in matrix must be equal."
 		)
 		
-		return GPUMatrix3(device: device, descriptor: (width: UInt32(width), height: UInt32(height), depth: UInt32(depth)), buffer: buffer)
+		return GPUMatrix3(descriptor: (width: UInt32(width), height: UInt32(height), depth: UInt32(depth)), buffer: buffer)
 	}
 	
 	func reshaped(descriptor: (width: UInt32, height: UInt32, depth: UInt32), descriptorBuffer: MTLBuffer) -> GPUMatrix3
 	{
-		return GPUMatrix3(device: self.device, descriptor: descriptor, buffer: self.buffer, descriptorBuffer: descriptorBuffer)
+		return GPUMatrix3(descriptor: descriptor, buffer: self.buffer, descriptorBuffer: descriptorBuffer)
 	}
 	
 	

@@ -9,6 +9,64 @@
 import Foundation
 import Metal
 
+extension MTLComputeCommandEncoder
+{
+	func dispatch(workSize maxSize: (width: Int, height: Int, depth: Int))
+	{
+		let maxDeviceSize = self.device.maxThreadsPerThreadgroup
+		
+		var size = MTLSize(
+			width: min(maxSize.width, maxDeviceSize.width),
+			height: min(maxSize.height, maxDeviceSize.height),
+			depth: min(maxSize.depth, maxDeviceSize.depth)
+		)
+		
+		while size.width * size.height * size.depth > max(maxDeviceSize.width, maxDeviceSize.height, maxDeviceSize.depth)
+		{
+			// Shrink the largest size first, begin with depth
+			// If there is no largest size, shrink anyway, begin with depth
+			
+			if size.depth > size.width && size.depth > size.height
+			{
+				size.depth /= 2
+			}
+			else if size.height > size.width && size.height > size.depth
+			{
+				size.height /= 2
+			}
+			else if size.width > size.height && size.width > size.depth
+			{
+				size.width /= 2
+			}
+			else if size.depth >= 2
+			{
+				size.depth /= 2
+			}
+			else if size.height >= 2
+			{
+				size.height /= 2
+			}
+			else if size.width >= 2
+			{
+				size.width /= 2
+			}
+			else
+			{
+				fatalError("Cannot make optimal size smaller. If you see this, there is something wrong.")
+			}
+		}
+		
+		let threadGroups = MTLSize(
+			width:  (maxSize.width  + size.width  - 1) / size.width,
+			height: (maxSize.height + size.height - 1) / size.height,
+			depth:  (maxSize.depth  + size.depth  - 1) / size.depth
+		)
+		
+		self.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: size)
+	}
+}
+
+
 // A layer of a feed forward neural network
 public protocol GPUBasicLayer
 {
@@ -27,7 +85,7 @@ public protocol GPUBasicLayer
 	/// Initializes all buffers required for the layer to operate.
 	///
 	/// - Parameter device: Compute device, which is used.
-	mutating func initialize(device: MTLDevice, library: MTLLibrary)
+	mutating func initialize(library: MTLLibrary, shareOutput: Bool)
 	
 	
 	/// Performs data transformations for feed forward operation
@@ -39,7 +97,6 @@ public protocol GPUBasicLayer
 	/// - Parameter output: Input of the layer which should be forwarded
 	/// - Returns: Weighted output of the layer
 	func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
-
 }
 
 /// A layer of a feed forward neural network
@@ -151,7 +208,7 @@ public struct GPUFullyConnectedLayer: GPUNeuralLayer
 	private var gpuWeightDelta: GPUMatrix!
 	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState!
 	
-	public mutating func initialize(device: MTLDevice, library: MTLLibrary)
+	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
 	{
 		guard
 			let function = library.makeFunction(name: "FullyConnectedLayer_forward"),
@@ -163,22 +220,22 @@ public struct GPUFullyConnectedLayer: GPUNeuralLayer
 		
 		do
 		{
-			self.gpuFunctionPipelineState = try device.makeComputePipelineState(function: function)
-			self.gpuBackpropagateFunctionPipelineState = try device.makeComputePipelineState(function: backpropagateFunction)
+			self.gpuFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: function)
+			self.gpuBackpropagateFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: backpropagateFunction)
 		}
 		catch
 		{
 			fatalError("\(error)")
 		}
 		
-		self.gpuWeights = GPUMatrix(on: device, matrix: self.weights)
-		self.gpuWeightDelta = GPUMatrix(on: device, matrix: self.weightDelta)
+		self.gpuWeights = GPUMatrix(matrix: self.weights)
+		self.gpuWeightDelta = GPUMatrix(matrix: self.weightDelta)
 		
 		let outputValues = Matrix3(repeating: 0, width: self.outputSize.width, height: self.outputSize.height, depth: self.outputSize.depth)
-		self.gpuOutput = GPUMatrix3(on: device, matrix: outputValues)
+		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: shareOutput)
 		
 		let gradientValues = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
-		self.gpuGradient = GPUMatrix3(on: device, matrix: gradientValues)
+		self.gpuGradient = GPUMatrix3(matrix: gradientValues)
 	}
 	
 	
@@ -190,14 +247,7 @@ public struct GPUFullyConnectedLayer: GPUNeuralLayer
 		gpuOutput.setBuffer(on: encoder, at: 2)
 		gpuWeights.setBuffer(on: encoder, at: 4)
 		
-		let threadGroupSize = MTLSize(
-			width: min(outputSize.depth, encoder.device.maxThreadsPerThreadgroup.width),
-			height: 1,
-			depth: 1
-		)
-		let threadGroups = MTLSize(width: (outputSize.depth + threadGroupSize.width - 1) / threadGroupSize.width, height: 1, depth: 1)
-		
-		encoder.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadGroupSize)
+		encoder.dispatch(workSize: (width: outputSize.depth, height: 1, depth: 1))
 		
 		return gpuOutput
 	}
@@ -322,8 +372,8 @@ public struct GPUConvolutionLayer: GPUNeuralLayer
 		inputSize: (width: Int, height: Int, depth: Int),
 		kernels: [Matrix3],
 		bias: [Float],
-		horizontalStride: Int,
-		verticalStride: Int,
+//		horizontalStride: Int, // strides other than 1 currently unsupported
+//		verticalStride: Int,
 		horizontalInset: Int,
 		verticalInset: Int
 		)
@@ -331,8 +381,8 @@ public struct GPUConvolutionLayer: GPUNeuralLayer
 		self.inputSize = inputSize
 		self.kernels = kernels
 		self.bias = bias
-		self.horizontalStride = horizontalStride
-		self.verticalStride = verticalStride
+		self.horizontalStride = 1
+		self.verticalStride = 1
 		self.horizontalInset = horizontalInset
 		self.verticalInset = verticalInset
 	}
@@ -344,7 +394,7 @@ public struct GPUConvolutionLayer: GPUNeuralLayer
 		kernelSize: (width: Int, height: Int),
 		//		stride: (horizontal: Int, vertical: Int) = (1, 1), // strides other than 1 currently unsupported
 		inset: (horizontal: Int, vertical: Int) = (0, 0)
-		)
+	)
 	{
 		self.inputSize = inputSize
 		self.horizontalStride = 1
@@ -356,25 +406,39 @@ public struct GPUConvolutionLayer: GPUNeuralLayer
 	}
 	
 	private var gpuFunctionPipelineState: MTLComputePipelineState!
+	private var gpuBackpropagatePipelineState: MTLComputePipelineState!
+	private var gpuWeightUpdatePipelineState: MTLComputePipelineState!
+	
 	private var gpuKernels: GPUMatrix3!
 	private var gpuBias: MTLBuffer!
+	
+	private var gpuKernelDelta: GPUMatrix3!
+	private var gpuBiasDelta: MTLBuffer!
+	
 	private var gpuOutput: GPUMatrix3!
+	private var gpuGradient: GPUMatrix3!
+	
 	private var gpuHorizontalInset: MTLBuffer!
 	private var gpuVerticalInset: MTLBuffer!
 	private var gpuHorizontalStride: MTLBuffer!
 	private var gpuVerticalStride: MTLBuffer!
 	
-	public mutating func initialize(device: MTLDevice, library: MTLLibrary)
+	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
 	{
-		let constantValues = MTLFunctionConstantValues()
-		guard let function = try? library.makeFunction(name: "ConvolutionLayer_forward", constantValues: constantValues) else
+		guard
+			let function = library.makeFunction(name: "ConvolutionLayer_forward"),
+			let backpropagateFunction = library.makeFunction(name: "ConvolutionLayer_backpropagate"),
+			let updateFunction = library.makeFunction(name: "ConvolutionLayer_adjust_weights")
+		else
 		{
 			fatalError("Could not make Metal function.")
 		}
 		
 		do
 		{
-			self.gpuFunctionPipelineState = try device.makeComputePipelineState(function: function)
+			self.gpuFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: function)
+			self.gpuBackpropagatePipelineState = try GPUGlobalDevice.makeComputePipelineState(function: backpropagateFunction)
+			self.gpuWeightUpdatePipelineState = try GPUGlobalDevice.makeComputePipelineState(function: updateFunction)
 		}
 		catch
 		{
@@ -383,20 +447,51 @@ public struct GPUConvolutionLayer: GPUNeuralLayer
 		
 		let allKernels = Matrix3(
 			values: kernels.flatMap{$0.values},
-			width: kernels[0].width,
+			width:  kernels[0].width,
 			height: kernels[0].height,
-			depth: kernels[0].depth * kernels.count
+			depth:  kernels[0].depth * kernels.count
 		)
-		self.gpuKernels = GPUMatrix3(on: device, matrix: allKernels)
-		self.gpuBias = device.makeBuffer(bytes: bias, length: MemoryLayout.size(ofValue: Float(0)) * bias.count, options: [])
+		self.gpuKernels = GPUMatrix3(matrix: allKernels)
+		self.gpuBias = GPUGlobalDevice.makeBuffer(
+			bytes: bias,
+			length: MemoryLayout.size(ofValue: Float(0)) * bias.count,
+			options: []
+		)
 		
-		let outputValues = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		self.gpuOutput = GPUMatrix3(on: device, matrix: outputValues)
+		let kernelDelta = Matrix3(
+			repeating: 0,
+			width:  kernels[0].width,
+			height: kernels[0].height,
+			depth:  kernels[0].depth * kernels.count
+		)
+		self.gpuKernelDelta = GPUMatrix3(matrix: kernelDelta)
 		
-		gpuHorizontalInset	= device.makeBuffer(bytes: [Int32(self.horizontalInset)],	length: MemoryLayout<Int32>.size, options: [])
-		gpuVerticalInset	= device.makeBuffer(bytes: [Int32(self.verticalInset)],		length: MemoryLayout<Int32>.size, options: [])
-		gpuHorizontalStride = device.makeBuffer(bytes: [Int32(self.horizontalStride)],	length: MemoryLayout<Int32>.size, options: [])
-		gpuVerticalStride	= device.makeBuffer(bytes: [Int32(self.verticalStride)],	length: MemoryLayout<Int32>.size, options: [])
+		self.gpuBiasDelta = GPUGlobalDevice.makeBuffer(
+			bytes: (0..<kernels.count).map{_ in Float(0)},
+			length: MemoryLayout<Float>.size * kernels.count,
+			options: []
+		)
+		
+		let outputValues = Matrix3(
+			repeating: 0,
+			width:  outputSize.width,
+			height: outputSize.height,
+			depth:  outputSize.depth
+		)
+		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: shareOutput)
+		
+		let gradient = Matrix3(
+			repeating: 0,
+			width:  inputSize.width,
+			height: inputSize.height,
+			depth:  inputSize.depth
+		)
+		self.gpuGradient = GPUMatrix3(matrix: gradient)
+		
+		gpuHorizontalInset	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.horizontalInset)],	length: MemoryLayout<Int32>.size, options: [])
+		gpuVerticalInset	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.verticalInset)],		length: MemoryLayout<Int32>.size, options: [])
+		gpuHorizontalStride = GPUGlobalDevice.makeBuffer(bytes: [Int32(self.horizontalStride)],	length: MemoryLayout<Int32>.size, options: [])
+		gpuVerticalStride	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.verticalStride)],	length: MemoryLayout<Int32>.size, options: [])
 	}
 	
 	
@@ -409,23 +504,13 @@ public struct GPUConvolutionLayer: GPUNeuralLayer
 		gpuKernels.setBuffer(on: encoder,				   at: 4)
 		
 		encoder.setBuffer(gpuBias,				offset: 0, at: 6)
+		
 		encoder.setBuffer(gpuHorizontalInset,	offset: 0, at: 7)
 		encoder.setBuffer(gpuVerticalInset,		offset: 0, at: 8)
 		encoder.setBuffer(gpuHorizontalStride,	offset: 0, at: 9)
 		encoder.setBuffer(gpuVerticalStride,	offset: 0, at: 10)
-		
-		let threadGroupSize = MTLSize(
-			width: min(encoder.device.maxThreadsPerThreadgroup.width, outputSize.width),
-			height: min(encoder.device.maxThreadsPerThreadgroup.height, outputSize.height),
-			depth: min(encoder.device.maxThreadsPerThreadgroup.depth, outputSize.depth)
-		)
-		let threadGroups = MTLSize(
-			width: (outputSize.width + threadGroupSize.width - 1) / threadGroupSize.width,
-			height: (outputSize.height + threadGroupSize.height - 1) / threadGroupSize.height,
-			depth: (outputSize.depth + threadGroupSize.depth - 1) / threadGroupSize.depth
-		)
-		
-		encoder.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadGroupSize)
+
+		encoder.dispatch(workSize: outputSize)
 		
 		return gpuOutput
 	}
@@ -454,47 +539,32 @@ public struct GPUConvolutionLayer: GPUNeuralLayer
 		decay: Float
 		) -> GPUMatrix3
 	{
-		fatalError()
+		encoder.setComputePipelineState(gpuBackpropagatePipelineState)
 		
-//		var gradient = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
-//		
-//		for (outputZ, kernel) in kernels.enumerated()
-//		{
-//			var kernelGradient = Matrix3.init(repeating: 0, width: kernel.width, height: kernel.height, depth: kernel.depth)
-//			var biasGradient: Float = 0
-//			
-//			for outputY in 0 ..< outputSize.height
-//			{
-//				for outputX in 0 ..< outputSize.width
-//				{
-//					let outputGradient = nextLayerGradients[outputX, outputY, outputZ]
-//					
-//					kernelGradient += inputs[
-//						x: outputX * horizontalStride + horizontalInset,
-//						y: outputY * verticalStride + verticalInset,
-//						z: 0,
-//						width: kernel.width,
-//						height: kernel.height,
-//						depth: kernel.depth
-//						].mapv{$0 &* outputGradient}
-//					
-//					gradient[
-//						x: outputX * horizontalStride + horizontalInset,
-//						y: outputY * verticalStride + verticalInset,
-//						z: 0,
-//						width: kernel.width,
-//						height: kernel.height,
-//						depth: kernel.depth
-//						] += kernel.mapv{$0 &* outputGradient}
-//					
-//					biasGradient += outputGradient
-//				}
-//			}
-//			kernels[outputZ] += kernelGradient.mapv{$0 &* learningRate}
-//			bias[outputZ] += biasGradient * learningRate
-//		}
-//		
-//		return gradient
+		inputs.setBuffer(on: encoder, at: 0)
+		nextLayerGradients.setBuffer(on: encoder, at: 2)
+		gpuGradient.setBuffer(on: encoder, at: 4)
+		gpuKernels.setBuffer(on: encoder, at: 6)
+		encoder.setBuffer(gpuBias, offset: 0, at: 8)
+		gpuKernelDelta.setBuffer(on: encoder, at: 9)
+		encoder.setBuffer(gpuBiasDelta, offset: 0, at: 11)
+		
+		encoder.setBuffer(gpuHorizontalInset,	offset: 0, at: 12)
+		encoder.setBuffer(gpuVerticalInset,		offset: 0, at: 13)
+		encoder.setBuffer(gpuHorizontalStride,	offset: 0, at: 14)
+		encoder.setBuffer(gpuVerticalStride,	offset: 0, at: 15)
+		
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 16)
+		encoder.setBytes([momentum], length: MemoryLayout<Float>.size, at: 17)
+		encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 18)
+
+		encoder.dispatch(workSize: inputSize)
+		
+		encoder.setComputePipelineState(gpuWeightUpdatePipelineState)
+
+		encoder.dispatch(workSize: (width: kernels[0].width, height: kernels[0].height, depth: inputSize.depth * kernels.count))
+		
+		return gpuGradient
 	}
 	
 }
@@ -534,16 +604,23 @@ public struct GPUPoolingLayer: GPUNeuralLayer
 	private var gpuFunctionPipelineState: MTLComputePipelineState!
 	private var gpuOutput: GPUMatrix3!
 	
-	public mutating func initialize(device: MTLDevice, library: MTLLibrary)
+	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState!
+	private var gpuGradient: GPUMatrix3!
+	
+	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
 	{
-		guard let function = library.makeFunction(name: "ConvolutionLayer_forward") else
+		guard
+			let function = library.makeFunction(name: "PoolingLayer_forward"),
+			let backpropagateFunction = library.makeFunction(name: "PoolingLayer_backpropagate")
+		else
 		{
 			fatalError("Could not make Metal function.")
 		}
 		
 		do
 		{
-			self.gpuFunctionPipelineState = try device.makeComputePipelineState(function: function)
+			self.gpuFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: function)
+			self.gpuBackpropagateFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: backpropagateFunction)
 		}
 		catch
 		{
@@ -551,7 +628,10 @@ public struct GPUPoolingLayer: GPUNeuralLayer
 		}
 		
 		let outputValues = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		self.gpuOutput = GPUMatrix3(on: device, matrix: outputValues)
+		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: shareOutput)
+		
+		let gradients = Matrix3(repeating: 0, width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
+		self.gpuGradient = GPUMatrix3(matrix: gradients)
 	}
 	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
@@ -560,19 +640,8 @@ public struct GPUPoolingLayer: GPUNeuralLayer
 		
 		input.setBuffer(on: encoder, at: 0)
 		gpuOutput.setBuffer(on: encoder, at: 2)
-		
-		let threadGroupSize = MTLSize(
-			width: min(encoder.device.maxThreadsPerThreadgroup.width, outputSize.width),
-			height: min(encoder.device.maxThreadsPerThreadgroup.height, outputSize.height),
-			depth: min(encoder.device.maxThreadsPerThreadgroup.depth, outputSize.depth)
-		)
-		let threadGroups = MTLSize(
-			width: (outputSize.width + threadGroupSize.width - 1) / threadGroupSize.width,
-			height: (outputSize.height + threadGroupSize.height - 1) / threadGroupSize.height,
-			depth: (outputSize.depth + threadGroupSize.depth - 1) / threadGroupSize.depth
-		)
-		
-		encoder.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadGroupSize)
+
+		encoder.dispatch(workSize: outputSize)
 		
 		return gpuOutput
 	}
@@ -600,38 +669,15 @@ public struct GPUPoolingLayer: GPUNeuralLayer
 		decay: Float
 		) -> GPUMatrix3
 	{
-		fatalError()
-//		let xScale = inputSize.width / outputSize.width
-//		let yScale = inputSize.height / outputSize.height
-//		let zScale = inputSize.depth / outputSize.depth
-//		
-//		var gradients = Matrix3(repeating: 0, width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
-//		
-//		for z in 0 ..< outputSize.depth
-//		{
-//			for y in 0 ..< outputSize.height
-//			{
-//				for x in 0 ..< outputSize.width
-//				{
-//					let inputVolume = inputs[
-//						x: x * xScale,
-//						y: y * yScale,
-//						z: z * zScale,
-//						width: xScale,
-//						height: yScale,
-//						depth: zScale
-//					]
-//					let (maxX, maxY, maxZ) = inputVolume.maxIndex()
-//					gradients[
-//						x * xScale + maxX,
-//						y * yScale + maxY,
-//						z * zScale + maxZ
-//						] = nextLayerGradients[x, y, z]
-//				}
-//			}
-//		}
-//		
-//		return gradients
+		encoder.setComputePipelineState(gpuBackpropagateFunctionPipelineState)
+		
+		inputs.setBuffer(on: encoder, at: 0)
+		nextLayerGradients.setBuffer(on: encoder, at: 2)
+		gpuGradient.setBuffer(on: encoder, at: 4)
+
+		encoder.dispatch(workSize: outputSize)
+		
+		return gpuGradient
 	}
 	
 }
@@ -673,14 +719,29 @@ public struct GPUReshapingLayer: GPUNeuralLayer
 	
 	private var gpuOutputDescriptor: MTLBuffer!
 	
-	public mutating func initialize(device: MTLDevice, library: MTLLibrary)
+	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
 	{
-		gpuOutputDescriptor = device.makeBuffer(bytes: [UInt32(outputSize.width), UInt32(outputSize.height), UInt32(outputSize.depth)], length: 3 * MemoryLayout<UInt32>.size, options: [])
+		gpuOutputDescriptor = GPUGlobalDevice.makeBuffer(
+			bytes: [
+				UInt32(outputSize.width),
+				UInt32(outputSize.height),
+				UInt32(outputSize.depth)
+			],
+			length: 3 * MemoryLayout<UInt32>.size,
+			options: .storageModePrivate
+		)
 	}
 	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{
-		return input.reshaped(descriptor: (width: UInt32(outputSize.width), height: UInt32(outputSize.height), depth: UInt32(outputSize.depth)), descriptorBuffer: gpuOutputDescriptor)
+		return input.reshaped(
+			descriptor: (
+				width: UInt32(outputSize.width),
+				height: UInt32(outputSize.height),
+				depth: UInt32(outputSize.depth)
+			),
+			descriptorBuffer: gpuOutputDescriptor
+		)
 	}
 	
 	
@@ -707,8 +768,14 @@ public struct GPUReshapingLayer: GPUNeuralLayer
 		decay: Float
 		) -> GPUMatrix3
 	{
-		fatalError()
-//		return nextLayerGradients.reshaped(width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
+		return nextLayerGradients.reshaped(
+			descriptor: (
+				width: UInt32(inputSize.width),
+				height: UInt32(inputSize.height),
+				depth: UInt32(inputSize.depth)
+			),
+			descriptorBuffer: inputs.descriptorBuffer
+		)
 	}
 	
 }
@@ -745,27 +812,23 @@ public struct GPUNonlinearityLayer: GPUNeuralLayer, GPUOutputLayer
 	{
 		self.inputSize = inputSize
 		self.activation = activation
-		
-		if activation == .linear
-		{
-			print("Warning: Using a linear function on a nonlinearity layer has no effect.")
-		}
 	}
 	
-	private var gpuFunctionPipelineState: MTLComputePipelineState!
-	private var gpuOutput: GPUMatrix3!
+	private var gpuFunctionPipelineState: MTLComputePipelineState?
+	private var gpuOutput: GPUMatrix3?
 	
-	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState!
+	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState?
+	private var gpuLossFunctionPipelineState: MTLComputePipelineState!
 	private var gpuGradient: GPUMatrix3!
 	
-	public mutating func initialize(device: MTLDevice, library: MTLLibrary)
+	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
 	{
-		let functionName: String
+		let functionName: String?
 		
 		switch activation
 		{
 		case .linear:
-			return
+			functionName = nil
 		
 		case .relu:
 			functionName = "relu"
@@ -777,12 +840,30 @@ public struct GPUNonlinearityLayer: GPUNeuralLayer, GPUOutputLayer
 			functionName = "tanh"
 			
 		case .softmax:
-			fatalError("The softmax function is unavailable.")
+			fatalError("The softmax function is unavailable. Use SoftmaxLayer instead.")
+		}
+		
+		if
+			let funcName = functionName,
+			let function = library.makeFunction(name: "NonlinearityLayer_forward_\(funcName)"),
+			let backpropagationFunction = library.makeFunction(name: "NonlinearityLayer_backpropagate_\(funcName)")
+		{
+			do
+			{
+				self.gpuFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: function)
+				self.gpuBackpropagateFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: backpropagationFunction)
+			}
+			catch
+			{
+				fatalError("\(error)")
+			}
+			
+			let outputMatrix = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
+			self.gpuOutput = GPUMatrix3(matrix: outputMatrix, isShared: shareOutput)
 		}
 		
 		guard
-			let function = library.makeFunction(name: "NonlinearityLayer_forward_\(functionName)"),
-			let backpropagationFunction = library.makeFunction(name: "NonlinearityLayer_backpropagate_\(functionName)")
+			let lossFunction = library.makeFunction(name: "Loss_delta")
 		else
 		{
 			fatalError()
@@ -790,45 +871,34 @@ public struct GPUNonlinearityLayer: GPUNeuralLayer, GPUOutputLayer
 		
 		do
 		{
-			self.gpuFunctionPipelineState = try device.makeComputePipelineState(function: function)
-			self.gpuBackpropagateFunctionPipelineState = try device.makeComputePipelineState(function: backpropagationFunction)
+			self.gpuLossFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: lossFunction)
 		}
 		catch
 		{
 			fatalError("\(error)")
 		}
 		
-		let outputMatrix = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		self.gpuOutput = GPUMatrix3(on: device, matrix: outputMatrix)
-		
 		let gradientMatrix = Matrix3(repeating: 0, width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
-		self.gpuGradient = GPUMatrix3(on: device, matrix: gradientMatrix)
+		self.gpuGradient = GPUMatrix3(matrix: gradientMatrix)
 	}
 	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{
-		guard activation != .linear else
+		guard
+			let gpuFunctionPipelineState = self.gpuFunctionPipelineState,
+			let gpuOutput = self.gpuOutput
+		else
 		{
 			return input
 		}
+			
 		
-		encoder.setComputePipelineState(self.gpuFunctionPipelineState)
+		encoder.setComputePipelineState(gpuFunctionPipelineState)
 		
 		input.setBuffer(on: encoder, at: 0)
 		gpuOutput.setBuffer(on: encoder, at: 2)
-		
-		let threadGroupSize = MTLSize(
-			width: min(encoder.device.maxThreadsPerThreadgroup.width, outputSize.width),
-			height: min(encoder.device.maxThreadsPerThreadgroup.height, outputSize.height),
-			depth: min(encoder.device.maxThreadsPerThreadgroup.depth, outputSize.depth)
-		)
-		let threadGroups = MTLSize(
-			width: (outputSize.width + threadGroupSize.width - 1) / threadGroupSize.width,
-			height: (outputSize.height + threadGroupSize.height - 1) / threadGroupSize.height,
-			depth: (outputSize.depth + threadGroupSize.depth - 1) / threadGroupSize.depth
-		)
-		
-		encoder.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadGroupSize)
+
+		encoder.dispatch(workSize: outputSize)
 		
 		return gpuOutput
 	}
@@ -856,19 +926,48 @@ public struct GPUNonlinearityLayer: GPUNeuralLayer, GPUOutputLayer
 		decay: Float
 		) -> GPUMatrix3
 	{
-		fatalError()
-		// gradients for anterior layer = gradients of posterior layer * derivative of gradients of posterior layer
-//		return Matrix3(
-//			values: activation.derivative(nextLayerGradients.values) &* nextLayerGradients.values,
-//			width: inputSize.width,
-//			height: inputSize.height,
-//			depth: inputSize.depth
-//		)
+		guard
+			let gpuBackpropagateFunctionPipelineState = self.gpuBackpropagateFunctionPipelineState
+		else
+		{
+			return nextLayerGradients
+		}
+		
+		encoder.setComputePipelineState(gpuBackpropagateFunctionPipelineState)
+		
+		nextLayerGradients.setBuffer(on: encoder, at: 0)
+		gpuGradient.setBuffer(on: encoder, at: 2)
+
+		encoder.dispatch(workSize: outputSize)
+		
+		return gpuGradient
 	}
 	
 	public func loss(expected: GPUMatrix3, actual: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{
-		fatalError()
+		encoder.setComputePipelineState(gpuLossFunctionPipelineState)
+		
+		expected.setBuffer(on: encoder, at: 0)
+		actual.setBuffer(on: encoder, at: 2)
+		gpuGradient.setBuffer(on: encoder, at: 4)
+
+		encoder.dispatch(workSize: outputSize)
+		
+		guard
+			let gpuBackpropagateFunctionPipelineState = self.gpuBackpropagateFunctionPipelineState
+		else
+		{
+			return gpuGradient
+		}
+		
+		encoder.setComputePipelineState(gpuBackpropagateFunctionPipelineState)
+		
+		gpuGradient.setBuffer(on: encoder, at: 0)
+		gpuGradient.setBuffer(on: encoder, at: 2)
+		
+		encoder.dispatch(workSize: outputSize)
+		
+		return gpuGradient
 	}
 }
 
@@ -882,36 +981,79 @@ public struct GPUSoftmaxLayer: GPUOutputLayer
 	}
 	
 	private var gpuFunctionPipelineState: MTLComputePipelineState!
+	private var gpuExpFunctionPipelineState: MTLComputePipelineState!
+	private var gpuLossPipelineState: MTLComputePipelineState!
+	private var gpuExponentiated: GPUMatrix3!
 	private var gpuOutput: GPUMatrix3!
+	private var gpuGradient: GPUMatrix3!
 	
-	public mutating func initialize(device: MTLDevice, library: MTLLibrary)
+	public init(inputSize: (width: Int, height: Int, depth: Int))
 	{
-		guard let function = library.makeFunction(name: "SoftmaxLayer_forward") else
+		self.inputSize = inputSize
+	}
+	
+	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
+	{
+		guard
+			let exponentiate = library.makeFunction(name: "SoftmaxLayer_forward_exp"),
+			let function = library.makeFunction(name: "SoftmaxLayer_forward"),
+			let loss = library.makeFunction(name: "Loss_delta")
+		else
 		{
 			fatalError()
 		}
 		
 		do
 		{
-			self.gpuFunctionPipelineState = try device.makeComputePipelineState(function: function)
+			self.gpuExpFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: exponentiate)
+			self.gpuFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: function)
+			self.gpuLossPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: loss)
 		}
 		catch
 		{
 			fatalError("\(error)")
 		}
 		
+		let exponentiatedMatrix = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
+		self.gpuExponentiated = GPUMatrix3(matrix: exponentiatedMatrix)
+		
 		let outputMatrix = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		self.gpuOutput = GPUMatrix3(on: device, matrix: outputMatrix)
+		self.gpuOutput = GPUMatrix3(matrix: outputMatrix, isShared: shareOutput)
+		
+		let gradientMatrix = Matrix3(repeating: 0, width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
+		self.gpuGradient = GPUMatrix3(matrix: gradientMatrix, isShared: shareOutput)
 	}
 	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{
-		fatalError()
+		encoder.setComputePipelineState(gpuExpFunctionPipelineState)
+		
+		input.setBuffer(on: encoder, at: 0)
+		gpuExponentiated.setBuffer(on: encoder, at: 2)
+
+		encoder.dispatch(workSize: outputSize)
+		
+		encoder.setComputePipelineState(gpuFunctionPipelineState)
+		
+		gpuExponentiated.setBuffer(on: encoder, at: 0)
+		gpuOutput.setBuffer(on: encoder, at: 2)
+		
+		encoder.dispatch(workSize: outputSize)
+		
+		return gpuOutput
 	}
 	
 	public func loss(expected: GPUMatrix3, actual: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{
-		fatalError()
+		encoder.setComputePipelineState(gpuLossPipelineState)
+		
+		expected.setBuffer(on: encoder, at: 0)
+		actual.setBuffer(on: encoder, at: 2)
+		gpuGradient.setBuffer(on: encoder, at: 4)
+		
+		encoder.dispatch(workSize: outputSize)
+		
+		return gpuGradient
 	}
 }
 

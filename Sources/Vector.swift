@@ -88,7 +88,7 @@ public func &- (lhs: [Float], rhs: [Float]) -> [Float]
 	precondition(lhs.count == rhs.count, "Vector lengths must be equal")
 	
 	var output = lhs
-	vDSP_vsub(lhs, 1, rhs, 1, &output, 1, UInt(lhs.count))
+	vDSP_vsub(rhs, 1, lhs, 1, &output, 1, UInt(lhs.count))
 	return output
 }
 

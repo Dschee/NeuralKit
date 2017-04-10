@@ -121,11 +121,11 @@ public struct FeedForwardNeuralNetwork
 		// Calculate the errors at the output layer
 		if outputActivationFunction == .softmax
 		{
-			errors = networkOutput &- sample.expected.values
+			errors = sample.expected.values &- networkOutput
 		}
 		else
 		{
-			errors = (networkOutput &- sample.expected.values) &* outputActivationFunction.derivative(networkOutput)
+			errors = (sample.expected.values &- networkOutput) &* outputActivationFunction.derivative(networkOutput)
 		}
 
 		let errorMatrix = Matrix3(
@@ -137,17 +137,35 @@ public struct FeedForwardNeuralNetwork
 		
 		// Backpropagate the error through the network
 		
-		_ = layers.indices.reversed().reduce(errorMatrix)
-		{ (errorMatrix, layerIndex) -> Matrix3 in
-			layers[layerIndex].adjustWeights(
-				nextLayerGradients: errorMatrix,
-				inputs: layerIndex > 0 ? partialResults[layerIndex-1] : sample.values,
+//		print("CPU actual: \(networkOutput.map(String.init).joined(separator: ", "))")
+		
+		var gradient: Matrix3 = errorMatrix
+		
+//		print("CPU: \(gradient.values.map(String.init).joined(separator: ", "))")
+		
+		for index in layers.indices.reversed()
+		{
+			gradient = layers[index].adjustWeights(
+				nextLayerGradients: gradient,
+				inputs: index > 0 ? partialResults[index-1] : sample.values,
 				learningRate: learningRate,
 				annealingRate: annealingRate,
 				momentum: momentum,
 				decay: decay
 			)
 		}
+		
+//		_ = layers.indices.reversed().reduce(errorMatrix)
+//		{ (errorMatrix, layerIndex) -> Matrix3 in
+//			layers[layerIndex].adjustWeights(
+//				nextLayerGradients: errorMatrix,
+//				inputs: layerIndex > 0 ? partialResults[layerIndex-1] : sample.values,
+//				learningRate: learningRate,
+//				annealingRate: annealingRate,
+//				momentum: momentum,
+//				decay: decay
+//			)
+//		}
 		
 		// Calculate the total error
 		return -sum(log(networkOutput) &* sample.expected.values)

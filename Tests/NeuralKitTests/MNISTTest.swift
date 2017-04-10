@@ -30,6 +30,15 @@ import Cocoa
 
 class MNISTTest: XCTestCase
 {
+	lazy var library: MTLLibrary =
+	{
+#if DEBUG
+		return try! GPUGlobalDevice.makeLibrary(filepath: "/Users/Palle/Library/Developer/Xcode/DerivedData/NeuralKit-gqvgbrxdpkclopbfiglfaeqqojot/Build/Products/Debug/NeuralKit.framework/Versions/A/Resources/default.metallib")
+#else
+		return try! GPUGlobalDevice.makeLibrary(filepath: "/Users/Palle/Library/Developer/Xcode/DerivedData/NeuralKit-gqvgbrxdpkclopbfiglfaeqqojot/Build/Products/Release/NeuralKit.framework/Versions/A/Resources/default.metallib")
+#endif
+	}()
+	
 	static func readSamples(from bytes: [UInt8], labels: [UInt8], count: Int) -> [TrainingSample]
 	{
 		let imageOffset = 16
@@ -109,70 +118,86 @@ class MNISTTest: XCTestCase
 		
 		var network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputActivation: .softmax)!
 		
-		let epochs = 100_000
+		let epochs = 200_000
 		
 		var time = CACurrentMediaTime()
+		
+		var gpuNetwork = GPUFeedForwardNeuralNetwork(
+			layers: network.layers.flatMap
+				{ l in
+					if let layer = l as? ReshapingLayer
+					{
+						return GPUReshapingLayer(inputSize: layer.inputSize, outputSize: layer.outputSize)
+					}
+					else if let layer = l as? FullyConnectedLayer
+					{
+						return GPUFullyConnectedLayer(weights: layer.weights)
+					}
+					else if let layer = l as? NonlinearityLayer
+					{
+						return GPUNonlinearityLayer(inputSize: layer.inputSize, activation: layer.activation)
+					}
+					else
+					{
+						return nil
+					}
+			},
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
+			library: library
+		)!
 		
 		for epoch in 0 ..< epochs
 		{
 			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
-			let error = network.train(sample, learningRate: 0.005 * pow(0.999996, Float(epoch))/*, annealingRate: epoch % 300 == 0 ? 0.002 * pow(0.99999, Float(epoch)) : 0*/)
+//			let error = network.train(sample, learningRate: 0.005 * pow(0.999996, Float(epoch))/*, annealingRate: epoch % 300 == 0 ? 0.002 * pow(0.99999, Float(epoch)) : 0*/)
+			let input = GPUMatrix3(matrix: sample.values, isShared: true)
+			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
+			
+			let error = gpuNetwork.train((input: input, expected: output),	learningRate: 0.005 * pow(0.999996, Float(epoch)))
+//			let error = Float.nan
+			let cpuError = network.train(sample,							learningRate: 0.005 * pow(0.999996, Float(epoch)))
 			
 			if epoch % 1000 == 0
 			{
 				let newTime = CACurrentMediaTime()
-				print("epoch \(epoch) of \(epochs): \(error * 100)% error, duration: \(newTime - time) seconds.")
+				print("epoch \(epoch) of \(epochs): \(error * 100)% error, \(cpuError * 100) error on CPU, duration: \(newTime - time) seconds.")
 				time = newTime
 			}
 		}
 		
-		var correctCount = 0
-		var wrongCount = 0
-		
-		for sample in testSamples
-		{
-			let result = network.feedForward(sample.values)
-			
-			let expectedIndex = argmax(sample.expected.values).1
-			let actualIndex = argmax(result.values).1
-			
-			XCTAssertEqual(expectedIndex, actualIndex)
-			correctCount += expectedIndex == actualIndex ? 1 : 0
-			wrongCount += expectedIndex == actualIndex ? 0 : 1
-		}
-		
-		print("\(correctCount) correct, \(wrongCount) wrong, \(Float(correctCount) / Float(wrongCount + correctCount) * 100)% accuracy")
-		
-		let gpuNetwork = GPUFeedForwardNeuralNetwork(
-			layers: network.layers.flatMap
-			{ l in
-				if let layer = l as? ReshapingLayer
-				{
-					return GPUReshapingLayer(inputSize: layer.inputSize, outputSize: layer.outputSize)
-				}
-				else if let layer = l as? FullyConnectedLayer
-				{
-					return GPUFullyConnectedLayer(weights: layer.weights)
-				}
-				else if let layer = l as? NonlinearityLayer
-				{
-					return GPUNonlinearityLayer(inputSize: layer.inputSize, activation: layer.activation)
-				}
-				else
-				{
-					return nil
-				}
-			},
-			outputActivation: .softmax
-		)!
-		
 		let time1 = CACurrentMediaTime()
 		
-		let gpuSamples = testSamples.map{$0.values}.map{GPUMatrix3(on: gpuNetwork.device, matrix: $0)}
+		let gpuSamples = testSamples.map{$0.values}.map{GPUMatrix3(matrix: $0)}
 		
 		let time2 = CACurrentMediaTime()
 		
 		print("Copy time: \(time2 - time1) seconds")
+		
+		var correctCount = 0
+		var wrongCount = 0
+		
+		for (sample, input) in zip(testSamples, gpuSamples)
+		{
+//			let result = network.feedForward(sample.values)
+			let gpuResult = gpuNetwork.feedForward(input)
+			
+			let expectedIndex = argmax(sample.expected.values).1
+			let actualIndex = argmax(gpuResult.values).1
+			
+//			XCTAssertEqual(expectedIndex, actualIndex)
+			correctCount += expectedIndex == actualIndex ? 1 : 0
+			wrongCount += expectedIndex == actualIndex ? 0 : 1
+			
+//			for (cpuValue, gpuValue) in zip(gpuResult.values, gpuResult.values)
+//			{
+//				XCTAssertEqualWithAccuracy(cpuValue, gpuValue, accuracy: 0.001)
+//			}
+		}
+		
+		print("\(correctCount) correct, \(wrongCount) wrong, \(Float(correctCount) / Float(wrongCount + correctCount) * 100)% accuracy")
+		
+		// Assert 90% or higher accuracy
+		XCTAssertGreaterThanOrEqual(Float(correctCount) / Float(wrongCount + correctCount), 0.9)
 		
 		var gpuCorrectCount = 0
 		var gpuWrongCount = 0
@@ -232,12 +257,13 @@ class MNISTTest: XCTestCase
 						return nil
 					}
 			},
-			outputActivation: .softmax
-			)!
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
+			library: library
+		)!
 		
 		let time1 = CACurrentMediaTime()
 		
-		let gpuSamples = testSamples.map{$0.values}.map{GPUMatrix3(on: gpuNetwork.device, matrix: $0)}
+		let gpuSamples = testSamples.map{$0.values}.map{GPUMatrix3(matrix: $0)}
 		
 		let time2 = CACurrentMediaTime()
 		
@@ -297,22 +323,82 @@ class MNISTTest: XCTestCase
 		
 		let fullyConnected = FullyConnectedLayer(weights: RandomWeightMatrix(width: 257, height: 10))
 		
-		var network = FeedForwardNeuralNetwork(layers: [conv1, nonlinear1, pool1, conv2, nonlinear2, pool2, reshape, fullyConnected], outputActivation: .softmax)!
+		let network = FeedForwardNeuralNetwork(layers: [conv1, nonlinear1, pool1, conv2, nonlinear2, pool2, reshape, fullyConnected], outputActivation: .softmax)!
 		
-		let epochs = 100_000
+		var gpuNetwork = GPUFeedForwardNeuralNetwork(
+			layers: network.layers.flatMap
+			{ l in
+				if let layer = l as? ReshapingLayer
+				{
+					return GPUReshapingLayer(inputSize: layer.inputSize, outputSize: layer.outputSize)
+				}
+				else if let layer = l as? FullyConnectedLayer
+				{
+					return GPUFullyConnectedLayer(weights: layer.weights)
+				}
+				else if let layer = l as? NonlinearityLayer
+				{
+					return GPUNonlinearityLayer(inputSize: layer.inputSize, activation: layer.activation)
+				}
+				else if let layer = l as? ConvolutionLayer
+				{
+					return GPUConvolutionLayer(inputSize: layer.inputSize, kernels: layer.kernels, bias: layer.bias, horizontalInset: layer.horizontalInset, verticalInset: layer.verticalInset)
+				}
+				else if let layer = l as? PoolingLayer
+				{
+					return GPUPoolingLayer(inputSize: layer.inputSize, outputSize: layer.outputSize)
+				}
+				else
+				{
+					return nil
+				}
+			},
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
+			library: library
+		)!
+		
+		let epochs = 10_000_000
 		
 		var time = CACurrentMediaTime()
 		
+		let numberFormatter = NumberFormatter()
+		numberFormatter.maximumSignificantDigits = 5
+		numberFormatter.maximumFractionDigits = 3
+		numberFormatter.maximumIntegerDigits = 10
+		numberFormatter.localizesFormat = false
+		
+//		print("Copying inputs...")
+		
+//		let gpuInputs = trainingSamples.map{$0.values}.map{GPUMatrix3(matrix: $0, isShared: false)}
+		
+//		print("Copying outputs...")
+//		
+//		let gpuOutputs = trainingSamples.map{$0.expected}.map{GPUMatrix3(matrix: $0, isShared: true)}
+//		
+//		print("Done.")
+		
 		for epoch in 0 ..< epochs
 		{
-			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
-			let error = network.train(sample, learningRate: 0.01, annealingRate: 0, momentum: 0, decay: 0)
+			let index = Int(arc4random_uniform(UInt32(trainingSamples.count)))
+			let sample = trainingSamples[index]
+//			let input = gpuInputs[index]
+			let input = GPUMatrix3(matrix: sample.values, isShared: true)
+			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
+//			let output = gpuOutputs[index]
+//			let error = network.train(sample, learningRate: 0.01, annealingRate: 0, momentum: 0, decay: 0)
+			let error = gpuNetwork.train((input: input, expected: output), learningRate: 0.01, momentum: 0.9, decay: 0.001)
 			
 			if epoch % 1000 == 0
 			{
 				let newTime = CACurrentMediaTime()
-				print("epoch \(epoch) of \(epochs): \(error * 100)% error, duration: \(newTime - time) seconds.")
+				print("epoch \(epoch) of \(epochs): \(numberFormatter.string(from: (error * 100) as NSNumber) ?? "")% error, duration: \(numberFormatter.string(from: (newTime - time) as NSNumber) ?? "") seconds.")
 				time = newTime
+			}
+			
+			if error.isNaN
+			{
+				XCTFail("NaN error")
+				return
 			}
 		}
 		
@@ -321,16 +407,17 @@ class MNISTTest: XCTestCase
 		
 		for sample in testSamples
 		{
-			let result = network.feedForward(sample.values)
+			let input = GPUMatrix3(matrix: sample.values)
+			let result = gpuNetwork.feedForward(input)
 			
 			let expectedIndex = argmax(sample.expected.values).1
 			let actualIndex = argmax(result.values).1
 			
-			XCTAssertEqual(expectedIndex, actualIndex)
 			correctCount += expectedIndex == actualIndex ? 1 : 0
 			wrongCount += expectedIndex == actualIndex ? 0 : 1
 		}
 		
-		print("\(correctCount) correct, \(wrongCount) wrong, \(Float(correctCount) / Float(wrongCount + correctCount) * 100)% accuracy")
+		XCTAssertGreaterThanOrEqual(Float(correctCount) / Float(wrongCount + correctCount), 0.9)
+		print("\(correctCount) correct, \(wrongCount) wrong, \(numberFormatter.string(from: (Double(correctCount) / Double(wrongCount + correctCount) * 100) as NSNumber) ?? "")% accuracy")
 	}
 }
