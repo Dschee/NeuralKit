@@ -1,8 +1,8 @@
 //
-//  Package.swift
+//  LossFunctions.metal
 //  NeuralKit
 //
-//  Created by Palle Klewitz on 19.02.17.
+//  Created by Palle Klewitz on 11.04.17.
 //	Copyright (c) 2017 Palle Klewitz
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,11 +22,21 @@
 //	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //	SOFTWARE.
-//
 
-import PackageDescription
+#include <metal_stdlib>
+using namespace metal;
 
-let package = Package(
-	name: "NeuralKit",
-	dependencies: []
-)
+#include "Matrix.h"
+
+
+kernel void Loss_delta(const 	device 	float*		expected			[[buffer(0)]],
+					   constant			matrix3_t	&size_descriptor	[[buffer(1)]],
+					   const 	device 	float*		actual				[[buffer(2)]],
+					   			device	float*		loss				[[buffer(4)]],
+					  			 		uint3		pos					[[thread_position_in_grid]])
+{
+	float ex = matrix3_get(size_descriptor, expected, pos[0], pos[1], pos[2]);
+	float ac = matrix3_get(size_descriptor, actual, pos[0], pos[1], pos[2]);
+	
+	matrix3_set(size_descriptor, loss, pos[0], pos[1], pos[2], ex - ac);
+}

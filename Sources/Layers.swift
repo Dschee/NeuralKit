@@ -101,69 +101,6 @@ internal extension Activation
 	}
 }
 
-
-/// Creates a three dimensional weight matrix 
-/// and fills it with small random values in the specified range
-///
-/// - Parameters:
-///   - width: Width of the weight matrix
-///   - height: Height of the weight matrix
-///   - depth: Depth of the weight matrix
-///   - range: Range in which the random values should be. Default: [-0.01; 0.01]
-/// - Returns: Weight matrix containing random values
-public func RandomWeightMatrix(width: Int, height: Int, depth: Int, range: ClosedRange<Float> = Float(-0.01) ... Float(0.01)) -> Matrix3
-{
-	var weightMatrix = Matrix3(repeating: 0, width: width, height: height, depth: depth)
-	
-	for (x,y,z) in weightMatrix.indices
-	{
-		weightMatrix[x,y,z] = Float(drand48()) * (range.upperBound - range.lowerBound) + range.lowerBound
-	}
-	
-	return weightMatrix
-}
-
-
-/// Creates a weight matrix
-/// and fills it with small random values in the specified range
-///
-/// - Parameters:
-///   - width: Width of the weight matrix
-///   - height: Height of the weight matrix
-///   - range: Range in which the random values should be. Default: [-0.01; 0.01]
-/// - Returns: Weight matrix containing random values
-public func RandomWeightMatrix(width: Int, height: Int, range: ClosedRange<Float> = Float(-0.01) ... Float(0.01)) -> Matrix
-{
-	var weightMatrix = Matrix(repeating: 0, width: width, height: height)
-	
-	for (x,y) in weightMatrix.indices
-	{
-		weightMatrix[x,y] = Float(drand48()) * (range.upperBound - range.lowerBound) + range.lowerBound
-	}
-	
-	return weightMatrix
-}
-
-
-/// Creates a pertubation matrix
-/// consisting of very small values around zero with a few randomly larger values
-///
-/// - Parameters:
-///   - width: Width of the perturbation matrix
-///   - height: Height of the perturbation matrix
-/// - Returns: Perturbation matrix
-public func RandomPertubationMatrix(width: Int, height: Int) -> Matrix
-{
-	let matA = RandomWeightMatrix(width: width, height: height, range: 0 ... 1)
-	let matB = RandomWeightMatrix(width: width, height: height, range: 0 ... 1)
-	
-	// generating a normal distribution from uniformly distributed random values
-	let transformed = matA.mapv{sqrt(-2 &* log($0))}
-	let randomNegated = zip(transformed.values, matB.values).map{$1 < 0.5 ? -$0 : $0}
-	return Matrix(values: randomNegated, width: width, height: height).mapv{pow($0, Array<Float>(repeating: 5, count: randomNegated.count)) &* 0.0003}
-}
-
-
 /// A layer of a feed forward neural network
 public protocol NeuralLayer
 {

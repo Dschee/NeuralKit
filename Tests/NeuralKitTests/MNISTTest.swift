@@ -131,7 +131,7 @@ class MNISTTest: XCTestCase
 					}
 					else if let layer = l as? FullyConnectedLayer
 					{
-						return GPUFullyConnectedLayer(weights: layer.weights)
+						return GPUFullyConnectedLayer(weights: layer.weights, updateMethod: .sgd)
 					}
 					else if let layer = l as? NonlinearityLayer
 					{
@@ -142,28 +142,30 @@ class MNISTTest: XCTestCase
 						return nil
 					}
 			},
-			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),//GPUNonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .tanh), //GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
 			library: library
 		)!
 		
-		for epoch in 0 ..< epochs
-		{
-			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
-//			let error = network.train(sample, learningRate: 0.005 * pow(0.999996, Float(epoch))/*, annealingRate: epoch % 300 == 0 ? 0.002 * pow(0.99999, Float(epoch)) : 0*/)
-			let input = GPUMatrix3(matrix: sample.values, isShared: true)
-			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
-			
-			let error = gpuNetwork.train((input: input, expected: output),	learningRate: 0.005 * pow(0.999996, Float(epoch)))
-//			let error = Float.nan
-			let cpuError = network.train(sample,							learningRate: 0.005 * pow(0.999996, Float(epoch)))
-			
-			if epoch % 1000 == 0
-			{
-				let newTime = CACurrentMediaTime()
-				print("epoch \(epoch) of \(epochs): \(error * 100)% error, \(cpuError * 100) error on CPU, duration: \(newTime - time) seconds.")
-				time = newTime
-			}
-		}
+//		for epoch in 0 ..< epochs
+//		{
+//			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
+////			let error = network.train(sample, learningRate: 0.005 * pow(0.999996, Float(epoch))/*, annealingRate: epoch % 300 == 0 ? 0.002 * pow(0.99999, Float(epoch)) : 0*/)
+//			let input = GPUMatrix3(matrix: sample.values, isShared: true)
+//			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
+//			
+////			let error = gpuNetwork.train((input: input, expected: output),	learningRate: 0.005 * pow(0.999996, Float(epoch)), deltaDecay: 0.98)
+////			let error = Float.nan
+//			let cpuError = network.train(sample,							learningRate: 0.005 * pow(0.999996, Float(epoch)))
+//			
+////			print(error)
+//			
+//			if epoch % 1000 == 0
+//			{
+//				let newTime = CACurrentMediaTime()
+////				print("epoch \(epoch) of \(epochs): \(error * 100)% error, \(cpuError * 100) error on CPU, duration: \(newTime - time) seconds.")
+//				time = newTime
+//			}
+//		}
 		
 		let time1 = CACurrentMediaTime()
 		
@@ -334,7 +336,7 @@ class MNISTTest: XCTestCase
 				}
 				else if let layer = l as? FullyConnectedLayer
 				{
-					return GPUFullyConnectedLayer(weights: layer.weights)
+					return GPUFullyConnectedLayer(weights: layer.weights, updateMethod: .momentum)
 				}
 				else if let layer = l as? NonlinearityLayer
 				{
@@ -377,30 +379,30 @@ class MNISTTest: XCTestCase
 //		
 //		print("Done.")
 		
-		for epoch in 0 ..< epochs
-		{
-			let index = Int(arc4random_uniform(UInt32(trainingSamples.count)))
-			let sample = trainingSamples[index]
-//			let input = gpuInputs[index]
-			let input = GPUMatrix3(matrix: sample.values, isShared: true)
-			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
-//			let output = gpuOutputs[index]
-//			let error = network.train(sample, learningRate: 0.01, annealingRate: 0, momentum: 0, decay: 0)
-			let error = gpuNetwork.train((input: input, expected: output), learningRate: 0.01, momentum: 0.9, decay: 0.001)
-			
-			if epoch % 1000 == 0
-			{
-				let newTime = CACurrentMediaTime()
-				print("epoch \(epoch) of \(epochs): \(numberFormatter.string(from: (error * 100) as NSNumber) ?? "")% error, duration: \(numberFormatter.string(from: (newTime - time) as NSNumber) ?? "") seconds.")
-				time = newTime
-			}
-			
-			if error.isNaN
-			{
-				XCTFail("NaN error")
-				return
-			}
-		}
+//		for epoch in 0 ..< epochs
+//		{
+//			let index = Int(arc4random_uniform(UInt32(trainingSamples.count)))
+//			let sample = trainingSamples[index]
+////			let input = gpuInputs[index]
+//			let input = GPUMatrix3(matrix: sample.values, isShared: true)
+//			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
+////			let output = gpuOutputs[index]
+////			let error = network.train(sample, learningRate: 0.01, annealingRate: 0, momentum: 0, decay: 0)
+////			let error = gpuNetwork.train((input: input, expected: output), learningRate: 0.01, momentum: 0.9, decay: 0.001)
+//			
+//			if epoch % 1000 == 0
+//			{
+//				let newTime = CACurrentMediaTime()
+//				print("epoch \(epoch) of \(epochs): \(numberFormatter.string(from: (error * 100) as NSNumber) ?? "")% error, duration: \(numberFormatter.string(from: (newTime - time) as NSNumber) ?? "") seconds.")
+//				time = newTime
+//			}
+//			
+//			if error.isNaN
+//			{
+//				XCTFail("NaN error")
+//				return
+//			}
+//		}
 		
 		var correctCount = 0
 		var wrongCount = 0

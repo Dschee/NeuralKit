@@ -168,7 +168,15 @@ public struct FeedForwardNeuralNetwork
 //		}
 		
 		// Calculate the total error
-		return -sum(log(networkOutput) &* sample.expected.values)
+		if outputActivationFunction == .softmax
+		{
+			return -sum(log(networkOutput) &* sample.expected.values)
+		}
+		else
+		{
+			let deltas = networkOutput &- sample.expected.values
+			return (deltas * deltas) * 0.5
+		}
 	}
 	
 }
