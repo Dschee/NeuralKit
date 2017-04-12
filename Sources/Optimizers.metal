@@ -33,12 +33,13 @@ kernel void Optimize_sgd(		device	float*		weights			[[buffer(0)]],
 						 constant		uint		&count			[[buffer(1)]],
 								device	float*		gradients		[[buffer(2)]],
 						 constant		float		&learningRate	[[buffer(3)]],
+						 constant		float		&batch_size		[[buffer(4)]],
 										uint		index			[[thread_position_in_grid]])
 {
 	if (index >= count)
 		return;
 	
-	weights[index] -= gradients[index] * learningRate;
+	weights[index] -= gradients[index] * learningRate / batch_size;
 	gradients[index] = 0;
 }
 
@@ -48,14 +49,15 @@ kernel void Optimize_momentum(		device	float*		weights			[[buffer(0)]],
 							  		device 	float*		weight_deltas	[[buffer(3)]],
 							  constant 		float		&learningRate	[[buffer(4)]],
 							  constant		float		&momentum		[[buffer(5)]],
+							  constant		float		&batch_size		[[buffer(6)]],
 							  				uint		index			[[thread_position_in_grid]])
 {
 	if (index >= count)
 		return;
 	
-	float delta = weight_deltas[index] * momentum + gradients[index] * learningRate;
+	float delta = weight_deltas[index] * momentum - gradients[index] * learningRate / batch_size;
 	weight_deltas[index] = delta;
-	weights[index] -= delta;
+	weights[index] += delta;
 	gradients[index] = 0;
 }
 
@@ -64,12 +66,13 @@ kernel void Optimize_adagrad(		device	float*		weights					[[buffer(0)]],
 									device	float*		gradients				[[buffer(2)]],
 									device	float*		squared_gradient_sums	[[buffer(3)]],
 							 constant		float		&learningRate			[[buffer(4)]],
+							 constant		float		&batch_size				[[buffer(5)]],
 											uint		index					[[thread_position_in_grid]])
 {
 	if (index >= count)
 		return;
 	
-	float gradient = gradients[index];
+	float gradient = gradients[index] / batch_size;
 	
 	float squared_gradient_sum = squared_gradient_sums[index];
 	squared_gradient_sum += gradient * gradient;
@@ -85,12 +88,13 @@ kernel void Optimize_adadelta(		device	float*		weights						[[buffer(0)]],
 							  		device	float*		squared_gradient_sums		[[buffer(3)]],
 							  		device	float*		squared_weight_update_sums	[[buffer(4)]],
 							  constant		float		&decay						[[buffer(5)]],
+							  constant		float		&batch_size					[[buffer(6)]],
 							  				uint		index						[[thread_position_in_grid]])
 {
 	if (index >= count)
 		return;
 	
-	float gradient = gradients[index];
+	float gradient = gradients[index] / batch_size;
 	
 	float squared_gradient_sum = (decay * squared_gradient_sums[index]) + ((1 - decay) * (gradient * gradient));
 	float squared_weight_update_sum = squared_weight_update_sums[index];

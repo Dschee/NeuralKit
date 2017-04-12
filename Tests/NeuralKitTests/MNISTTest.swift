@@ -136,22 +136,22 @@ class MNISTTest: XCTestCase
 						return nil
 					}
 			},
-			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10))//GPUNonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .tanh), //GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10))
 		)!
 		
 		let sema = DispatchSemaphore(value: 0)
 		
-		let trainer = GPUNetworkTrainingSession(network: gpuNetwork, batchSize: 1, optimizer: MomentumOptimizer(learningRate: 0.005, momentum: 0.9), sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples))
+		let trainer = GPUNetworkTrainingSession(network: gpuNetwork, batchSize: 20, optimizer: MomentumOptimizer(learningRate: 0.005, momentum: 0.9), sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples))
 		
 		trainer.onFinishTraining = {sema.signal()}
 		trainer.onBatchFinish = {
 			_, epoch in
-			if epoch % 1000 == 0
+			if epoch % 100 == 0
 			{
 				print("Epoch \(epoch)")
 			}
 		}
-		trainer.train(epochs: 100_000)
+		trainer.train(epochs: 10_000)
 		
 		sema.wait()
 		

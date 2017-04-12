@@ -71,7 +71,7 @@ public protocol Optimizer
 {
 	associatedtype OptimizerData
 	
-	func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: OptimizerData?) -> OptimizerData
+	func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: OptimizerData?) -> OptimizerData
 }
 
 @available(OSX 10.12, *)
@@ -91,11 +91,12 @@ public struct SGDOptimizer: Optimizer
 	}
 	
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: Void?) -> Void
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: Void?) -> Void
 	{
 		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 		
 		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 3)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 4)
 		
 		for (weightBuffer, gradientBuffer) in zip(weights, gradients)
 		{
@@ -127,7 +128,7 @@ public struct MomentumOptimizer: Optimizer
 		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
 	}
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
 	{
 		let momentumData: [MTLBuffer]
 		
@@ -151,6 +152,7 @@ public struct MomentumOptimizer: Optimizer
 		
 		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
 		encoder.setBytes([momentum], length: MemoryLayout<Float>.size, at: 5)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 6)
 		
 		for ((weightBuffer, gradientBuffer), momentumBuffer) in zip(zip(weights, gradients), momentumData)
 		{
@@ -183,7 +185,7 @@ public struct AdaGradOptimizer: Optimizer
 		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
 	}
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
 	{
 		let squaredGradientSum: [MTLBuffer]
 		
@@ -205,6 +207,7 @@ public struct AdaGradOptimizer: Optimizer
 		
 		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 5)
 		
 		for ((weightBuffer, gradientBuffer), squaredGradientSumBuffer) in zip(zip(weights, gradients), squaredGradientSum)
 		{
@@ -237,7 +240,7 @@ public struct AdaDeltaOptimizer: Optimizer
 		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
 	}
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: ([MTLBuffer], [MTLBuffer])?) -> ([MTLBuffer], [MTLBuffer])
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: ([MTLBuffer], [MTLBuffer])?) -> ([MTLBuffer], [MTLBuffer])
 	{
 		let squaredGradientSum: [MTLBuffer]
 		let squaredWeightUpdateSum: [MTLBuffer]
@@ -268,6 +271,9 @@ public struct AdaDeltaOptimizer: Optimizer
 		
 		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 		
+		encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 5)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 6)
+		
 		for ((weightBuffer, gradientBuffer), (squaredGradientSumBuffer, squaredWeightUpdateBuffer)) in zip(zip(weights, gradients), zip(squaredGradientSum, squaredWeightUpdateSum))
 		{
 			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
@@ -275,7 +281,6 @@ public struct AdaDeltaOptimizer: Optimizer
 			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
 			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, at: 3)
 			encoder.setBuffer(squaredWeightUpdateBuffer, offset: 0, at: 4)
-			encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 5)
 			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
@@ -347,7 +352,7 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 						.flatMap{$0 as? GPUWeightAdjustableLayer}
 						.flatMap{$0.gradients}
 					
-					this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, encoder: encoder, data: this.optimizerData)
+					this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, batchSize: this.batchSize, encoder: encoder, data: this.optimizerData)
 					
 					encoder.endEncoding()
 					buffer.commit()
