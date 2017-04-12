@@ -26,15 +26,37 @@
 import Foundation
 import Metal
 
-
+/// A two dimensional Matrix which is accessible to the GPU.
+/// 
+///
 @available(OSX 10.12, *)
 public struct GPUMatrix
 {
+	
+	/// Describes the size of the Matrix.
 	public let descriptor: (width: UInt32, height: UInt32)
 	
+	
+	/// The buffer holding the actual matrix values on the GPU.
 	internal let buffer: MTLBuffer
+	
+	
+	/// The buffer holding the descriptor on the GPU.
 	internal let descriptorBuffer: MTLBuffer
 	
+	
+	/// Creates a new two dimensional Matrix which is accessible to the GPU
+	/// and copies the content of the given matrix into it.
+	///
+	/// If the matrix is not shared, it will be allocated in VRAM,
+	/// which improves access performance from shader code
+	/// but introduces a slow copy back phase if the CPU
+	/// needs to access the content of the matrix.
+	///
+	/// - Parameters:
+	///   - matrix: The matrix which should be made available to the GPU
+	///   - isShared: If the matrix is shared, it will be allocated in shared memory.
+	///					Otherwise it will be allocated on GPU memory.
 	public init(matrix: Matrix, isShared: Bool = false)
 	{
 		buffer = GPUGlobalDevice.makeBuffer(
@@ -54,6 +76,13 @@ public struct GPUMatrix
 		)
 	}
 	
+	
+	/// Initializes a new matrix from a size descriptor and an already
+	/// existing buffer.
+	///
+	/// - Parameters:
+	///   - descriptor: Describes the size of the matrix.
+	///   - buffer: Buffer storing the contents of the matrix.
 	internal init(descriptor: (width: UInt32, height: UInt32), buffer: MTLBuffer)
 	{
 		self.buffer = buffer
@@ -66,6 +95,13 @@ public struct GPUMatrix
 		)
 	}
 	
+	
+	/// Copies the content of the gpu matrix into a new matrix.
+	///
+	/// If the matrix is not shared, this requires a copy from 
+	/// VRAM to RAM which can decrease performance.
+	///
+	/// - Returns: A copy of the data contained in the gpu matrix.
 	public func asMatrix() -> Matrix
 	{
 		
@@ -107,6 +143,20 @@ public struct GPUMatrix
 		return Matrix(values: values, width: Int(descriptor.width), height: Int(descriptor.height))
 	}
 	
+	
+	/// Reshapes the matrix to the given width and height.
+	///
+	/// The product of the new width and height must equal
+	/// the product of the old width and height.
+	///
+	/// The contents of the matrix are not copied so a write access
+	/// to either the current or the reshaped matrix will result in
+	/// the same changes to the other matrix.
+	///
+	/// - Parameters:
+	///   - width: Width of the reshaped matrix
+	///   - height: Height of the reshaped matrix
+	/// - Returns: Reshaped matrix containing the same values
 	public func reshaped(width: Int, height: Int) -> GPUMatrix
 	{
 		precondition(
@@ -131,14 +181,36 @@ public struct GPUMatrix
 	}
 }
 
+
+/// A three dimensional matrix which is accessible to the GPU.
 @available(OSX 10.12, *)
 public struct GPUMatrix3
 {
+	
+	/// Describes the width, height and depth of the matrix.
 	public let descriptor: (width: UInt32, height: UInt32, depth: UInt32)
 	
+	
+	/// The buffer holding the actual matrix values on the GPU.
 	internal let buffer: MTLBuffer
+	
+	
+	/// The buffer holding the descriptor on the GPU.
 	internal let descriptorBuffer: MTLBuffer
 	
+	
+	/// Creates a new three dimensional Matrix which is accessible to the GPU
+	/// and copies the content of the given matrix into it.
+	///
+	/// If the matrix is not shared, it will be allocated in VRAM,
+	/// which improves access performance from shader code
+	/// but introduces a slow copy back phase if the CPU
+	/// needs to access the content of the matrix.
+	///
+	/// - Parameters:
+	///   - matrix: The matrix which should be made available to the GPU
+	///   - isShared: If the matrix is shared, it will be allocated in shared memory.
+	///					Otherwise it will be allocated on GPU memory.
 	public init(matrix: Matrix3, isShared: Bool = false)
 	{
 		buffer = GPUGlobalDevice.makeBuffer(
@@ -159,6 +231,13 @@ public struct GPUMatrix3
 		)
 	}
 	
+	
+	/// Initializes a new matrix from a size descriptor and an already
+	/// existing buffer.
+	///
+	/// - Parameters:
+	///   - descriptor: Describes the size of the matrix.
+	///   - buffer: Buffer storing the contents of the matrix.
 	private init(descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer)
 	{
 		self.buffer = buffer
@@ -171,6 +250,13 @@ public struct GPUMatrix3
 		)
 	}
 	
+	
+	/// Initializes a new matrix from a size descriptor,
+	/// an already existing descriptor buffer and value buffer.
+	///
+	/// - Parameters:
+	///   - descriptor: Describes the size of the matrix.
+	///   - buffer: Buffer storing the contents of the matrix.
 	internal init(descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer, descriptorBuffer: MTLBuffer)
 	{
 		self.buffer = buffer
@@ -179,6 +265,13 @@ public struct GPUMatrix3
 		self.descriptorBuffer = descriptorBuffer
 	}
 	
+	
+	/// Copies the content of the gpu matrix into a new matrix.
+	///
+	/// If the matrix is not shared, this requires a copy from
+	/// VRAM to RAM which can decrease performance.
+	///
+	/// - Returns: A copy of the data contained in the gpu matrix.
 	public func asMatrix() -> Matrix3
 	{
 		let destination: MTLBuffer
@@ -218,6 +311,21 @@ public struct GPUMatrix3
 		return Matrix3(values: values, width: Int(descriptor.width), height: Int(descriptor.height), depth: Int(descriptor.depth))
 	}
 	
+	
+	/// Reshapes the matrix to the given width and height.
+	///
+	/// The product of the new width, height and depth must equal
+	/// the product of the old width, height and depth.
+	///
+	/// The contents of the matrix are not copied so a write access
+	/// to either the current or the reshaped matrix will result in
+	/// the same changes to the other matrix.
+	///
+	/// - Parameters:
+	///   - width: Width of the reshaped matrix
+	///   - height: Height of the reshaped matrix
+	///   - depth: Depth of the reshaped matrix
+	/// - Returns: Reshaped matrix containing the same values
 	public func reshaped(width: Int, height: Int, depth: Int) -> GPUMatrix3
 	{
 		precondition(

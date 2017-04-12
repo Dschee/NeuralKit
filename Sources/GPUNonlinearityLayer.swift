@@ -212,3 +212,12 @@ public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 	}
 }
 
+
+@available(OSX 10.12, *)
+public extension GPUNonlinearityLayer
+{
+	public init(_ layer: NonlinearityLayer)
+	{
+		self.init(inputSize: layer.inputSize, activation: layer.activation)
+	}
+}

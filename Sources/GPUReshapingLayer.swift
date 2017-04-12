@@ -120,3 +120,12 @@ public struct GPUReshapingLayer: GPUBidirectionalLayer
 	
 }
 
+
+@available(OSX 10.12, *)
+public extension GPUReshapingLayer
+{
+	public init(_ layer: ReshapingLayer)
+	{
+		self.init(inputSize: layer.inputSize, outputSize: layer.outputSize)
+	}
+}

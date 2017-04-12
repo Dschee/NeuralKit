@@ -333,3 +333,19 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		}
 	}
 }
+
+
+@available(OSX 10.12, *)
+extension GPUConvolutionLayer
+{
+	public init(_ layer: ConvolutionLayer)
+	{
+		self.init(
+			inputSize: layer.inputSize,
+			kernels: layer.kernels,
+			bias: layer.bias,
+			horizontalInset: layer.horizontalInset,
+			verticalInset: layer.verticalInset
+		)
+	}
+}

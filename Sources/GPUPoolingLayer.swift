@@ -135,3 +135,13 @@ public struct GPUPoolingLayer: GPUBidirectionalLayer
 	}
 	
 }
+
+
+@available(OSX 10.12, *)
+public extension GPUPoolingLayer
+{
+	public init(_ layer: PoolingLayer)
+	{
+		self.init(inputSize: layer.inputSize, outputSize: layer.outputSize)
+	}
+}

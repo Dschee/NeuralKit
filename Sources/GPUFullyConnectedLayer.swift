@@ -188,3 +188,11 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustable
 	}
 }
 
+@available(OSX 10.12, *)
+public extension GPUFullyConnectedLayer
+{
+	public init(_ layer: FullyConnectedLayer)
+	{
+		self.init(weights: layer.weights)
+	}
+}

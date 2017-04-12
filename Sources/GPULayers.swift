@@ -26,9 +26,21 @@
 import Foundation
 import Metal
 
+// Extension which automatically computes the thread group size
+// when dispatching a compute shader.
 @available(OSX 10.12, *)
 extension MTLComputeCommandEncoder
 {
+	
+	/// Dispatches a compute shader with the given global size.
+	///
+	/// The size will be divided into thread groups are as large as possible
+	/// for the device used.
+	///
+	/// This may lead to kernel invokations, which are outside of
+	/// the given global size.
+	///
+	/// - Parameter maxSize: Global size
 	func dispatch(workSize maxSize: (width: Int, height: Int, depth: Int))
 	{
 		let maxDeviceSize = self.device.maxThreadsPerThreadgroup
@@ -82,10 +94,22 @@ extension MTLComputeCommandEncoder
 		
 		self.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: size)
 	}
+	
 }
 
 
-// A layer of a feed forward neural network
+/// A layer of a feed forward neural network
+/// which runs on a metal capable compute device.
+///
+/// A neural layer provides a forward propagation function
+/// which takes an input, which can either be the network
+/// input or the output of an anterior layer and performs
+/// transformations on it using metal compute shaders.
+///
+/// A layer always has a fixed input and output size to ensure
+/// that all layers will fit together in a network.
+///
+/// This protocol requires macOS 10.12 or greater.
 @available(OSX 10.12, *)
 public protocol GPUNeuralLayer
 {
@@ -100,57 +124,88 @@ public protocol GPUNeuralLayer
 	var outputSize: (width: Int, height: Int, depth: Int) { get }
 	
 	
-	/// Performs data transformations for feed forward operation
+	/// Performs all transformations of the layer used in feed forward mode.
 	///
-	/// - Parameter output: Input of the layer which should be forwarded
-	/// - Returns: Weighted output of the layer
-	/// Performs data transformations for feed forward operation
+	/// This function takes an input, which can either be the network
+	/// input or the output of an anterior layer and performs
+	/// transformations on it.
 	///
-	/// - Parameter output: Input of the layer which should be forwarded
-	/// - Returns: Weighted output of the layer
+	/// This function returns a matrix, which will contain the result of 
+	/// the transformations after the shaders of this layer have finished
+	/// running.
+	///
+	/// - Parameters:
+	///   - input: Input of the layer.
+	///   - encoder: Encoder used to dispatch metal compute shaders
+	/// - Returns: A matrix which will contain the result of all computations of the layer.
 	func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 }
 
-/// A layer of a feed forward neural network
+
+/// A layer of a feed forward neural network, which supports backpropagation
+/// of gradients.
+/// 
+/// During backproagation, a layer will be presented with the gradients
+/// of the posterior layer and will compute the gradient, which can be passed to
+/// the next layer.
+/// If the layer has adjustable weights, the backproagation function will also
+/// compute weight gradients, which can be used for weight updates by an optimizer.
 @available(OSX 10.12, *)
 public protocol GPUBidirectionalLayer: GPUNeuralLayer
 {
 	
-	/// Adjusts the weights of the layer to reduce the total error of the network
-	/// using gradient descent.
+	/// Backpropagates the gradient through the network and calculates
+	/// weight gradients if necessary.
 	///
-	/// The gradients of the posterior layer will be provided.
-	/// The function has to also calculate the errors of the layer
-	/// for the anterior layer to use.
+	/// The backpropagated gradient of this layer will be passed to the
+	/// anterior layer.
 	///
 	/// - Parameters:
-	///   - nextLayerGradients: Error matrix from the input of the next layer
-	///   - inputs: Inputs of the current layer
-	///   - learningRate: Learning rate at which the weights should be adjusted
-	///   - momentum: Momentum of weight updates
-	///   - decay: Decay rate at which weights should be decreased
-	/// - Returns: Error matrix of the current layer
+	///   - nextLayerGradients: Gradients computed by the posterior layer
+	///   - inputs: Inputs of the layer
+	///   - encoder: Encoder used to dispatch metal compute shaders
+	/// - Returns: Gradients which will be passed to the anterior layer.
 	func backpropagate(
 		nextLayerGradients: GPUMatrix3,
 		inputs: GPUMatrix3,
 		encoder: MTLComputeCommandEncoder
 	) -> GPUMatrix3
 	
-	
-	
 }
 
 
+/// A layer which has adjustable weights, which can be updated using backpropagation.
+///
+/// An adjustable layer will update its weight gradients during backpropagation.
+/// An optimizer can then take the gradients and apply them to the weights of this layer.
 @available(OSX 10.12, *)
-public protocol GPUWeightAdjustableLayer: GPUNeuralLayer
+public protocol GPUWeightAdjustableLayer: GPUBidirectionalLayer
 {
+	
+	/// All weights of this layer.
+	///
+	/// The weight at a given index must correspond to the
+	/// gradient at the same index
 	var weights: [GPUTensor] { get }
+	
+	
+	/// All weight gradients of this layer
+	///
+	/// The weight gradient at a given index must correspond to the
+	/// weight at the same index.
 	var gradients: [GPUTensor] { get }
 	
+	
+	/// Notifies the layer that training has finished and 
+	/// weights can be copied back to the CPU if needed.
 	mutating func finishTraining()
 }
 
 
+/// A layer which can be used as the last layer in a neuronal network.
+/// 
+/// The last layer of a network is responsible for calculating the gradient
+/// at the output of a network with respect to the expected output.
 @available(OSX 10.12, *)
 public protocol GPUOutputLayer: GPUNeuralLayer
 {
@@ -161,7 +216,7 @@ public protocol GPUOutputLayer: GPUNeuralLayer
 	///   - expected: Expected output values of the layer
 	///   - actual: Actual output values of the layer
 	///   - encoder: Encoder for dispatching on the GPU
-	/// - Returns: Loss matrix
+	/// - Returns: Gradient matrix
 	func loss(expected: GPUMatrix3, actual: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	
 }

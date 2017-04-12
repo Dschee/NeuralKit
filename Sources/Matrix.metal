@@ -28,77 +28,63 @@ using namespace metal;
 
 #include "Matrix.h"
 
-/**
- 
- Retrieves an element of a 2D matrix.
- 
- This method assumes that the matrix values are stored in row major data ordering
- 
- - parameter descriptor: Descriptor storing the dimensions of the matix
- - parameter matrix_store: The contents of the matrix
- - parameter column: The column at which the matrix should be accessed
- - parameter row: The row at which the matrix should be accessed
- - returns: The value stored at (column, row) in the matrix
- 
- */
+
+/// Retrieves an element from a matrix at the given column and row.
+///
+/// This method assumes that the matrix values are stored in row major data ordering
+///
+/// - parameter matrix_descriptor: Descriptor containing the dimensions of the matrix
+/// - parameter matrix_store: Value store of the matrix.
+/// - parameter column: Column at which the matrix should be accessed
+/// - parameter row: Row at which the matrix should be accessed
+/// - returns: Value stored in the matrix at the given column and row
 float matrix_get(matrix_t matrix_descriptor, const device float* matrix_store, uint column, uint row)
 {
 	return matrix_store[(int)(matrix_descriptor.width * row + column)];
 }
 
-/**
- 
- Sets an element of a 2D matrix.
- 
- This method assumes that the matrix values are stored in row major data ordering
- 
- - parameter descriptor: Descriptor storing the dimensions of the matix
- - parameter matrix_store: The contents of the matrix
- - parameter column: The column at which the matrix should be accessed
- - parameter row: The row at which the matrix should be accessed
- - parameter value: The value to which the matrix at (column, row) should be set to
- 
- */
+
+/// Sets an element in a matrix at the given column and row.
+///
+/// This method assumes that the matrix values are stored in row major data ordering
+///
+/// - parameter matrix_descriptor: Descriptor containing the dimensions of the matrix
+/// - parameter matrix_store: Value store of the matrix.
+/// - parameter column: Column at which the matrix should be set
+/// - parameter row: Row at which the matrix should be set
+/// - parameter value: New value which will replace the value at the specified location in the matrix.
 void matrix_set(matrix_t matrix_descriptor, device float* matrix_store, uint column, uint row, float value)
 {
 	matrix_store[(int)(matrix_descriptor.width * row + column)] = value;
 }
 
 
-/**
- 
- Retrieves an element of a 3D matrix.
- 
- This method assumes that the matrix values are stored in slice major and then in row major data ordering
- 
- - parameter descriptor: Descriptor storing the dimensions of the matix
- - parameter matrix_store: The contents of the matrix
- - parameter column: The column at which the matrix should be accessed
- - parameter row: The row at which the matrix should be accessed
- - parameter slice: The z index at which the matrix should be accessed
- - returns: The value stored at (column, row) in the matrix
- 
- */
+/// Retrieves an element from a three dimensional matrix at the given column and row.
+///
+/// This method assumes that the matrix values are stored in slice major and then in row major data ordering
+///
+/// - parameter matrix_descriptor: Descriptor containing the dimensions of the matrix
+/// - parameter matrix_store: Value store of the matrix.
+/// - parameter column: Column at which the matrix should be accessed
+/// - parameter row: Row at which the matrix should be accessed
+/// - parameter slice: Slice at which the matrix should be accessed
+/// - returns: Value stored in the matrix at the given column and row
 float matrix3_get(matrix3_t matrix_descriptor, const device float* matrix_store, uint column, uint row, uint slice)
 {
 	return matrix_store[(int)((matrix_descriptor.height * slice + row) * matrix_descriptor.width + column)];
 }
 
 
-/**
- 
- Sets an element of a 3D matrix.
- 
- This method assumes that the matrix values are stored in slice major and then in row major data ordering
- 
- - parameter descriptor: Descriptor storing the dimensions of the matix
- - parameter matrix_store: The contents of the matrix
- - parameter column: The column at which the matrix should be accessed
- - parameter row: The row at which the matrix should be accessed
- - parameter slice: The z index at which the matrix should be accessed
- - parameter value: The value to which the matrix at (column, row) should be set to
- 
- */
+/// Sets an element in a three dimensional matrix at the given column and row.
+///
+/// This method assumes that the matrix values are stored in slice major and then in row major data ordering
+///
+/// - parameter matrix_descriptor: Descriptor containing the dimensions of the matrix
+/// - parameter matrix_store: Value store of the matrix.
+/// - parameter column: Column at which the matrix should be set
+/// - parameter row: Row at which the matrix should be set
+/// - parameter slice: Slice at which the matrix should beset
+/// - parameter value: New value which will replace the value at the specified location in the matrix.
 void matrix3_set(matrix3_t matrix_descriptor, device float* matrix_store, uint column, uint row, uint slice, float value)
 {
 	matrix_store[(int)((matrix_descriptor.height * slice + row) * matrix_descriptor.width + column)] = value;
