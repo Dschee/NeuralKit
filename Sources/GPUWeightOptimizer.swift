@@ -159,7 +159,7 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 	
 	private func finalizeTraining()
 	{
-		
+		//TODO: Copy weights back from VRAM to RAM
 	}
 	
 	

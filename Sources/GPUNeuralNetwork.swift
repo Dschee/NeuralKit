@@ -30,8 +30,6 @@ import Metal
 public let GPUGlobalDevice = MTLCreateSystemDefaultDevice()!
 public let GPUGlobalQueue = GPUGlobalDevice.makeCommandQueue()
 
-
-
 /// A feed forward multi layer neural network
 public struct GPUFeedForwardNeuralNetwork
 {

@@ -29,7 +29,6 @@ using namespace metal;
 #include "Matrix.h"
 
 
-
 kernel void Optimize_sgd(		device	float*		weights			[[buffer(0)]],
 						 constant		uint		&count			[[buffer(1)]],
 								device	float*		gradients		[[buffer(2)]],

@@ -29,7 +29,7 @@ import Metal
 
 /// A fully connected layer of a neural network.
 /// All neurons of the layer are connected to all neurons of the next layer
-public struct GPUFullyConnectedLayer: GPUBidirectionalLayer
+public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustableLayer
 {
 	
 	/// Input size of the layer.
@@ -37,7 +37,7 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer
 	public var inputSize: (width: Int, height: Int, depth: Int)
 	{
 		// The last neuron is an extra bias neuron and will not be counted in input depth
-		return (width: 1, height: 1, depth: weights.width - 1)
+		return (width: 1, height: 1, depth: weightMatrix.width - 1)
 	}
 	
 	
@@ -45,19 +45,22 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer
 	/// Should not change after initialization
 	public var outputSize: (width: Int, height: Int, depth: Int)
 	{
-		return (width: 1, height: 1, depth: weights.height)
+		return (width: 1, height: 1, depth: weightMatrix.height)
 	}
 	
 	
 	/// Weights with which outputs of the layer are weighted when presented to the next layer
-	public internal(set) var weights: Matrix
+	public internal(set) var weightMatrix: Matrix
 	
+	public var weights: [GPUTensor]
+	{
+		return [.matrix(self.gpuWeights)]
+	}
 	
-	/// Weight delta for momentum training
-	private var weightDelta: Matrix
-	
-	private let weightUpdateMethod: WeightUpdateMethod
-	
+	public var gradients: [GPUTensor]
+	{
+		return [.matrix(self.gpuWeightGradient)]
+	}
 	
 	/// Initializes a fully connected neural layer using the given weight matrix, its activation function and derivative
 	///
@@ -71,19 +74,15 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer
 	///   - weights: Weights from the layer to the next layer
 	///   - activationFunction: Activation function with which the inputs should be activated
 	///   - activationDerivative: Derivative of the activation function used for training
-	public init(weights: Matrix, updateMethod: WeightUpdateMethod = .sgd)
+	public init(weights: Matrix)
 	{
-		self.weights = weights
-		self.weightDelta = Matrix(repeating: 0, width: weights.width, height: weights.height)
-		self.weightUpdateMethod = updateMethod
+		self.weightMatrix = weights
 	}
 	
 	
-	public init(inputDepth: Int, outputDepth: Int, updateMethod: WeightUpdateMethod = .sgd)
+	public init(inputDepth: Int, outputDepth: Int)
 	{
-		self.weights = RandomWeightMatrix(width: inputDepth + 1, height: outputDepth, variance: 1 / Float(inputDepth + 1))
-		self.weightDelta = Matrix(repeating: 0, width: weights.width, height: weights.height)
-		self.weightUpdateMethod = updateMethod
+		self.weightMatrix = RandomWeightMatrix(width: inputDepth + 1, height: outputDepth, variance: 1 / Float(inputDepth + 1))
 	}
 	
 	
@@ -91,21 +90,19 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer
 	private var gpuOutput: GPUMatrix3!
 	private var gpuFunctionPipelineState: MTLComputePipelineState!
 	
-	private var gpuGradient: GPUMatrix3!
-	private var gpuWeightDelta: GPUMatrix!
-	private var gpuWeightUpdateDelta: GPUMatrix?
 	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState!
-	private var gpuWeightUpdateFunctionPipelineState: MTLComputePipelineState!
+	private var gpuGradientUpdateFunctionPipelineState: MTLComputePipelineState!
+	
+	private var gpuGradient: GPUMatrix3!
+	private var gpuWeightGradient: GPUMatrix!
+	
 	
 	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
 	{
-		let constants = MTLFunctionConstantValues()
-		constants.setConstantValue([self.weightUpdateMethod.rawValue], type: MTLDataType.short, at: 0)
-		
 		guard
 			let function = library.makeFunction(name: "FullyConnectedLayer_forward"),
 			let backpropagateFunction = library.makeFunction(name: "FullyConnectedLayer_backpropagate"),
-			let weightUpdateFunction = try? library.makeFunction(name: "FullyConnectedLayer_adjust_weights", constantValues: constants)
+			let gradientUpdateFunction = library.makeFunction(name: "FullyConnectedLayer_update_gradients")
 		else
 		{
 			fatalError("Could not make Metal function.")
@@ -115,28 +112,23 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer
 		{
 			self.gpuFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: function)
 			self.gpuBackpropagateFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: backpropagateFunction)
-			self.gpuWeightUpdateFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: weightUpdateFunction)
+			self.gpuGradientUpdateFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: gradientUpdateFunction)
 		}
 		catch
 		{
 			fatalError("\(error)")
 		}
 		
-		self.gpuWeights = GPUMatrix(matrix: self.weights)
-		self.gpuWeightDelta = GPUMatrix(matrix: self.weightDelta)
+		self.gpuWeights = GPUMatrix(matrix: self.weightMatrix)
 		
-		if self.weightUpdateMethod == .adadelta
-		{
-			let weightUpdateDelta = Matrix(repeating: 0, width: self.weights.width, height: self.weights.height)
-			self.gpuWeightUpdateDelta = GPUMatrix(matrix: weightUpdateDelta)
-		}
+		let weightGradient = Matrix.init(repeating: 0, width: self.weightMatrix.width, height: self.weightMatrix.height)
+		self.gpuWeightGradient = GPUMatrix(matrix: weightGradient)
 		
 		let outputValues = Matrix3(repeating: 0, width: self.outputSize.width, height: self.outputSize.height, depth: self.outputSize.depth)
 		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: shareOutput)
 		
 		let gradientValues = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
 		self.gpuGradient = GPUMatrix3(matrix: gradientValues)
-		
 	}
 	
 	
@@ -172,7 +164,7 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer
 		nextLayerGradients: GPUMatrix3,
 		inputs: GPUMatrix3,
 		encoder: MTLComputeCommandEncoder
-		) -> GPUMatrix3
+	) -> GPUMatrix3
 	{
 		encoder.setComputePipelineState(self.gpuBackpropagateFunctionPipelineState)
 		
@@ -180,13 +172,11 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer
 		nextLayerGradients.setBuffer(on: encoder, at: 2)
 		gpuGradient.setBuffer(on: encoder, at: 4)
 		gpuWeights.setBuffer(on: encoder, at: 6)
-		gpuWeightDelta.setBuffer(on: encoder, at: 8)
-		
-		gpuWeightUpdateDelta?.setBuffer(on: encoder, at: 10)
+		gpuWeightGradient.setBuffer(on: encoder, at: 8)
 		
 		encoder.dispatch(workSize: (width: inputSize.depth, height: 1, depth: 1))
 		
-		encoder.setComputePipelineState(self.gpuWeightUpdateFunctionPipelineState)
+		encoder.setComputePipelineState(self.gpuGradientUpdateFunctionPipelineState)
 		encoder.dispatch(workSize: (width: inputSize.depth + 1, height: outputSize.depth, depth: 1))
 		
 		return gpuGradient

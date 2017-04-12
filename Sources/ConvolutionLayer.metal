@@ -28,18 +28,6 @@ using namespace metal;
 
 #include "Matrix.h"
 
-constant short WEIGHT_UPDATE_MODE [[function_constant(0)]];
-// 0: Vanilla SGD
-// 1: Momentum SGD
-// 2: Adagrad
-// 3: Adadelta
-
-constant short SGD = 0;
-constant short MOMENTUM = 1;
-constant short ADAGRAD = 2;
-constant short ADADELTA = 3;
-//constant short ADAM = 4;
-
 
 kernel void ConvolutionLayer_forward(const	device	float*		input				[[buffer(0)]],
 									 constant		matrix3_t	&input_descriptor	[[buffer(1)]],
@@ -54,8 +42,8 @@ kernel void ConvolutionLayer_forward(const	device	float*		input				[[buffer(0)]]
 									 constant		int			&vertical_stride	[[buffer(10)]],
 									 				uint3		pos					[[thread_position_in_grid]])
 {
-	//	if (pos[0] >= output_descriptor.width || pos[1] >= output_descriptor.height || pos[2] >= output_descriptor.depth)
-	//		return;
+	if (pos[0] >= output_descriptor.width || pos[1] >= output_descriptor.height || pos[2] >= output_descriptor.depth)
+		return;
 	
 	matrix3_t kernel_desc = kernel_descriptor;
 	kernel_desc.depth = input_descriptor.depth;
@@ -97,10 +85,10 @@ kernel void ConvolutionLayer_backpropagate(			device	float*		next_gradient				[[
 										   constant			matrix3_t	&input_descriptor			[[buffer(5)]],
 										   const	device	float*		kernels						[[buffer(6)]],
 										   			device	matrix3_t	&kernel_descriptor			[[buffer(7)]],
-										   constant			int			&horizontal_inset			[[buffer(13)]],
-										   constant			int			&vertical_inset				[[buffer(14)]],
-										   constant			int			&horizontal_stride			[[buffer(15)]],
-										   constant			int			&vertical_stride			[[buffer(16)]],
+										   constant			int			&horizontal_inset			[[buffer(12)]],
+										   constant			int			&vertical_inset				[[buffer(13)]],
+										   constant			int			&horizontal_stride			[[buffer(14)]],
+										   constant			int			&vertical_stride			[[buffer(15)]],
 										   					uint3		pos							[[thread_position_in_grid]])
 {
 	if (pos[0] >= input_descriptor.width || pos[1] >= input_descriptor.height || pos[2] >= input_descriptor.depth)
@@ -143,13 +131,12 @@ kernel void ConvolutionLayer_update_gradients(const	device	float*		input						[[
 											  constant		matrix3_t	&input_descriptor			[[buffer(1)]],
 													device	float*		next_gradient				[[buffer(2)]],
 											  constant		matrix3_t	&next_gradient_descriptor	[[buffer(3)]],
-													device	float*		kernels						[[buffer(6)]],
-													device	matrix3_t	&kernel_descriptor			[[buffer(7)]],
-													device	float*		weight_gradients			[[buffer(9)]], // Skip kernel deltas descriptor
-											  constant		int			&horizontal_inset			[[buffer(13)]],
-											  constant		int			&vertical_inset				[[buffer(14)]],
-											  constant		int			&horizontal_stride			[[buffer(15)]],
-											  constant		int			&vertical_stride			[[buffer(16)]],
+													device	float*		weight_gradients			[[buffer(8)]],
+													device	matrix3_t	&kernel_descriptor			[[buffer(9)]],
+											  constant		int			&horizontal_inset			[[buffer(12)]],
+											  constant		int			&vertical_inset				[[buffer(13)]],
+											  constant		int			&horizontal_stride			[[buffer(14)]],
+											  constant		int			&vertical_stride			[[buffer(15)]],
 															uint3		pos							[[thread_position_in_grid]]) // Position in convolution kernels
 {
 	if (pos[0] >= kernel_descriptor.width || pos[1] >= kernel_descriptor.height || pos[2] >= kernel_descriptor.depth)
@@ -190,16 +177,14 @@ kernel void ConvolutionLayer_update_gradients(const	device	float*		input						[[
 
 kernel void ConvolutionLayer_update_bias_gradients(			device	float*		next_gradient				[[buffer(2)]],
 												   constant			matrix3_t	&next_gradient_descriptor	[[buffer(3)]],
-												   			device	float*		bias_values					[[buffer(6)]],
-												   			device	uint		&count						[[buffer(7)]],
-												   			device	float*		weight_gradients			[[buffer(9)]], // Skip kernel deltas descriptor
-												   constant			int			&horizontal_inset			[[buffer(13)]],
-												   constant			int			&vertical_inset				[[buffer(14)]],
-												   constant			int			&horizontal_stride			[[buffer(15)]],
-												   constant			int			&vertical_stride			[[buffer(16)]],
+												   			device	float*		weight_gradients			[[buffer(8)]], // Skip kernel deltas descriptor
+												   constant			int			&horizontal_inset			[[buffer(12)]],
+												   constant			int			&vertical_inset				[[buffer(13)]],
+												   constant			int			&horizontal_stride			[[buffer(14)]],
+												   constant			int			&vertical_stride			[[buffer(15)]],
 																	uint		index						[[thread_position_in_grid]])
 {
-	if (index >= count)
+	if (index >= next_gradient_descriptor.depth)
 		return;
 	
 	float biasGradient = weight_gradients[index];

@@ -28,18 +28,6 @@ using namespace metal;
 
 #include "Matrix.h"
 
-constant short WEIGHT_UPDATE_MODE [[function_constant(0)]];
-// 0: Vanilla SGD
-// 1: Momentum SGD
-// 2: Adagrad
-// 3: Adadelta
-
-constant short SGD = 0;
-constant short MOMENTUM = 1;
-constant short ADAGRAD = 2;
-constant short ADADELTA = 3;
-//constant short ADAM = 4;
-
 //MARK: Layer forward propagation functions
 
 /**
@@ -94,37 +82,27 @@ kernel void FullyConnectedLayer_backpropagate(const	device	float*		input						[[
 													device	float*		gradient					[[buffer(4)]], // skip gradient descriptor
 													device	float*		weights						[[buffer(6)]],
 											  constant		matrix_t	&weight_descriptor			[[buffer(7)]],
-													device	float*		weight_delta				[[buffer(8)]], // skip weight delta descriptor
-											  constant		float		&learning_rate				[[buffer(10)]],
-											  constant		float		&momentum					[[buffer(11)]],
-											  constant		float		&decay						[[buffer(12)]],
 											 	 			uint		column						[[thread_position_in_grid]])
 {
 	if (column >= input_descriptor.depth)
 		return;
 	
-	// Don't calculate gradient for bias
-	if (column != weight_descriptor.width - 1)
+	float grad = 0;
+	
+	for (uint row = 0; row < next_gradient_descriptor.depth; row++)
 	{
-		float grad = 0;
-		
-		for (uint row = 0; row < next_gradient_descriptor.depth; row++)
-		{
-			grad += matrix3_get(next_gradient_descriptor, next_gradient, 0, 0, row) * matrix_get(weight_descriptor, weights, column, row);
-		}
-		
-		matrix3_set(input_descriptor, gradient, 0, 0, column, grad);
+		grad += matrix3_get(next_gradient_descriptor, next_gradient, 0, 0, row) * matrix_get(weight_descriptor, weights, column, row);
 	}
+	
+	matrix3_set(input_descriptor, gradient, 0, 0, column, grad);
 }
 
-kernel void FullyConnectedLayer_adjust_weights(const	device	float*		input						[[buffer(0)]],
-											   constant			matrix3_t	&input_descriptor			[[buffer(1)]],
-											   const	device	float*		next_gradient				[[buffer(2)]],
-											   constant			matrix3_t	&next_gradient_descriptor	[[buffer(3)]],
-											   			device	float*		gradient					[[buffer(4)]], // skip gradient descriptor
-											   			device	float*		weights						[[buffer(6)]],
-											   constant			matrix_t	&weight_descriptor			[[buffer(7)]],
-											   			device	float*		weight_gradient				[[buffer(8)]], // skip weight delta descriptor
+kernel void FullyConnectedLayer_update_gradients(const	device	float*		input						[[buffer(0)]],
+												 constant		matrix3_t	&input_descriptor			[[buffer(1)]],
+												 const	device	float*		next_gradient				[[buffer(2)]],
+												 constant		matrix3_t	&next_gradient_descriptor	[[buffer(3)]],
+												 		device	float*		weight_gradient				[[buffer(8)]],
+												 constant		matrix_t	&weight_descriptor			[[buffer(9)]],
 											   					uint2		pos							[[thread_position_in_grid]])
 {
 	uint column = pos[0];
@@ -133,7 +111,7 @@ kernel void FullyConnectedLayer_adjust_weights(const	device	float*		input						[
 	if (column > input_descriptor.depth || row >= next_gradient_descriptor.depth)
 		return;
 	
-	float in = (column == (weight_descriptor.width - 1)) ? 1 : matrix3_get(input_descriptor, input, 0, 0, column);
+	float in = (column == input_descriptor.depth) ? 1 : matrix3_get(input_descriptor, input, 0, 0, column);
 	
 	float weightGradient = matrix_get(weight_descriptor, weight_gradient, column, row);
 	weightGradient += matrix3_get(next_gradient_descriptor, next_gradient, 0, 0, row) * in;

@@ -145,7 +145,8 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 	
 	private var gpuFunctionPipelineState: MTLComputePipelineState!
 	private var gpuBackpropagatePipelineState: MTLComputePipelineState!
-	private var gpuWeightUpdatePipelineState: MTLComputePipelineState!
+	private var gpuWeightGradientUpdatePipelineState: MTLComputePipelineState!
+	private var gpuBiasGradientUpdatePipelineState: MTLComputePipelineState!
 	
 	private var gpuKernels: GPUMatrix3!
 	private var gpuBias: MTLBuffer!
@@ -166,7 +167,8 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		guard
 			let function = library.makeFunction(name: "ConvolutionLayer_forward"),
 			let backpropagateFunction = library.makeFunction(name: "ConvolutionLayer_backpropagate"),
-			let updateFunction = library.makeFunction(name: "ConvolutionLayer_update_gradients")
+			let updateFunction = library.makeFunction(name: "ConvolutionLayer_update_gradients"),
+			let updateBiasFunction = library.makeFunction(name: "ConvolutionLayer_update_bias_gradients")
 		else
 		{
 			fatalError("Could not make Metal function.")
@@ -176,7 +178,8 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		{
 			self.gpuFunctionPipelineState = try GPUGlobalDevice.makeComputePipelineState(function: function)
 			self.gpuBackpropagatePipelineState = try GPUGlobalDevice.makeComputePipelineState(function: backpropagateFunction)
-			self.gpuWeightUpdatePipelineState = try GPUGlobalDevice.makeComputePipelineState(function: updateFunction)
+			self.gpuWeightGradientUpdatePipelineState = try GPUGlobalDevice.makeComputePipelineState(function: updateFunction)
+			self.gpuBiasGradientUpdatePipelineState = try GPUGlobalDevice.makeComputePipelineState(function: updateBiasFunction)
 		}
 		catch
 		{
@@ -280,17 +283,21 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		nextLayerGradients.setBuffer(on: encoder, at: 2)
 		gpuGradient.setBuffer(on: encoder, at: 4)
 		gpuKernels.setBuffer(on: encoder, at: 6)
+		gpuKernelGradient.setBuffer(on: encoder, at: 8)
 		
-		encoder.setBuffer(gpuHorizontalInset,	offset: 0, at: 8)
-		encoder.setBuffer(gpuVerticalInset,		offset: 0, at: 9)
-		encoder.setBuffer(gpuHorizontalStride,	offset: 0, at: 10)
-		encoder.setBuffer(gpuVerticalStride,	offset: 0, at: 11)
+		encoder.setBuffer(gpuHorizontalInset,	offset: 0, at: 12)
+		encoder.setBuffer(gpuVerticalInset,		offset: 0, at: 13)
+		encoder.setBuffer(gpuHorizontalStride,	offset: 0, at: 14)
+		encoder.setBuffer(gpuVerticalStride,	offset: 0, at: 15)
 		
 		encoder.dispatch(workSize: inputSize)
 		
-		encoder.setComputePipelineState(gpuWeightUpdatePipelineState)
-		
+		encoder.setComputePipelineState(gpuWeightGradientUpdatePipelineState)
 		encoder.dispatch(workSize: (width: kernels[0].width, height: kernels[0].height, depth: inputSize.depth * kernels.count))
+		
+		encoder.setComputePipelineState(gpuBiasGradientUpdatePipelineState)
+		encoder.setBuffer(gpuBiasGradient, offset: 0, at: 8)
+		encoder.dispatch(workSize: (width: outputSize.depth, height: 1, depth: 1))
 		
 		return gpuGradient
 	}
