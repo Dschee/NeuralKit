@@ -58,17 +58,7 @@ public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 	{
 		self.inputSize = inputSize
 		self.activation = activation
-	}
-	
-	private var gpuFunctionPipelineState: MTLComputePipelineState?
-	private var gpuOutput: GPUMatrix3?
-	
-	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState?
-	private var gpuLossFunctionPipelineState: MTLComputePipelineState!
-	private var gpuGradient: GPUMatrix3!
-	
-	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
-	{
+		
 		let functionName: String?
 		
 		switch activation
@@ -91,8 +81,8 @@ public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 		
 		if
 			let funcName = functionName,
-			let function = library.makeFunction(name: "NonlinearityLayer_forward_\(funcName)"),
-			let backpropagationFunction = library.makeFunction(name: "NonlinearityLayer_backpropagate_\(funcName)")
+			let function = GPUGlobalLibrary.makeFunction(name: "NonlinearityLayer_forward_\(funcName)"),
+			let backpropagationFunction = GPUGlobalLibrary.makeFunction(name: "NonlinearityLayer_backpropagate_\(funcName)")
 		{
 			do
 			{
@@ -105,12 +95,12 @@ public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 			}
 			
 			let outputMatrix = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-			self.gpuOutput = GPUMatrix3(matrix: outputMatrix, isShared: shareOutput)
+			self.gpuOutput = GPUMatrix3(matrix: outputMatrix, isShared: false)
 		}
 		
 		guard
-			let lossFunction = library.makeFunction(name: "Loss_delta")
-			else
+			let lossFunction = GPUGlobalLibrary.makeFunction(name: "Loss_delta")
+		else
 		{
 			fatalError()
 		}
@@ -128,12 +118,19 @@ public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 		self.gpuGradient = GPUMatrix3(matrix: gradientMatrix)
 	}
 	
+	private var gpuFunctionPipelineState: MTLComputePipelineState?
+	private var gpuOutput: GPUMatrix3?
+	
+	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState?
+	private var gpuLossFunctionPipelineState: MTLComputePipelineState!
+	private var gpuGradient: GPUMatrix3!
+	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{
 		guard
 			let gpuFunctionPipelineState = self.gpuFunctionPipelineState,
 			let gpuOutput = self.gpuOutput
-			else
+		else
 		{
 			return input
 		}

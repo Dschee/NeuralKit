@@ -45,14 +45,11 @@ public struct GPUSoftmaxLayer: GPUOutputLayer
 	public init(inputSize: (width: Int, height: Int, depth: Int))
 	{
 		self.inputSize = inputSize
-	}
-	
-	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
-	{
+		
 		guard
-			let exponentiate = library.makeFunction(name: "SoftmaxLayer_forward_exp"),
-			let function = library.makeFunction(name: "SoftmaxLayer_forward"),
-			let loss = library.makeFunction(name: "Loss_delta")
+			let exponentiate = GPUGlobalLibrary.makeFunction(name: "SoftmaxLayer_forward_exp"),
+			let function = GPUGlobalLibrary.makeFunction(name: "SoftmaxLayer_forward"),
+			let loss = GPUGlobalLibrary.makeFunction(name: "Loss_delta")
 			else
 		{
 			fatalError()
@@ -73,10 +70,10 @@ public struct GPUSoftmaxLayer: GPUOutputLayer
 		self.gpuExponentiated = GPUMatrix3(matrix: exponentiatedMatrix)
 		
 		let outputMatrix = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		self.gpuOutput = GPUMatrix3(matrix: outputMatrix, isShared: shareOutput)
+		self.gpuOutput = GPUMatrix3(matrix: outputMatrix, isShared: false)
 		
 		let gradientMatrix = Matrix3(repeating: 0, width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
-		self.gpuGradient = GPUMatrix3(matrix: gradientMatrix, isShared: shareOutput)
+		self.gpuGradient = GPUMatrix3(matrix: gradientMatrix, isShared: false)
 	}
 	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3

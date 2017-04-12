@@ -62,6 +62,18 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustable
 		return [.matrix(self.gpuWeightGradient)]
 	}
 	
+	
+	private var gpuWeights: GPUMatrix
+	private var gpuOutput: GPUMatrix3
+	private var gpuFunctionPipelineState: MTLComputePipelineState
+	
+	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState
+	private var gpuGradientUpdateFunctionPipelineState: MTLComputePipelineState
+	
+	private var gpuGradient: GPUMatrix3
+	private var gpuWeightGradient: GPUMatrix
+	
+	
 	/// Initializes a fully connected neural layer using the given weight matrix, its activation function and derivative
 	///
 	/// The value at column n and row m of the weight matrix corresponds to the weight of the nth neuron
@@ -77,33 +89,12 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustable
 	public init(weights: Matrix)
 	{
 		self.weightMatrix = weights
-	}
-	
-	
-	public init(inputDepth: Int, outputDepth: Int)
-	{
-		self.weightMatrix = RandomWeightMatrix(width: inputDepth + 1, height: outputDepth, variance: 1 / Float(inputDepth + 1))
-	}
-	
-	
-	private var gpuWeights: GPUMatrix!
-	private var gpuOutput: GPUMatrix3!
-	private var gpuFunctionPipelineState: MTLComputePipelineState!
-	
-	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState!
-	private var gpuGradientUpdateFunctionPipelineState: MTLComputePipelineState!
-	
-	private var gpuGradient: GPUMatrix3!
-	private var gpuWeightGradient: GPUMatrix!
-	
-	
-	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
-	{
+		
 		guard
-			let function = library.makeFunction(name: "FullyConnectedLayer_forward"),
-			let backpropagateFunction = library.makeFunction(name: "FullyConnectedLayer_backpropagate"),
-			let gradientUpdateFunction = library.makeFunction(name: "FullyConnectedLayer_update_gradients")
-		else
+			let function = GPUGlobalLibrary.makeFunction(name: "FullyConnectedLayer_forward"),
+			let backpropagateFunction = GPUGlobalLibrary.makeFunction(name: "FullyConnectedLayer_backpropagate"),
+			let gradientUpdateFunction = GPUGlobalLibrary.makeFunction(name: "FullyConnectedLayer_update_gradients")
+			else
 		{
 			fatalError("Could not make Metal function.")
 		}
@@ -124,11 +115,18 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustable
 		let weightGradient = Matrix.init(repeating: 0, width: self.weightMatrix.width, height: self.weightMatrix.height)
 		self.gpuWeightGradient = GPUMatrix(matrix: weightGradient)
 		
-		let outputValues = Matrix3(repeating: 0, width: self.outputSize.width, height: self.outputSize.height, depth: self.outputSize.depth)
-		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: shareOutput)
+		let outputValues = Matrix3(repeating: 0, width: 1, height: 1, depth: weights.height)
+		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: false)
 		
-		let gradientValues = Matrix3(repeating: 0, width: self.inputSize.width, height: self.inputSize.height, depth: self.inputSize.depth)
+		let gradientValues = Matrix3(repeating: 0, width: 1, height: 1, depth: weights.width)
 		self.gpuGradient = GPUMatrix3(matrix: gradientValues)
+	}
+	
+	
+	public init(inputDepth: Int, outputDepth: Int)
+	{
+		let weights = RandomWeightMatrix(width: inputDepth + 1, height: outputDepth, variance: 1 / Float(inputDepth + 1))
+		self.init(weights: weights)
 	}
 	
 	

@@ -41,6 +41,8 @@ public struct GPUReshapingLayer: GPUBidirectionalLayer
 	public let inputSize: (width: Int, height: Int, depth: Int)
 	
 	
+	private var gpuOutputDescriptor: MTLBuffer
+	
 	/// Initializes a reshaping layer which
 	/// reshapes the output of one layer to fit the input of another layer.
 	///
@@ -59,12 +61,7 @@ public struct GPUReshapingLayer: GPUBidirectionalLayer
 		)
 		self.inputSize = inputSize
 		self.outputSize = outputSize
-	}
-	
-	private var gpuOutputDescriptor: MTLBuffer!
-	
-	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
-	{
+		
 		gpuOutputDescriptor = GPUGlobalDevice.makeBuffer(
 			bytes: [
 				UInt32(outputSize.width),
@@ -75,6 +72,7 @@ public struct GPUReshapingLayer: GPUBidirectionalLayer
 			options: .storageModePrivate
 		)
 	}
+	
 	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{

@@ -26,15 +26,6 @@
 import Foundation
 import Metal
 
-public enum WeightUpdateMethod: Int16
-{
-	case sgd = 0
-	case momentum = 1
-	case adagrad = 2
-	case adadelta = 3
-//	case adam = 4
-}
-
 extension MTLComputeCommandEncoder
 {
 	func dispatch(workSize maxSize: (width: Int, height: Int, depth: Int))
@@ -105,13 +96,6 @@ public protocol GPUNeuralLayer
 	/// Output size of the layer.
 	/// Should not change after initialization
 	var outputSize: (width: Int, height: Int, depth: Int) { get }
-	
-	
-	
-	/// Initializes all buffers required for the layer to operate.
-	///
-	/// - Parameter device: Compute device, which is used.
-	mutating func initialize(library: MTLLibrary, shareOutput: Bool)
 	
 	
 	/// Performs data transformations for feed forward operation

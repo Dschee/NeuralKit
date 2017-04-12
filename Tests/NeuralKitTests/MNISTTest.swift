@@ -30,15 +30,7 @@ import Cocoa
 
 class MNISTTest: XCTestCase
 {
-	lazy var library: MTLLibrary =
-	{
-#if DEBUG
-		return try! GPUGlobalDevice.makeLibrary(filepath: "/Users/Palle/Library/Developer/Xcode/DerivedData/NeuralKit-gqvgbrxdpkclopbfiglfaeqqojot/Build/Products/Debug/NeuralKit.framework/Versions/A/Resources/default.metallib")
-#else
-		return try! GPUGlobalDevice.makeLibrary(filepath: "/Users/Palle/Library/Developer/Xcode/DerivedData/NeuralKit-gqvgbrxdpkclopbfiglfaeqqojot/Build/Products/Release/NeuralKit.framework/Versions/A/Resources/default.metallib")
-#endif
-	}()
-	
+
 	static func readSamples(from bytes: [UInt8], labels: [UInt8], count: Int) -> [TrainingSample]
 	{
 		let imageOffset = 16
@@ -116,13 +108,13 @@ class MNISTTest: XCTestCase
 		let tanh3 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 200), activation: .tanh)
 		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10))
 		
-		var network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputActivation: .softmax)!
+		let network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputActivation: .softmax)!
 		
-		let epochs = 200_000
+//		let epochs = 200_000
 		
-		var time = CACurrentMediaTime()
+//		var time = CACurrentMediaTime()
 		
-		var gpuNetwork = GPUFeedForwardNeuralNetwork(
+		let gpuNetwork = GPUFeedForwardNeuralNetwork(
 			layers: network.layers.flatMap
 				{ l in
 					if let layer = l as? ReshapingLayer
@@ -131,7 +123,7 @@ class MNISTTest: XCTestCase
 					}
 					else if let layer = l as? FullyConnectedLayer
 					{
-						return GPUFullyConnectedLayer(weights: layer.weights, updateMethod: .sgd)
+						return GPUFullyConnectedLayer(weights: layer.weights)
 					}
 					else if let layer = l as? NonlinearityLayer
 					{
@@ -142,30 +134,41 @@ class MNISTTest: XCTestCase
 						return nil
 					}
 			},
-			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),//GPUNonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .tanh), //GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
-			library: library
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10))//GPUNonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .tanh), //GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
 		)!
 		
 //		for epoch in 0 ..< epochs
 //		{
 //			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
-////			let error = network.train(sample, learningRate: 0.005 * pow(0.999996, Float(epoch))/*, annealingRate: epoch % 300 == 0 ? 0.002 * pow(0.99999, Float(epoch)) : 0*/)
 //			let input = GPUMatrix3(matrix: sample.values, isShared: true)
 //			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
 //			
-////			let error = gpuNetwork.train((input: input, expected: output),	learningRate: 0.005 * pow(0.999996, Float(epoch)), deltaDecay: 0.98)
-////			let error = Float.nan
 //			let cpuError = network.train(sample,							learningRate: 0.005 * pow(0.999996, Float(epoch)))
 //			
-////			print(error)
 //			
 //			if epoch % 1000 == 0
 //			{
 //				let newTime = CACurrentMediaTime()
-////				print("epoch \(epoch) of \(epochs): \(error * 100)% error, \(cpuError * 100) error on CPU, duration: \(newTime - time) seconds.")
+//				print("epoch \(epoch) of \(epochs): \(error * 100)% error, \(cpuError * 100) error on CPU, duration: \(newTime - time) seconds.")
 //				time = newTime
 //			}
 //		}
+		
+		let sema = DispatchSemaphore(value: 0)
+		
+		let trainer = GPUNetworkTrainingSession(network: gpuNetwork, batchSize: 10, optimizer: SGDOptimizer(learningRate: 0.005), sampleProvider: BufferedTrainingSampleProvider(samples: trainingSamples))
+		
+		trainer.onFinishTraining = {sema.signal()}
+		trainer.onBatchFinish = {
+			_, epoch in
+			if epoch % 1000 == 0
+			{
+				print("Epoch \(epoch)")
+			}
+		}
+		trainer.train(epochs: 100_000)
+		
+		sema.wait()
 		
 		let time1 = CACurrentMediaTime()
 		
@@ -180,20 +183,21 @@ class MNISTTest: XCTestCase
 		
 		for (sample, input) in zip(testSamples, gpuSamples)
 		{
-//			let result = network.feedForward(sample.values)
+			let result = network.feedForward(sample.values)
 			let gpuResult = gpuNetwork.feedForward(input)
 			
 			let expectedIndex = argmax(sample.expected.values).1
 			let actualIndex = argmax(gpuResult.values).1
+			let cpuActualIndex = argmax(result.values).1
 			
-//			XCTAssertEqual(expectedIndex, actualIndex)
+//			XCTAssertEqual(actualIndex, cpuActualIndex)
 			correctCount += expectedIndex == actualIndex ? 1 : 0
 			wrongCount += expectedIndex == actualIndex ? 0 : 1
 			
-//			for (cpuValue, gpuValue) in zip(gpuResult.values, gpuResult.values)
-//			{
-//				XCTAssertEqualWithAccuracy(cpuValue, gpuValue, accuracy: 0.001)
-//			}
+			for (cpuValue, gpuValue) in zip(gpuResult.values, gpuResult.values)
+			{
+				XCTAssertEqualWithAccuracy(cpuValue, gpuValue, accuracy: 0.001)
+			}
 		}
 		
 		print("\(correctCount) correct, \(wrongCount) wrong, \(Float(correctCount) / Float(wrongCount + correctCount) * 100)% accuracy")
@@ -201,27 +205,6 @@ class MNISTTest: XCTestCase
 		// Assert 90% or higher accuracy
 		XCTAssertGreaterThanOrEqual(Float(correctCount) / Float(wrongCount + correctCount), 0.9)
 		
-		var gpuCorrectCount = 0
-		var gpuWrongCount = 0
-		
-		for (sample, input) in zip(testSamples, gpuSamples)
-		{
-			let result = gpuNetwork.feedForward(input)
-//			print(result.values)
-			let expectedIndex = argmax(sample.expected.values).1
-			let actualIndex = argmax(result.values).1
-			
-//			XCTAssertEqual(expectedIndex, actualIndex)
-			gpuCorrectCount += expectedIndex == actualIndex ? 1 : 0
-			gpuWrongCount += expectedIndex == actualIndex ? 0 : 1
-		}
-		
-		let time3 = CACurrentMediaTime()
-		
-		print("Eval time: \(time3 - time2) seconds")
-		
-		XCTAssertEqual(gpuCorrectCount, correctCount)
-		XCTAssertEqual(gpuWrongCount, wrongCount)
 	}
 	
 	func testMNISTMetalFeedForwardPerformance()
@@ -259,8 +242,7 @@ class MNISTTest: XCTestCase
 						return nil
 					}
 			},
-			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
-			library: library
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10))
 		)!
 		
 		let time1 = CACurrentMediaTime()
@@ -327,7 +309,7 @@ class MNISTTest: XCTestCase
 		
 		let network = FeedForwardNeuralNetwork(layers: [conv1, nonlinear1, pool1, conv2, nonlinear2, pool2, reshape, fullyConnected], outputActivation: .softmax)!
 		
-		var gpuNetwork = GPUFeedForwardNeuralNetwork(
+		let gpuNetwork = GPUFeedForwardNeuralNetwork(
 			layers: network.layers.flatMap
 			{ l in
 				if let layer = l as? ReshapingLayer
@@ -336,7 +318,7 @@ class MNISTTest: XCTestCase
 				}
 				else if let layer = l as? FullyConnectedLayer
 				{
-					return GPUFullyConnectedLayer(weights: layer.weights, updateMethod: .momentum)
+					return GPUFullyConnectedLayer(weights: layer.weights)
 				}
 				else if let layer = l as? NonlinearityLayer
 				{
@@ -355,8 +337,7 @@ class MNISTTest: XCTestCase
 					return nil
 				}
 			},
-			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
-			library: library
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10))
 		)!
 		
 		let epochs = 10_000_000

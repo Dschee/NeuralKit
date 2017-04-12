@@ -31,27 +31,77 @@ public enum GPUTensor
 	case vector(MTLBuffer, length: Int)
 	case matrix(GPUMatrix)
 	case matrix3(GPUMatrix3)
+	
+	internal var count: UInt32
+	{
+		switch self
+		{
+		case .vector(_, length: let length):
+			return UInt32(length)
+			
+		case .matrix(let matrix):
+			let descriptor = matrix.descriptor
+			return descriptor.width * descriptor.height
+			
+		case .matrix3(let matrix):
+			let descriptor = matrix.descriptor
+			return descriptor.width * descriptor.height * descriptor.depth
+		}
+	}
+	
+	internal var buffer: MTLBuffer
+	{
+		switch self
+		{
+		case .vector(let buffer, length: _):
+			return buffer
+			
+		case .matrix(let matrix):
+			return matrix.buffer
+		
+		case .matrix3(let matrix):
+			return matrix.buffer
+		}
+	}
 }
 
 public protocol Optimizer
 {
 	associatedtype OptimizerData
 	
-	func update(weights: [GPUTensor], gradients: [GPUTensor], data: OptimizerData?) -> OptimizerData
+	func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: OptimizerData?) -> OptimizerData
 }
 
 public struct SGDOptimizer: Optimizer
 {
-	public typealias OptimizerData = ()
+	public typealias OptimizerData = Void
 	
 	public var learningRate: Float
+	private let optimizeFunctionPipelineState: MTLComputePipelineState
 	
-	
-	
-	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], data: ()?) -> ()
+	public init(learningRate: Float)
 	{
+		self.learningRate = learningRate
 		
+		let function = GPUGlobalLibrary.makeFunction(name: "Optimize_sgd")!
+		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
+	}
+	
+	
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: Void?) -> Void
+	{
+		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
+		
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 3)
+		
+		for (weightBuffer, gradientBuffer) in zip(weights, gradients)
+		{
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
+			
+			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
+		}
 	}
 }
 
@@ -62,7 +112,7 @@ public struct MomentumOptimizer: Optimizer
 	public var learningRate: Float
 	public var momentum: Float
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], data: [GPUTensor]?) -> [GPUTensor]
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [GPUTensor]?) -> [GPUTensor]
 	{
 		return []
 	}
@@ -74,7 +124,7 @@ public struct AdaGradOptimizer: Optimizer
 	
 	public var learningRate: Float
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], data: [GPUTensor]?) -> [GPUTensor]
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [GPUTensor]?) -> [GPUTensor]
 	{
 		return []
 	}
@@ -84,7 +134,7 @@ public struct AdaDeltaOptimizer: Optimizer
 {
 	public typealias OptimizerData = [(GPUTensor, GPUTensor)]
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], data: [(GPUTensor, GPUTensor)]?) -> [(GPUTensor, GPUTensor)]
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [(GPUTensor, GPUTensor)]?) -> [(GPUTensor, GPUTensor)]
 	{
 		return []
 	}
@@ -104,6 +154,10 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 	public let optimizer: OptimizerType
 	public var trainingSampleProvider: TrainingSampleProvider
 	
+	public var onBatchFinish: ((_ loss: Float, _ epoch: Int) -> ())?
+	public var onFinishTraining: (() -> ())?
+	
+	
 	private var optimizerData: OptimizerType.OptimizerData?
 	
 	public init(network: GPUFeedForwardNeuralNetwork, batchSize: Int = 1, optimizer: OptimizerType, sampleProvider: TrainingSampleProvider)
@@ -120,8 +174,7 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 		DispatchQueue.global().async
 		{ [weak self] in
 			
-			
-			for _ in 0 ..< epochs
+			for epoch in 0 ..< epochs
 			{
 				guard let this = self else { break }
 				let samples = this.trainingSampleProvider.nextSamples(count: this.batchSize)
@@ -146,14 +199,17 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 					.flatMap{$0 as? GPUWeightAdjustableLayer}
 					.flatMap{$0.gradients}
 				
-				this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, data: this.optimizerData)
+				this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, encoder: encoder, data: this.optimizerData)
 				
 				encoder.endEncoding()
 				buffer.commit()
 				buffer.waitUntilCompleted()
+				
+				self?.onBatchFinish?(0, epoch)
 			}
 			
 			self?.finalizeTraining()
+			self?.onFinishTraining?()
 		}
 	}
 	
@@ -165,4 +221,18 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 	
 }
 
-
+public struct BufferedTrainingSampleProvider: TrainingSampleProvider
+{
+	public let samples: [TrainingSample]
+	
+	public func nextSamples(count: Int) -> [(input: GPUMatrix3, expected: GPUMatrix3)]
+	{
+		return (0 ..< count)
+			.map{_ in Int(arc4random_uniform(UInt32(samples.count)))}
+			.map{samples[$0]}
+			.map{(
+				input: GPUMatrix3(matrix: $0.values, isShared: true),
+				expected: GPUMatrix3(matrix: $0.expected, isShared: true)
+			)}
+	}
+}

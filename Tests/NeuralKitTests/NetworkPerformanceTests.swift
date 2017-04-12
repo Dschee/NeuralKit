@@ -175,8 +175,7 @@ class NetworkPerformanceTests: XCTestCase
 				
 				GPUFullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 100))
 			],
-			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 100)),
-			library: MNISTTest().library
+			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 100))
 		)!
 		
 		let samples = (0..<1000).map{_ in RandomWeightMatrix(width: 128, height: 128, depth: 3)}.map{GPUMatrix3(matrix: $0)}

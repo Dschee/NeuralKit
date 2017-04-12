@@ -41,6 +41,13 @@ public struct GPUPoolingLayer: GPUBidirectionalLayer
 	public let outputSize: (width: Int, height: Int, depth: Int)
 	
 	
+	private var gpuFunctionPipelineState: MTLComputePipelineState
+	private var gpuOutput: GPUMatrix3
+	
+	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState
+	private var gpuGradient: GPUMatrix3
+	
+	
 	/// Creates a new Max Pooling layer with the given input and output size.
 	/// Scaling factors are determined automatically from the input and output size.
 	///
@@ -56,20 +63,10 @@ public struct GPUPoolingLayer: GPUBidirectionalLayer
 	{
 		self.inputSize = inputSize
 		self.outputSize = outputSize
-	}
-	
-	
-	private var gpuFunctionPipelineState: MTLComputePipelineState!
-	private var gpuOutput: GPUMatrix3!
-	
-	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState!
-	private var gpuGradient: GPUMatrix3!
-	
-	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
-	{
+		
 		guard
-			let function = library.makeFunction(name: "PoolingLayer_forward"),
-			let backpropagateFunction = library.makeFunction(name: "PoolingLayer_backpropagate")
+			let function = GPUGlobalLibrary.makeFunction(name: "PoolingLayer_forward"),
+			let backpropagateFunction = GPUGlobalLibrary.makeFunction(name: "PoolingLayer_backpropagate")
 			else
 		{
 			fatalError("Could not make Metal function.")
@@ -86,11 +83,12 @@ public struct GPUPoolingLayer: GPUBidirectionalLayer
 		}
 		
 		let outputValues = Matrix3(repeating: 0, width: outputSize.width, height: outputSize.height, depth: outputSize.depth)
-		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: shareOutput)
+		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: false)
 		
 		let gradients = Matrix3(repeating: 0, width: inputSize.width, height: inputSize.height, depth: inputSize.depth)
 		self.gpuGradient = GPUMatrix3(matrix: gradients)
 	}
+	
 	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{

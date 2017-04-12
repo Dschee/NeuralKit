@@ -89,6 +89,26 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 	}
 	
 	
+	private var gpuFunctionPipelineState: MTLComputePipelineState
+	private var gpuBackpropagatePipelineState: MTLComputePipelineState
+	private var gpuWeightGradientUpdatePipelineState: MTLComputePipelineState
+	private var gpuBiasGradientUpdatePipelineState: MTLComputePipelineState
+	
+	private var gpuKernels: GPUMatrix3
+	private var gpuBias: MTLBuffer
+	
+	private var gpuKernelGradient: GPUMatrix3
+	private var gpuBiasGradient: MTLBuffer
+	
+	private var gpuOutput: GPUMatrix3
+	private var gpuGradient: GPUMatrix3
+	
+	private var gpuHorizontalInset: MTLBuffer
+	private var gpuVerticalInset: MTLBuffer
+	private var gpuHorizontalStride: MTLBuffer
+	private var gpuVerticalStride: MTLBuffer
+	
+	
 	/// Initializes a new convolutional layer.
 	///
 	/// A convolutional layer applies a set of given convolution filters
@@ -120,56 +140,14 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		self.verticalStride = 1
 		self.horizontalInset = horizontalInset
 		self.verticalInset = verticalInset
-	}
-	
-	
-	public init(
-		inputSize: (width: Int, height: Int, depth: Int),
-		outputDepth: Int,
-		kernelSize: (width: Int, height: Int),
-		//		stride: (horizontal: Int, vertical: Int) = (1, 1), // strides other than 1 currently unsupported
-		inset: (horizontal: Int, vertical: Int) = (0, 0)
-		)
-	{
-		self.inputSize = inputSize
-		self.horizontalStride = 1
-		self.verticalStride = 1
-		self.horizontalInset = inset.horizontal
-		self.verticalInset = inset.vertical
 		
-		let variance = 1 / Float(kernelSize.width * kernelSize.height * inputSize.depth + 1)
 		
-		self.bias = RandomWeightMatrix(width: outputDepth, height: 1, variance: variance).values
-		self.kernels = (0 ..< outputDepth).map{_ in RandomWeightMatrix(width: kernelSize.width, height: kernelSize.height, depth: inputSize.depth, variance: variance)}
-	}
-	
-	private var gpuFunctionPipelineState: MTLComputePipelineState!
-	private var gpuBackpropagatePipelineState: MTLComputePipelineState!
-	private var gpuWeightGradientUpdatePipelineState: MTLComputePipelineState!
-	private var gpuBiasGradientUpdatePipelineState: MTLComputePipelineState!
-	
-	private var gpuKernels: GPUMatrix3!
-	private var gpuBias: MTLBuffer!
-	
-	private var gpuKernelGradient: GPUMatrix3!
-	private var gpuBiasGradient: MTLBuffer!
-	
-	private var gpuOutput: GPUMatrix3!
-	private var gpuGradient: GPUMatrix3!
-	
-	private var gpuHorizontalInset: MTLBuffer!
-	private var gpuVerticalInset: MTLBuffer!
-	private var gpuHorizontalStride: MTLBuffer!
-	private var gpuVerticalStride: MTLBuffer!
-	
-	public mutating func initialize(library: MTLLibrary, shareOutput: Bool)
-	{
 		guard
-			let function = library.makeFunction(name: "ConvolutionLayer_forward"),
-			let backpropagateFunction = library.makeFunction(name: "ConvolutionLayer_backpropagate"),
-			let updateFunction = library.makeFunction(name: "ConvolutionLayer_update_gradients"),
-			let updateBiasFunction = library.makeFunction(name: "ConvolutionLayer_update_bias_gradients")
-		else
+			let function = GPUGlobalLibrary.makeFunction(name: "ConvolutionLayer_forward"),
+			let backpropagateFunction = GPUGlobalLibrary.makeFunction(name: "ConvolutionLayer_backpropagate"),
+			let updateFunction = GPUGlobalLibrary.makeFunction(name: "ConvolutionLayer_update_gradients"),
+			let updateBiasFunction = GPUGlobalLibrary.makeFunction(name: "ConvolutionLayer_update_bias_gradients")
+			else
 		{
 			fatalError("Could not make Metal function.")
 		}
@@ -213,13 +191,30 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 			options: []
 		)
 		
+		
+		let outputSize =
+		{ () -> (width: Int, height: Int, depth: Int) in 
+			let kernelWidth = kernels.first?.width ?? 0
+			let kernelHeight = kernels.first?.height ?? 0
+			
+			let stridedWidth = inputSize.width
+			let stridedHeight = inputSize.height
+			
+			return (
+				width:  stridedWidth  - kernelWidth + 1 - (2 * horizontalInset),
+				height: stridedHeight - kernelHeight + 1 - (2 * verticalInset),
+				depth:  kernels.count
+			)
+		}()
+		
+		
 		let outputValues = Matrix3(
 			repeating: 0,
 			width:  outputSize.width,
 			height: outputSize.height,
 			depth:  outputSize.depth
 		)
-		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: shareOutput)
+		self.gpuOutput = GPUMatrix3(matrix: outputValues, isShared: false)
 		
 		let gradient = Matrix3(
 			repeating: 0,
@@ -235,6 +230,21 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		gpuVerticalStride	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.verticalStride)],	length: MemoryLayout<Int32>.size, options: [])
 	}
 	
+	
+	public init(
+		inputSize: (width: Int, height: Int, depth: Int),
+		outputDepth: Int,
+		kernelSize: (width: Int, height: Int),
+		inset: (horizontal: Int, vertical: Int) = (0, 0)
+	)
+	{
+		let variance = 1 / Float(kernelSize.width * kernelSize.height * inputSize.depth + 1)
+		
+		let bias = RandomWeightMatrix(width: outputDepth, height: 1, variance: variance).values
+		let kernels = (0 ..< outputDepth).map{_ in RandomWeightMatrix(width: kernelSize.width, height: kernelSize.height, depth: inputSize.depth, variance: variance)}
+		
+		self.init(inputSize: inputSize, kernels: kernels, bias: bias, horizontalInset: inset.horizontal, verticalInset: inset.vertical)
+	}
 	
 	public func forward(_ input: GPUMatrix3, encoder: MTLComputeCommandEncoder) -> GPUMatrix3
 	{
