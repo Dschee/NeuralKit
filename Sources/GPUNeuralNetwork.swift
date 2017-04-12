@@ -30,12 +30,16 @@ import Metal
 private class _BundleIdentifyingClass {}
 
 
+@available(OSX 10.12, *)
 public let GPUGlobalDevice = MTLCreateSystemDefaultDevice()!
+@available(OSX 10.12, *)
 public let GPUGlobalQueue = GPUGlobalDevice.makeCommandQueue()
+@available(OSX 10.12, *)
 public let GPUGlobalLibrary = try! GPUGlobalDevice.makeDefaultLibrary(bundle: Bundle(for: _BundleIdentifyingClass.self))
 
 
 /// A feed forward multi layer neural network
+@available(OSX 10.12, *)
 public struct GPUFeedForwardNeuralNetwork
 {
 	
@@ -125,6 +129,16 @@ public struct GPUFeedForwardNeuralNetwork
 				inputs: layerInputs[index],
 				encoder: encoder
 			)
+		}
+	}
+	
+	mutating func finishTraining()
+	{
+		for (index, layer) in layers.enumerated() where layer is GPUWeightAdjustableLayer
+		{
+			var l = layer as! GPUWeightAdjustableLayer & GPUBidirectionalLayer
+			l.finishTraining()
+			layers[index] = l
 		}
 	}
 }

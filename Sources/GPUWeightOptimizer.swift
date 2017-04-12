@@ -26,6 +26,7 @@
 import Foundation
 import Metal
 
+@available(OSX 10.12, *)
 public enum GPUTensor
 {
 	case vector(MTLBuffer, length: Int)
@@ -65,6 +66,7 @@ public enum GPUTensor
 	}
 }
 
+@available(OSX 10.12, *)
 public protocol Optimizer
 {
 	associatedtype OptimizerData
@@ -72,6 +74,7 @@ public protocol Optimizer
 	func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: OptimizerData?) -> OptimizerData
 }
 
+@available(OSX 10.12, *)
 public struct SGDOptimizer: Optimizer
 {
 	public typealias OptimizerData = Void
@@ -105,6 +108,7 @@ public struct SGDOptimizer: Optimizer
 	}
 }
 
+@available(OSX 10.12, *)
 public struct MomentumOptimizer: Optimizer
 {
 	public typealias OptimizerData = [MTLBuffer]
@@ -162,6 +166,7 @@ public struct MomentumOptimizer: Optimizer
 	}
 }
 
+@available(OSX 10.12, *)
 public struct AdaGradOptimizer: Optimizer
 {
 	public typealias OptimizerData = [MTLBuffer]
@@ -215,6 +220,7 @@ public struct AdaGradOptimizer: Optimizer
 	}
 }
 
+@available(OSX 10.12, *)
 public struct AdaDeltaOptimizer: Optimizer
 {
 	public typealias OptimizerData = ([MTLBuffer], [MTLBuffer])
@@ -279,12 +285,14 @@ public struct AdaDeltaOptimizer: Optimizer
 }
 
 
+@available(OSX 10.12, *)
 public protocol TrainingSampleProvider
 {
 	mutating func nextSamples(count: Int) -> [(input: GPUMatrix3, expected: GPUMatrix3)]
 }
 
 
+@available(OSX 10.12, *)
 public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 {
 	public private(set) var network: GPUFeedForwardNeuralNetwork
@@ -346,20 +354,19 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 				self?.onBatchFinish?(0, epoch)
 			}
 			
-			self?.finalizeTraining()
+			self?.finishTraining()
 			self?.onFinishTraining?()
 		}
 	}
 	
-	private func finalizeTraining()
+	private func finishTraining()
 	{
-		//TODO: Copy weights back from VRAM to RAM
+		self.network.finishTraining()
 	}
-	
-	
 }
 
-public struct BufferedTrainingSampleProvider: TrainingSampleProvider
+@available(OSX 10.12, *)
+public struct ArrayTrainingSampleProvider: TrainingSampleProvider
 {
 	public let samples: [TrainingSample]
 	

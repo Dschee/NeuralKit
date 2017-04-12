@@ -27,6 +27,7 @@ import Foundation
 import Metal
 
 
+@available(OSX 10.12, *)
 public struct GPUMatrix
 {
 	public let descriptor: (width: UInt32, height: UInt32)
@@ -53,7 +54,7 @@ public struct GPUMatrix
 		)
 	}
 	
-	private init(descriptor: (width: UInt32, height: UInt32), buffer: MTLBuffer)
+	internal init(descriptor: (width: UInt32, height: UInt32), buffer: MTLBuffer)
 	{
 		self.buffer = buffer
 		
@@ -130,6 +131,7 @@ public struct GPUMatrix
 	}
 }
 
+@available(OSX 10.12, *)
 public struct GPUMatrix3
 {
 	public let descriptor: (width: UInt32, height: UInt32, depth: UInt32)
@@ -169,7 +171,7 @@ public struct GPUMatrix3
 		)
 	}
 	
-	private init(descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer, descriptorBuffer: MTLBuffer)
+	internal init(descriptor: (width: UInt32, height: UInt32, depth: UInt32), buffer: MTLBuffer, descriptorBuffer: MTLBuffer)
 	{
 		self.buffer = buffer
 		

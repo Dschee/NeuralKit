@@ -137,26 +137,9 @@ class MNISTTest: XCTestCase
 			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10))//GPUNonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .tanh), //GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10)),
 		)!
 		
-//		for epoch in 0 ..< epochs
-//		{
-//			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
-//			let input = GPUMatrix3(matrix: sample.values, isShared: true)
-//			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
-//			
-//			let cpuError = network.train(sample,							learningRate: 0.005 * pow(0.999996, Float(epoch)))
-//			
-//			
-//			if epoch % 1000 == 0
-//			{
-//				let newTime = CACurrentMediaTime()
-//				print("epoch \(epoch) of \(epochs): \(error * 100)% error, \(cpuError * 100) error on CPU, duration: \(newTime - time) seconds.")
-//				time = newTime
-//			}
-//		}
-		
 		let sema = DispatchSemaphore(value: 0)
 		
-		let trainer = GPUNetworkTrainingSession(network: gpuNetwork, batchSize: 1, optimizer: SGDOptimizer(learningRate: 0.005), sampleProvider: BufferedTrainingSampleProvider(samples: trainingSamples))
+		let trainer = GPUNetworkTrainingSession(network: gpuNetwork, batchSize: 1, optimizer: MomentumOptimizer(learningRate: 0.005, momentum: 0.9), sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples))
 		
 		trainer.onFinishTraining = {sema.signal()}
 		trainer.onBatchFinish = {

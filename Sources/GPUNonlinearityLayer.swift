@@ -29,6 +29,7 @@ import Metal
 
 /// A layer which adds nonlinearity to forwarded data, which improves performance
 /// on nonlinear classification and regression tasks
+@available(OSX 10.12, *)
 public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 {
 	/// Output size of the layer.

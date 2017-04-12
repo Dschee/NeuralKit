@@ -29,6 +29,7 @@ import Metal
 
 /// A fully connected layer of a neural network.
 /// All neurons of the layer are connected to all neurons of the next layer
+@available(OSX 10.12, *)
 public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustableLayer
 {
 	
@@ -180,5 +181,10 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustable
 		return gpuGradient
 	}
 	
+	
+	public mutating func finishTraining()
+	{
+		weightMatrix = gpuWeights.asMatrix()
+	}
 }
 

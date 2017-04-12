@@ -28,6 +28,7 @@ import Metal
 
 
 /// A pooling layer for reducing dimensionality using max pooling.
+@available(OSX 10.12, *)
 public struct GPUPoolingLayer: GPUBidirectionalLayer
 {
 	

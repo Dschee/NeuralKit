@@ -28,6 +28,7 @@ import Metal
 
 
 /// A layer which reshapes the output of one layer to fit the input of another layer
+@available(OSX 10.12, *)
 public struct GPUReshapingLayer: GPUBidirectionalLayer
 {
 	

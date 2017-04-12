@@ -28,6 +28,7 @@ import Metal
 
 
 /// A layer which is connected to the next layer using convolution kernels.
+@available(OSX 10.12, *)
 public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLayer
 {
 	
@@ -312,4 +313,23 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		return gpuGradient
 	}
 	
+	public mutating func finishTraining()
+	{
+		let updatedKernels = self.gpuKernels.asMatrix()
+		let updatedBias = GPUMatrix(descriptor: (width: UInt32(kernels.count), height: 1), buffer: self.gpuBias).asMatrix().values
+		
+		self.bias = updatedBias
+		
+		for index in kernels.indices
+		{
+			kernels[index] = updatedKernels[
+				x: 0,
+				y: 0,
+				z: inputSize.depth * index,
+				width: kernels.first!.width,
+				height: kernels.first!.height,
+				depth: inputSize.depth
+			]
+		}
+	}
 }

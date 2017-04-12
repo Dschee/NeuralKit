@@ -27,6 +27,7 @@ import Foundation
 import Metal
 
 
+@available(OSX 10.12, *)
 public struct GPUSoftmaxLayer: GPUOutputLayer
 {
 	public let inputSize: (width: Int, height: Int, depth: Int)

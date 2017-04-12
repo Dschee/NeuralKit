@@ -26,6 +26,7 @@
 import Foundation
 import Metal
 
+@available(OSX 10.12, *)
 extension MTLComputeCommandEncoder
 {
 	func dispatch(workSize maxSize: (width: Int, height: Int, depth: Int))
@@ -85,6 +86,7 @@ extension MTLComputeCommandEncoder
 
 
 // A layer of a feed forward neural network
+@available(OSX 10.12, *)
 public protocol GPUNeuralLayer
 {
 	
@@ -110,6 +112,7 @@ public protocol GPUNeuralLayer
 }
 
 /// A layer of a feed forward neural network
+@available(OSX 10.12, *)
 public protocol GPUBidirectionalLayer: GPUNeuralLayer
 {
 	
@@ -138,13 +141,17 @@ public protocol GPUBidirectionalLayer: GPUNeuralLayer
 }
 
 
+@available(OSX 10.12, *)
 public protocol GPUWeightAdjustableLayer: GPUNeuralLayer
 {
 	var weights: [GPUTensor] { get }
 	var gradients: [GPUTensor] { get }
+	
+	mutating func finishTraining()
 }
 
 
+@available(OSX 10.12, *)
 public protocol GPUOutputLayer: GPUNeuralLayer
 {
 	
