@@ -95,6 +95,8 @@ class MNISTTest: XCTestCase
 		return (trainingSamples,testingSamples)
 	}
 	
+	
+	@available(OSX 10.12, *)
 	func testMNISTClassification()
 	{
 		let (trainingSamples, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
@@ -182,6 +184,7 @@ class MNISTTest: XCTestCase
 		
 	}
 	
+	@available(OSX 10.12, *)
 	func testMNISTMetalFeedForwardPerformance()
 	{
 		let (_, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
@@ -248,6 +251,7 @@ class MNISTTest: XCTestCase
 		print("Eval time: \(time3 - time2) seconds")
 	}
 	
+	@available(OSX 10.12, *)
 	func testMNISTConvNet()
 	{
 		let (trainingSamples, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")

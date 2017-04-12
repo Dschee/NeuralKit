@@ -114,6 +114,7 @@ class NetworkPerformanceTests: XCTestCase
 		}
 	}
 	
+	@available(OSX 10.12, *)
 	func testGPUConvNetworkPerformance()
 	{
 		let network = GPUFeedForwardNeuralNetwork(
