@@ -323,35 +323,38 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 			for epoch in 0 ..< epochs
 			{
 				guard let this = self else { break }
-				let samples = this.trainingSampleProvider.nextSamples(count: this.batchSize)
-				
-				let buffer = GPUGlobalQueue.makeCommandBuffer()
-				let encoder = buffer.makeComputeCommandEncoder()
-				
-				for sample in samples
+				autoreleasepool
 				{
-					this.network.updateGradients(with: sample, encoder: encoder)
+					let samples = this.trainingSampleProvider.nextSamples(count: this.batchSize)
+					
+					let buffer = GPUGlobalQueue.makeCommandBuffer()
+					let encoder = buffer.makeComputeCommandEncoder()
+					
+					for sample in samples
+					{
+						this.network.updateGradients(with: sample, encoder: encoder)
+					}
+					
+					let weights = this
+						.network
+						.layers
+						.flatMap{$0 as? GPUWeightAdjustableLayer}
+						.flatMap{$0.weights}
+					
+					let gradients = this
+						.network
+						.layers
+						.flatMap{$0 as? GPUWeightAdjustableLayer}
+						.flatMap{$0.gradients}
+					
+					this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, encoder: encoder, data: this.optimizerData)
+					
+					encoder.endEncoding()
+					buffer.commit()
+					buffer.waitUntilCompleted()
+					
+					self?.onBatchFinish?(0, epoch)
 				}
-				
-				let weights = this
-					.network
-					.layers
-					.flatMap{$0 as? GPUWeightAdjustableLayer}
-					.flatMap{$0.weights}
-				
-				let gradients = this
-					.network
-					.layers
-					.flatMap{$0 as? GPUWeightAdjustableLayer}
-					.flatMap{$0.gradients}
-				
-				this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, encoder: encoder, data: this.optimizerData)
-				
-				encoder.endEncoding()
-				buffer.commit()
-				buffer.waitUntilCompleted()
-				
-				self?.onBatchFinish?(0, epoch)
 			}
 			
 			self?.finishTraining()
