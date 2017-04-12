@@ -156,7 +156,7 @@ class MNISTTest: XCTestCase
 		
 		let sema = DispatchSemaphore(value: 0)
 		
-		let trainer = GPUNetworkTrainingSession(network: gpuNetwork, batchSize: 10, optimizer: SGDOptimizer(learningRate: 0.005), sampleProvider: BufferedTrainingSampleProvider(samples: trainingSamples))
+		let trainer = GPUNetworkTrainingSession(network: gpuNetwork, batchSize: 1, optimizer: SGDOptimizer(learningRate: 0.005), sampleProvider: BufferedTrainingSampleProvider(samples: trainingSamples))
 		
 		trainer.onFinishTraining = {sema.signal()}
 		trainer.onBatchFinish = {
@@ -183,21 +183,13 @@ class MNISTTest: XCTestCase
 		
 		for (sample, input) in zip(testSamples, gpuSamples)
 		{
-			let result = network.feedForward(sample.values)
 			let gpuResult = gpuNetwork.feedForward(input)
 			
 			let expectedIndex = argmax(sample.expected.values).1
 			let actualIndex = argmax(gpuResult.values).1
-			let cpuActualIndex = argmax(result.values).1
 			
-//			XCTAssertEqual(actualIndex, cpuActualIndex)
 			correctCount += expectedIndex == actualIndex ? 1 : 0
 			wrongCount += expectedIndex == actualIndex ? 0 : 1
-			
-			for (cpuValue, gpuValue) in zip(gpuResult.values, gpuResult.values)
-			{
-				XCTAssertEqualWithAccuracy(cpuValue, gpuValue, accuracy: 0.001)
-			}
 		}
 		
 		print("\(correctCount) correct, \(wrongCount) wrong, \(Float(correctCount) / Float(wrongCount + correctCount) * 100)% accuracy")

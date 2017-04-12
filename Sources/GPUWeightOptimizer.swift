@@ -107,36 +107,174 @@ public struct SGDOptimizer: Optimizer
 
 public struct MomentumOptimizer: Optimizer
 {
-	public typealias OptimizerData = [GPUTensor]
+	public typealias OptimizerData = [MTLBuffer]
 	
 	public var learningRate: Float
 	public var momentum: Float
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [GPUTensor]?) -> [GPUTensor]
+	private let optimizeFunctionPipelineState: MTLComputePipelineState
+	
+	public init(learningRate: Float, momentum: Float)
 	{
-		return []
+		self.learningRate = learningRate
+		self.momentum = momentum
+		
+		let function = GPUGlobalLibrary.makeFunction(name: "Optimize_momentum")!
+		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
+	}
+	
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
+	{
+		let momentumData: [MTLBuffer]
+		
+		if let data = data
+		{
+			momentumData = data
+		}
+		else
+		{
+			momentumData = weights.map
+			{ (tensor) -> MTLBuffer in
+				return GPUGlobalDevice.makeBuffer(
+					bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
+					length: Int(tensor.count) * MemoryLayout<Float>.size,
+					options: .storageModePrivate
+				)
+			}
+		}
+		
+		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
+		
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
+		encoder.setBytes([momentum], length: MemoryLayout<Float>.size, at: 5)
+		
+		for ((weightBuffer, gradientBuffer), momentumBuffer) in zip(zip(weights, gradients), momentumData)
+		{
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
+			encoder.setBuffer(momentumBuffer, offset: 0, at: 3)
+			
+			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
+		}
+		
+		return momentumData
 	}
 }
 
 public struct AdaGradOptimizer: Optimizer
 {
-	public typealias OptimizerData = [GPUTensor]
+	public typealias OptimizerData = [MTLBuffer]
 	
 	public var learningRate: Float
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [GPUTensor]?) -> [GPUTensor]
+	private let optimizeFunctionPipelineState: MTLComputePipelineState
+	
+	public init(learningRate: Float)
 	{
-		return []
+		self.learningRate = learningRate
+		
+		let function = GPUGlobalLibrary.makeFunction(name: "Optimize_adagrad")!
+		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
+	}
+	
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
+	{
+		let squaredGradientSum: [MTLBuffer]
+		
+		if let data = data
+		{
+			squaredGradientSum = data
+		}
+		else
+		{
+			squaredGradientSum = weights.map
+			{ (tensor) -> MTLBuffer in
+				return GPUGlobalDevice.makeBuffer(
+					bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
+					length: Int(tensor.count) * MemoryLayout<Float>.size,
+					options: .storageModePrivate
+				)
+			}
+		}
+		
+		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
+		
+		for ((weightBuffer, gradientBuffer), squaredGradientSumBuffer) in zip(zip(weights, gradients), squaredGradientSum)
+		{
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
+			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, at: 3)
+			
+			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
+		}
+		
+		return squaredGradientSum
 	}
 }
 
 public struct AdaDeltaOptimizer: Optimizer
 {
-	public typealias OptimizerData = [(GPUTensor, GPUTensor)]
+	public typealias OptimizerData = ([MTLBuffer], [MTLBuffer])
 	
-	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: [(GPUTensor, GPUTensor)]?) -> [(GPUTensor, GPUTensor)]
+	public var decay: Float
+	
+	private let optimizeFunctionPipelineState: MTLComputePipelineState
+	
+	public init(decay: Float)
 	{
-		return []
+		self.decay = decay
+		
+		let function = GPUGlobalLibrary.makeFunction(name: "Optimize_adadelta")!
+		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
+	}
+	
+	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder, data: ([MTLBuffer], [MTLBuffer])?) -> ([MTLBuffer], [MTLBuffer])
+	{
+		let squaredGradientSum: [MTLBuffer]
+		let squaredWeightUpdateSum: [MTLBuffer]
+		
+		if let data = data
+		{
+			(squaredGradientSum, squaredWeightUpdateSum) = data
+		}
+		else
+		{
+			squaredGradientSum = weights.map
+				{ (tensor) -> MTLBuffer in
+					return GPUGlobalDevice.makeBuffer(
+						bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
+						length: Int(tensor.count) * MemoryLayout<Float>.size,
+						options: .storageModePrivate
+					)
+			}
+			squaredWeightUpdateSum = weights.map
+			{ (tensor) -> MTLBuffer in
+				return GPUGlobalDevice.makeBuffer(
+					bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
+					length: Int(tensor.count) * MemoryLayout<Float>.size,
+					options: .storageModePrivate
+				)
+			}
+		}
+		
+		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
+		
+		for ((weightBuffer, gradientBuffer), (squaredGradientSumBuffer, squaredWeightUpdateBuffer)) in zip(zip(weights, gradients), zip(squaredGradientSum, squaredWeightUpdateSum))
+		{
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
+			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, at: 3)
+			encoder.setBuffer(squaredWeightUpdateBuffer, offset: 0, at: 4)
+			encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 5)
+			
+			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
+		}
+		
+		return (squaredGradientSum, squaredWeightUpdateSum)
 	}
 }
 
