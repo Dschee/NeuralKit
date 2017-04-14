@@ -466,6 +466,18 @@ public func max(_ values: [Float]) -> Float
 }
 
 
+/// Finds the minimum value of a vector
+///
+/// - Parameter values: Input vector
+/// - Returns: Minimum value of the vector
+public func min(_ values: [Float]) -> Float
+{
+	var min: Float = 0
+	vDSP_minv(values, 1, &min, UInt(values.count))
+	return min
+}
+
+
 /// Finds the maximum value and its index of a vector
 ///
 /// - Parameter values: Input vector
@@ -479,14 +491,6 @@ public func argmax(_ values: [Float]) -> (Float, Int)
 }
 
 
-/// Finds the maximum value and its index of a vector
-///
-/// - Parameter values: Input vector
-/// - Returns: Maximum value and its index
-@available(*, unavailable, renamed: "argmax")
-public let maxi = argmax
-
-
 /// Finds the minimum value and its index of a vector
 ///
 /// - Parameter values: Input vector
@@ -498,11 +502,3 @@ public func argmin(_ values: [Float]) -> (Float, Int)
 	vDSP_minvi(values, 1, &min, &ind, UInt(values.count))
 	return (min, Int(ind))
 }
-
-
-/// Finds the minimum value and its index of a vector
-///
-/// - Parameter values: Input vector
-/// - Returns: Minimum value and its index
-@available(*, unavailable, renamed: "argmin")
-public let mini = argmin

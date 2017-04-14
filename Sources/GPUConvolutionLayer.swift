@@ -84,7 +84,7 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		return [.vector(self.gpuBias, length: self.bias.count), .matrix3(self.gpuKernels)]
 	}
 	
-	public var gradients: [GPUTensor]
+	public var weightGradients: [GPUTensor]
 	{
 		return [.vector(self.gpuBiasGradient, length: self.bias.count), .matrix3(self.gpuKernelGradient)]
 	}

@@ -417,7 +417,6 @@ public extension CGImage
 	/**
 
 	Initializes a CGImage instance from the given raw data.
-	The data must be in a range from -1.0 to +1.0.
 	
 	- parameter from: Source data
 	
@@ -425,17 +424,61 @@ public extension CGImage
 	
 	- parameter height: Height of the image
 	
+	- parameter minValue: Optional minimum value, which should be treated as black.
+	If no value is specified, the minimum value of the vector is used.
+	
+	- parameter maxValue: Optional maximum value, which should be treated as white.
+	If no value is specified, the maximum value of the vector is used.
+	
 	- returns: Image created from the data contained in the input vector
 	
 	*/
-	public static func make(from: [Float], width: Int, height: Int) -> CGImage?
+	public static func make(from: [Float], width: Int, height: Int, minValue: Float? = nil, maxValue: Float? = nil) -> CGImage?
 	{
+		let minValue = minValue ?? min(from)
+		let maxValue = maxValue ?? max(from)
+		
 		let colorSpace = CGColorSpaceCreateDeviceRGB()
-		var bytes = from.map{($0+1)*128}.map(UInt8.init)
+		var bytes = ((from &- minValue) &/ (maxValue - minValue)).map{UInt8($0)}
 		let buffer = withUnsafeMutablePointer(to: &bytes, UnsafeMutableRawPointer.init)
 		let ctx = CGContext(data: buffer, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: colorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
 		ctx?.flush()
 		return ctx?.makeImage()
 	}
 	
+	
+	public static func make(from matrix: Matrix) -> CGImage?
+	{
+		return self.make(from: matrix.values, width: matrix.width, height: matrix.height)
+	}
+	
+	
+	public static func make(from matrix: Matrix3) -> [CGImage]
+	{
+		var result: [CGImage] = []
+		
+		for z in 0 ..< matrix.depth
+		{
+			guard
+				let image = self.make(
+					from: Matrix(
+						matrix[
+							x: 0,
+							y: 0,
+							z: z,
+							width: matrix.width,
+							height: matrix.height,
+							depth: 1
+						]
+					)
+				)
+			else
+			{
+				continue
+			}
+			result.append(image)
+		}
+		
+		return result
+	}
 }

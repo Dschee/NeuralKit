@@ -354,3 +354,83 @@ public struct GPUMatrix3
 		encoder.setBuffer(self.descriptorBuffer, offset: 0, at: index + 1)
 	}
 }
+
+@available(OSX 10.12, *)
+extension GPUMatrix3: CustomStringConvertible
+{
+	public var description: String
+	{
+		return "GPUMatrix: \(self.descriptor)"
+	}
+}
+
+
+@available(OSX 10.12, *)
+extension GPUMatrix: CustomStringConvertible
+{
+	public var description: String
+	{
+		return "GPUMatrix: \(self.descriptor)"
+	}
+}
+
+
+@available(OSX 10.12, *)
+public enum GPUTensor
+{
+	case vector(MTLBuffer, length: Int)
+	case matrix(GPUMatrix)
+	case matrix3(GPUMatrix3)
+	
+	internal var count: UInt32
+	{
+		switch self
+		{
+		case .vector(_, length: let length):
+			return UInt32(length)
+			
+		case .matrix(let matrix):
+			let descriptor = matrix.descriptor
+			return descriptor.width * descriptor.height
+			
+		case .matrix3(let matrix):
+			let descriptor = matrix.descriptor
+			return descriptor.width * descriptor.height * descriptor.depth
+		}
+	}
+	
+	internal var buffer: MTLBuffer
+	{
+		switch self
+		{
+		case .vector(let buffer, length: _):
+			return buffer
+			
+		case .matrix(let matrix):
+			return matrix.buffer
+			
+		case .matrix3(let matrix):
+			return matrix.buffer
+		}
+	}
+}
+
+@available(OSX 10.12, *)
+extension GPUTensor: CustomStringConvertible
+{
+	public var description: String
+	{
+		switch self
+		{
+		case .vector(_, length: let count):
+			return "GPUTensor (vector: \(count) elements)"
+			
+		case .matrix(let matrix):
+			return "GPUTensor (\(matrix))"
+			
+			
+		case .matrix3(let matrix):
+			return "GPUTensor (\(matrix))"
+		}
+	}
+}

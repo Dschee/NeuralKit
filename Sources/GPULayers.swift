@@ -193,7 +193,7 @@ public protocol GPUWeightAdjustableLayer: GPUBidirectionalLayer
 	///
 	/// The weight gradient at a given index must correspond to the
 	/// weight at the same index.
-	var gradients: [GPUTensor] { get }
+	var weightGradients: [GPUTensor] { get }
 	
 	
 	/// Notifies the layer that training has finished and 

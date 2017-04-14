@@ -27,46 +27,6 @@ import Foundation
 import Metal
 
 @available(OSX 10.12, *)
-public enum GPUTensor
-{
-	case vector(MTLBuffer, length: Int)
-	case matrix(GPUMatrix)
-	case matrix3(GPUMatrix3)
-	
-	internal var count: UInt32
-	{
-		switch self
-		{
-		case .vector(_, length: let length):
-			return UInt32(length)
-			
-		case .matrix(let matrix):
-			let descriptor = matrix.descriptor
-			return descriptor.width * descriptor.height
-			
-		case .matrix3(let matrix):
-			let descriptor = matrix.descriptor
-			return descriptor.width * descriptor.height * descriptor.depth
-		}
-	}
-	
-	internal var buffer: MTLBuffer
-	{
-		switch self
-		{
-		case .vector(let buffer, length: _):
-			return buffer
-			
-		case .matrix(let matrix):
-			return matrix.buffer
-		
-		case .matrix3(let matrix):
-			return matrix.buffer
-		}
-	}
-}
-
-@available(OSX 10.12, *)
 public protocol Optimizer
 {
 	associatedtype OptimizerData
@@ -93,17 +53,16 @@ public struct SGDOptimizer: Optimizer
 	
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: Void?) -> Void
 	{
-		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
-		
 		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 3)
 		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 4)
 		
 		for (weightBuffer, gradientBuffer) in zip(weights, gradients)
 		{
+			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
+			
 			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
 			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
 			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
-			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
 	}
@@ -148,14 +107,14 @@ public struct MomentumOptimizer: Optimizer
 			}
 		}
 		
-		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
-		
 		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
 		encoder.setBytes([momentum], length: MemoryLayout<Float>.size, at: 5)
 		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 6)
 		
 		for ((weightBuffer, gradientBuffer), momentumBuffer) in zip(zip(weights, gradients), momentumData)
 		{
+			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
+			
 			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
 			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
 			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
@@ -205,12 +164,13 @@ public struct AdaGradOptimizer: Optimizer
 			}
 		}
 		
-		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
 		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 5)
 		
 		for ((weightBuffer, gradientBuffer), squaredGradientSumBuffer) in zip(zip(weights, gradients), squaredGradientSum)
 		{
+			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
+		
 			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
 			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
 			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
@@ -269,13 +229,13 @@ public struct AdaDeltaOptimizer: Optimizer
 			}
 		}
 		
-		encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
-		
 		encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 5)
 		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 6)
 		
 		for ((weightBuffer, gradientBuffer), (squaredGradientSumBuffer, squaredWeightUpdateBuffer)) in zip(zip(weights, gradients), zip(squaredGradientSum, squaredWeightUpdateSum))
 		{
+			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
+			
 			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
 			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
 			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
@@ -286,106 +246,5 @@ public struct AdaDeltaOptimizer: Optimizer
 		}
 		
 		return (squaredGradientSum, squaredWeightUpdateSum)
-	}
-}
-
-
-@available(OSX 10.12, *)
-public protocol TrainingSampleProvider
-{
-	mutating func nextSamples(count: Int) -> [(input: GPUMatrix3, expected: GPUMatrix3)]
-}
-
-
-@available(OSX 10.12, *)
-public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
-{
-	public private(set) var network: GPUFeedForwardNeuralNetwork
-	public let batchSize: Int
-	public let optimizer: OptimizerType
-	public var trainingSampleProvider: TrainingSampleProvider
-	
-	public var onBatchFinish: ((_ loss: Float, _ epoch: Int) -> ())?
-	public var onFinishTraining: (() -> ())?
-	
-	
-	private var optimizerData: OptimizerType.OptimizerData?
-	
-	public init(network: GPUFeedForwardNeuralNetwork, batchSize: Int = 1, optimizer: OptimizerType, sampleProvider: TrainingSampleProvider)
-	{
-		self.network = network
-		self.batchSize = batchSize
-		self.optimizer = optimizer
-		self.optimizerData = nil
-		self.trainingSampleProvider = sampleProvider
-	}
-	
-	public func train(epochs: Int)
-	{
-		DispatchQueue.global().async
-		{ [weak self] in
-			
-			for epoch in 0 ..< epochs
-			{
-				guard let this = self else { break }
-				autoreleasepool
-				{
-					let samples = this.trainingSampleProvider.nextSamples(count: this.batchSize)
-					
-					let buffer = GPUGlobalQueue.makeCommandBuffer()
-					let encoder = buffer.makeComputeCommandEncoder()
-					
-					for sample in samples
-					{
-						this.network.updateGradients(with: sample, encoder: encoder)
-					}
-					
-					let weights = this
-						.network
-						.layers
-						.flatMap{$0 as? GPUWeightAdjustableLayer}
-						.flatMap{$0.weights}
-					
-					let gradients = this
-						.network
-						.layers
-						.flatMap{$0 as? GPUWeightAdjustableLayer}
-						.flatMap{$0.gradients}
-					
-					this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, batchSize: this.batchSize, encoder: encoder, data: this.optimizerData)
-					
-					encoder.endEncoding()
-					buffer.commit()
-					buffer.waitUntilCompleted()
-					
-					self?.onBatchFinish?(0, epoch)
-				}
-			}
-			
-			self?.finishTraining()
-			self?.onFinishTraining?()
-		}
-	}
-	
-	private func finishTraining()
-	{
-		self.network.finishTraining()
-	}
-}
-
-@available(OSX 10.12, *)
-public struct ArrayTrainingSampleProvider: TrainingSampleProvider
-{
-	public let samples: [TrainingSample]
-	
-	public func nextSamples(count: Int) -> [(input: GPUMatrix3, expected: GPUMatrix3)]
-	{
-		return (0 ..< count)
-			.map{_ in Int(arc4random_uniform(UInt32(samples.count)))}
-			.map{samples[$0]}
-			.map{(
-				input: GPUMatrix3(matrix: $0.values, isShared: true),
-				expected: GPUMatrix3(matrix: $0.expected, isShared: true)
-			)}
 	}
 }

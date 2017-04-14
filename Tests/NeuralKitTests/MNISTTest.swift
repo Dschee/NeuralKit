@@ -102,15 +102,18 @@ class MNISTTest: XCTestCase
 		let (trainingSamples, testSamples) = MNISTTest.images(from: "/Users/Palle/Developer/MNIST/")
 		
 		let reshapingLayer = ReshapingLayer(inputSize: (width: 28, height: 28, depth: 1), outputSize: (width: 1, height: 1, depth: 28*28))
-		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 800))
-		let tanh1 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 800), activation: .tanh)
-		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 500))
-		let tanh2 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 500), activation: .tanh)
-		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 200))
-		let tanh3 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 200), activation: .tanh)
-		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10))
+//		let inputLayer = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 800))
+//		let tanh1 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 800), activation: .tanh)
+//		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 500))
+//		let tanh2 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 500), activation: .tanh)
+//		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 200))
+//		let tanh3 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 200), activation: .tanh)
+//		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10))
 		
-		let network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputActivation: .softmax)!
+		let hiddenLayer1 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 28*28+1, height: 10))
+//		let relu1 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .tanh)
+		
+		let network = FeedForwardNeuralNetwork(layers: [reshapingLayer, hiddenLayer1], outputActivation: .softmax)!
 		
 //		let epochs = 200_000
 		
@@ -141,17 +144,25 @@ class MNISTTest: XCTestCase
 		
 		let sema = DispatchSemaphore(value: 0)
 		
-		let trainer = GPUNetworkTrainingSession(network: gpuNetwork, batchSize: 20, optimizer: MomentumOptimizer(learningRate: 0.005, momentum: 0.9), sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples))
+		let trainer = GPUNetworkTrainingSession(
+			network: gpuNetwork,
+			batchSize: 1,
+			optimizer: MomentumOptimizer(learningRate: 0.01, momentum: 0.8),
+//			optimizer: AdaGradOptimizer(learningRate: 0.01),
+//			optimizer: AdaDeltaOptimizer(decay: 0.95),
+			normalizers: [L2Normalizer(decay: 0.001)],
+			sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples)
+		)
 		
 		trainer.onFinishTraining = {sema.signal()}
 		trainer.onBatchFinish = {
 			_, epoch in
-			if epoch % 100 == 0
+			if epoch % 1000 == 0
 			{
 				print("Epoch \(epoch)")
 			}
 		}
-		trainer.train(epochs: 10_000)
+		trainer.train(epochs: 100_000)
 		
 		sema.wait()
 		
@@ -202,23 +213,23 @@ class MNISTTest: XCTestCase
 		
 		let gpuNetwork = GPUFeedForwardNeuralNetwork(
 			layers: network.layers.flatMap
-				{ l in
-					if let layer = l as? ReshapingLayer
-					{
-						return GPUReshapingLayer(inputSize: layer.inputSize, outputSize: layer.outputSize)
-					}
-					else if let layer = l as? FullyConnectedLayer
-					{
-						return GPUFullyConnectedLayer(weights: layer.weights)
-					}
-					else if let layer = l as? NonlinearityLayer
-					{
-						return GPUNonlinearityLayer(inputSize: layer.inputSize, activation: layer.activation)
-					}
-					else
-					{
-						return nil
-					}
+			{ l in
+				if let layer = l as? ReshapingLayer
+				{
+					return GPUReshapingLayer(inputSize: layer.inputSize, outputSize: layer.outputSize)
+				}
+				else if let layer = l as? FullyConnectedLayer
+				{
+					return GPUFullyConnectedLayer(weights: layer.weights)
+				}
+				else if let layer = l as? NonlinearityLayer
+				{
+					return GPUNonlinearityLayer(inputSize: layer.inputSize, activation: layer.activation)
+				}
+				else
+				{
+					return nil
+				}
 			},
 			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10))
 		)!
@@ -258,8 +269,8 @@ class MNISTTest: XCTestCase
 		
 		let conv1 = ConvolutionLayer(
 			inputSize: (width: 28, height: 28, depth: 1),
-			kernels: (0..<8).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 1, range: -0.001 ... 0.001)},
-			bias: (0..<8).map{_ in Float(drand48()) * 0.002 - 0.001},
+			kernels: (0..<8).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 1, range: -0.04 ... 0.04)},
+			bias: (0..<8).map{_ in Float(drand48()) * 0.08 - 0.04},
 			horizontalStride: 1,
 			verticalStride: 1,
 			horizontalInset: 0,
@@ -271,8 +282,8 @@ class MNISTTest: XCTestCase
 		
 		let conv2 = ConvolutionLayer(
 			inputSize: (width: 12, height: 12, depth: 8),
-			kernels: (0..<16).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 8, range: -0.001 ... 0.001)},
-			bias: (0..<16).map{_ in Float(drand48()) * 0.002 - 0.001},
+			kernels: (0..<16).map{_ in RandomWeightMatrix(width: 5, height: 5, depth: 8, range: -0.005 ... 0.005)},
+			bias: (0..<16).map{_ in Float(drand48()) * 0.01 - 0.005},
 			horizontalStride: 1,
 			verticalStride: 1,
 			horizontalInset: -2,
@@ -284,7 +295,7 @@ class MNISTTest: XCTestCase
 		
 		let reshape = ReshapingLayer(inputSize: (width: 4, height: 4, depth: 16), outputSize: (width: 1, height: 1, depth: 256))
 		
-		let fullyConnected = FullyConnectedLayer(weights: RandomWeightMatrix(width: 257, height: 10))
+		let fullyConnected = FullyConnectedLayer(weights: RandomWeightMatrix(width: 257, height: 10, range: -0.004 ... 0.004))
 		
 		let network = FeedForwardNeuralNetwork(layers: [conv1, nonlinear1, pool1, conv2, nonlinear2, pool2, reshape, fullyConnected], outputActivation: .softmax)!
 		
@@ -319,9 +330,9 @@ class MNISTTest: XCTestCase
 			outputLayer: GPUSoftmaxLayer(inputSize: (width: 1, height: 1, depth: 10))
 		)!
 		
-		let epochs = 10_000_000
-		
-		var time = CACurrentMediaTime()
+//		let epochs = 10_000_000
+//		
+//		var time = CACurrentMediaTime()
 		
 		let numberFormatter = NumberFormatter()
 		numberFormatter.maximumSignificantDigits = 5
@@ -329,40 +340,29 @@ class MNISTTest: XCTestCase
 		numberFormatter.maximumIntegerDigits = 10
 		numberFormatter.localizesFormat = false
 		
-//		print("Copying inputs...")
+		let session = GPUNetworkTrainingSession(
+			network: gpuNetwork,
+			batchSize: 1,
+			optimizer: MomentumOptimizer(learningRate: 0.01, momentum: 0.8),
+//			optimizer: AdaGradOptimizer(learningRate: 0.01),
+//			optimizer: AdaDeltaOptimizer(decay: 0.95),
+			normalizers: [L2Normalizer(decay: 0.001)],
+			sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples)
+		)
 		
-//		let gpuInputs = trainingSamples.map{$0.values}.map{GPUMatrix3(matrix: $0, isShared: false)}
+		let sema = DispatchSemaphore(value: 0)
 		
-//		print("Copying outputs...")
-//		
-//		let gpuOutputs = trainingSamples.map{$0.expected}.map{GPUMatrix3(matrix: $0, isShared: true)}
-//		
-//		print("Done.")
+		session.onFinishTraining = {sema.signal()}
+		session.onBatchFinish = {
+			_, epoch in
+			if epoch % 1000 == 0
+			{
+				print("Epoch \(epoch)")
+			}
+		}
+		session.train(epochs: 100_000)
 		
-//		for epoch in 0 ..< epochs
-//		{
-//			let index = Int(arc4random_uniform(UInt32(trainingSamples.count)))
-//			let sample = trainingSamples[index]
-////			let input = gpuInputs[index]
-//			let input = GPUMatrix3(matrix: sample.values, isShared: true)
-//			let output = GPUMatrix3(matrix: sample.expected, isShared: true)
-////			let output = gpuOutputs[index]
-////			let error = network.train(sample, learningRate: 0.01, annealingRate: 0, momentum: 0, decay: 0)
-////			let error = gpuNetwork.train((input: input, expected: output), learningRate: 0.01, momentum: 0.9, decay: 0.001)
-//			
-//			if epoch % 1000 == 0
-//			{
-//				let newTime = CACurrentMediaTime()
-//				print("epoch \(epoch) of \(epochs): \(numberFormatter.string(from: (error * 100) as NSNumber) ?? "")% error, duration: \(numberFormatter.string(from: (newTime - time) as NSNumber) ?? "") seconds.")
-//				time = newTime
-//			}
-//			
-//			if error.isNaN
-//			{
-//				XCTFail("NaN error")
-//				return
-//			}
-//		}
+		sema.wait()
 		
 		var correctCount = 0
 		var wrongCount = 0

@@ -67,8 +67,8 @@ kernel void ConvolutionLayer_forward(const	device	float*		input				[[buffer(0)]]
 			for (uint z = 0; z < kernel_desc.depth; z++)
 			{
 				convolution_sum +=
-				matrix3_get(kernel_desc,		kernel_mat, x,				y,				z) *
-				matrix3_get(input_descriptor,	input,		x + inputBaseX, y + inputBaseY, z);
+					matrix3_get(kernel_desc,		kernel_mat, x,				y,				z) *
+					matrix3_get(input_descriptor,	input,		x + inputBaseX, y + inputBaseY, z);
 			}
 		}
 	}

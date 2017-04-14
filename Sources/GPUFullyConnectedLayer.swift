@@ -58,7 +58,7 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustable
 		return [.matrix(self.gpuWeights)]
 	}
 	
-	public var gradients: [GPUTensor]
+	public var weightGradients: [GPUTensor]
 	{
 		return [.matrix(self.gpuWeightGradient)]
 	}
