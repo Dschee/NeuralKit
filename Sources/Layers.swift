@@ -730,7 +730,7 @@ public struct NonlinearityLayer: NeuralLayer
 	{
 		// gradients for anterior layer = gradients of posterior layer * derivative of gradients of posterior layer
 		return Matrix3(
-			values: activation.derivative(nextLayerGradients.values) &* nextLayerGradients.values,
+			values: activation.derivative(activation.function(inputs.values)) &* nextLayerGradients.values,
 			width: inputSize.width,
 			height: inputSize.height,
 			depth: inputSize.depth

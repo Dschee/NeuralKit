@@ -438,24 +438,62 @@ public extension CGImage
 		let minValue = minValue ?? min(from)
 		let maxValue = maxValue ?? max(from)
 		
-		let colorSpace = CGColorSpaceCreateDeviceRGB()
-		var bytes = ((from &- minValue) &/ (maxValue - minValue)).map{UInt8($0)}
-		let buffer = withUnsafeMutablePointer(to: &bytes, UnsafeMutableRawPointer.init)
-		let ctx = CGContext(data: buffer, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: colorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
-		ctx?.flush()
-		return ctx?.makeImage()
+		let maxMagnitude = max(-minValue, maxValue)
+		
+		let colorSpace = CGColorSpaceCreateDeviceGray()
+		var bytes = from.map{($0 + maxMagnitude) / max(2 * maxMagnitude, Float.leastNonzeroMagnitude) * 255}.map{UInt8($0)}
+		
+//		let image = withUnsafeMutablePointer(to: &bytes) { (pointer) -> CGImage? in
+//			let rawPointer = UnsafeMutableRawPointer(pointer)
+//			let ctx = CGContext(data: rawPointer, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: colorSpace, bitmapInfo: CGImageAlphaInfo.none.rawValue)
+//			return ctx?.makeImage()
+//		}
+		
+		guard let context = CGContext(
+			data: nil,
+			width: width,
+			height: height,
+			bitsPerComponent: 8,
+			bytesPerRow: width,
+			space: colorSpace,
+			bitmapInfo: CGImageAlphaInfo.none.rawValue
+		)
+		else
+		{
+			print("Error: could not create context.")
+			return nil
+		}
+		
+		guard let data = context.data?.assumingMemoryBound(to: UInt8.self)
+		else
+		{
+			print("Error: Could not retrieve data of context.")
+			return nil
+		}
+		
+		for index in 0 ..< (width * height)
+		{
+			data[index] = bytes[index]
+		}
+		
+		return context.makeImage()
 	}
 	
 	
-	public static func make(from matrix: Matrix) -> CGImage?
+	public static func make(from matrix: Matrix, minValue: Float? = nil, maxValue: Float? = nil) -> CGImage?
 	{
-		return self.make(from: matrix.values, width: matrix.width, height: matrix.height)
+		return self.make(from: matrix.values, width: matrix.width, height: matrix.height, minValue: minValue, maxValue: maxValue)
 	}
 	
 	
-	public static func make(from matrix: Matrix3) -> [CGImage]
+	public static func make(from matrix: Matrix3, minValue: Float? = nil, maxValue: Float? = nil) -> [CGImage]
 	{
 		var result: [CGImage] = []
+		
+		if matrix.width == 1 && matrix.height == 1
+		{
+			return self.make(from: matrix.values, width: matrix.values.count, height: 1, minValue: minValue, maxValue: maxValue).flatMap{[$0]} ?? []
+		}
 		
 		for z in 0 ..< matrix.depth
 		{
@@ -470,7 +508,9 @@ public extension CGImage
 							height: matrix.height,
 							depth: 1
 						]
-					)
+					),
+					minValue: minValue,
+					maxValue: maxValue
 				)
 			else
 			{
@@ -480,5 +520,16 @@ public extension CGImage
 		}
 		
 		return result
+	}
+	
+	@discardableResult
+	public func write(to url: URL) -> Bool
+	{
+		guard let destination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) else
+		{
+			return false
+		}
+		CGImageDestinationAddImage(destination, self, nil)
+		return CGImageDestinationFinalize(destination)
 	}
 }

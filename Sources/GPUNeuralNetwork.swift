@@ -109,7 +109,7 @@ public struct GPUFeedForwardNeuralNetwork
 	}
 	
 	
-	internal func updateGradients(with sample: (input: GPUMatrix3, expected: GPUMatrix3), encoder: MTLComputeCommandEncoder)
+	internal mutating func updateGradients(with sample: (input: GPUMatrix3, expected: GPUMatrix3), encoder: MTLComputeCommandEncoder)
 	{
 		var layerInputs = [sample.input]
 		

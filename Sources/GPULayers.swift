@@ -153,6 +153,10 @@ public protocol GPUNeuralLayer
 @available(OSX 10.12, *)
 public protocol GPUBidirectionalLayer: GPUNeuralLayer
 {
+	// Optional debug properties
+	var gradient: GPUMatrix3? { get }
+	var activation: GPUMatrix3? { get }
+	
 	
 	/// Backpropagates the gradient through the network and calculates
 	/// weight gradients if necessary.
@@ -165,12 +169,11 @@ public protocol GPUBidirectionalLayer: GPUNeuralLayer
 	///   - inputs: Inputs of the layer
 	///   - encoder: Encoder used to dispatch metal compute shaders
 	/// - Returns: Gradients which will be passed to the anterior layer.
-	func backpropagate(
+	mutating func backpropagate(
 		nextLayerGradients: GPUMatrix3,
 		inputs: GPUMatrix3,
 		encoder: MTLComputeCommandEncoder
 	) -> GPUMatrix3
-	
 }
 
 

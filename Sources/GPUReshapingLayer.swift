@@ -44,6 +44,15 @@ public struct GPUReshapingLayer: GPUBidirectionalLayer
 	
 	private var gpuOutputDescriptor: MTLBuffer
 	
+	
+	public private(set) var gradient: GPUMatrix3?
+	
+	public var activation: GPUMatrix3?
+	{
+		return nil
+	}
+	
+	
 	/// Initializes a reshaping layer which
 	/// reshapes the output of one layer to fit the input of another layer.
 	///
@@ -102,13 +111,14 @@ public struct GPUReshapingLayer: GPUBidirectionalLayer
 	///   - momentum: Momentum of weight updates
 	///   - decay: Decay rate at which weights should be decreased
 	/// - Returns: Error matrix of the current layer
-	public func backpropagate(
+	public mutating func backpropagate(
 		nextLayerGradients: GPUMatrix3,
 		inputs: GPUMatrix3,
 		encoder: MTLComputeCommandEncoder
 		) -> GPUMatrix3
 	{
-		return nextLayerGradients.reshaped(
+		
+		let gradient = nextLayerGradients.reshaped(
 			descriptor: (
 				width: UInt32(inputSize.width),
 				height: UInt32(inputSize.height),
@@ -116,6 +126,8 @@ public struct GPUReshapingLayer: GPUBidirectionalLayer
 			),
 			descriptorBuffer: inputs.descriptorBuffer
 		)
+		self.gradient = gradient
+		return gradient
 	}
 	
 }

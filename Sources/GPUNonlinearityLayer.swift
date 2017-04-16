@@ -45,7 +45,18 @@ public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 	
 	
 	/// Activation function used for the layer
-	public let activation: Activation
+	public let activationFunction: Activation
+	
+	
+	public var gradient: GPUMatrix3?
+	{
+		return gpuGradient
+	}
+	
+	public var activation: GPUMatrix3?
+	{
+		return gpuOutput
+	}
 	
 	
 	/// Creates a new nonlinearity layer with a given nonlinearity function.
@@ -58,7 +69,7 @@ public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 	public init(inputSize: (width: Int, height: Int, depth: Int), activation: Activation)
 	{
 		self.inputSize = inputSize
-		self.activation = activation
+		self.activationFunction = activation
 		
 		let functionName: String?
 		
@@ -177,7 +188,8 @@ public struct GPUNonlinearityLayer: GPUBidirectionalLayer, GPUOutputLayer
 		encoder.setComputePipelineState(gpuBackpropagateFunctionPipelineState)
 		
 		nextLayerGradients.setBuffer(on: encoder, at: 0)
-		gpuGradient.setBuffer(on: encoder, at: 2)
+		gpuOutput?.setBuffer(on: encoder, at: 2)
+		gpuGradient.setBuffer(on: encoder, at: 4)
 		
 		encoder.dispatch(workSize: outputSize)
 		

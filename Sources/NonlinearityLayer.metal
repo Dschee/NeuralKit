@@ -58,14 +58,16 @@ kernel void NonlinearityLayer_forward_sigmoid(const	device	float*		input				[[bu
 
 kernel void NonlinearityLayer_backpropagate_sigmoid(const	device	float*		next_gradient				[[buffer(0)]],
 													constant		matrix3_t	&next_gradient_descriptor	[[buffer(1)]],
-															device	float*		gradient					[[buffer(2)]], // Skip gradient descriptor
+													const	device	float*		outputs						[[buffer(2)]],
+															device	float*		gradient					[[buffer(4)]], // Skip gradient descriptor
 																	uint3		pos							[[thread_position_in_grid]])
 {
 	if (pos[0] >= next_gradient_descriptor.width || pos[1] >= next_gradient_descriptor.height || pos[2] >= next_gradient_descriptor.depth)
 		return;
 	
 	float grad = matrix3_get(next_gradient_descriptor, next_gradient, pos[0], pos[1], pos[2]);
-	grad *= grad * (1 - grad);
+	float out = matrix3_get(next_gradient_descriptor, outputs, pos[0], pos[1], pos[2]);
+	grad *= out * (1 - out);
 	matrix3_set(next_gradient_descriptor, gradient, pos[0], pos[1], pos[2], grad);
 }
 
@@ -98,14 +100,16 @@ kernel void NonlinearityLayer_forward_tanh(const	device	float*		input				[[buffe
 
 kernel void NonlinearityLayer_backpropagate_tanh(const	device	float*		next_gradient				[[buffer(0)]],
 												 constant		matrix3_t	&next_gradient_descriptor	[[buffer(1)]],
-												 		device	float*		gradient					[[buffer(2)]], // Skip gradient descriptor
+												const	device	float*		outputs						[[buffer(2)]],
+												 		device	float*		gradient					[[buffer(4)]], // Skip gradient descriptor
 												 				uint3		pos							[[thread_position_in_grid]])
 {
 	if (pos[0] >= next_gradient_descriptor.width || pos[1] >= next_gradient_descriptor.height || pos[2] >= next_gradient_descriptor.depth)
 		return;
 	
 	float grad = matrix3_get(next_gradient_descriptor, next_gradient, pos[0], pos[1], pos[2]);
-	grad = grad * (1 - grad * grad);
+	float out = matrix3_get(next_gradient_descriptor, outputs, pos[0], pos[1], pos[2]);
+	grad *= (1 - out * out);
 	matrix3_set(next_gradient_descriptor, gradient, pos[0], pos[1], pos[2], grad);
 }
 
@@ -138,13 +142,15 @@ kernel void NonlinearityLayer_forward_relu(const	device	float*		input				[[buffe
 
 kernel void NonlinearityLayer_backpropagate_relu(const	device	float*		next_gradient				[[buffer(0)]],
 												 constant		matrix3_t	&next_gradient_descriptor	[[buffer(1)]],
-														device	float*		gradient					[[buffer(2)]], // Skip gradient descriptor
+												const	device	float*		outputs						[[buffer(2)]],
+														device	float*		gradient					[[buffer(4)]], // Skip gradient descriptor
 												 				uint3		pos							[[thread_position_in_grid]])
 {
 	if (pos[0] >= next_gradient_descriptor.width || pos[1] >= next_gradient_descriptor.height || pos[2] >= next_gradient_descriptor.depth)
 		return;
 	
 	float grad = matrix3_get(next_gradient_descriptor, next_gradient, pos[0], pos[1], pos[2]);
-	grad = fmax(grad, 0);
+	float out = matrix3_get(next_gradient_descriptor, outputs, pos[0], pos[1], pos[2]);
+	grad *= fmax(out, 0);
 	matrix3_set(next_gradient_descriptor, gradient, pos[0], pos[1], pos[2], grad);
 }

@@ -43,6 +43,7 @@ public struct GPUSoftmaxLayer: GPUOutputLayer
 	private var gpuOutput: GPUMatrix3!
 	private var gpuGradient: GPUMatrix3!
 	
+	
 	public init(inputSize: (width: Int, height: Int, depth: Int))
 	{
 		self.inputSize = inputSize

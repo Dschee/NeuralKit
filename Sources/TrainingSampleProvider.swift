@@ -38,6 +38,11 @@ public struct ArrayTrainingSampleProvider: TrainingSampleProvider
 {
 	public let samples: [TrainingSample]
 	
+	public init(samples: [TrainingSample])
+	{
+		self.samples = samples
+	}
+	
 	public func nextSamples(count: Int) -> [(input: GPUMatrix3, expected: GPUMatrix3)]
 	{
 		return (0 ..< count)
@@ -47,5 +52,44 @@ public struct ArrayTrainingSampleProvider: TrainingSampleProvider
 				input: GPUMatrix3(matrix: $0.values, isShared: true),
 				expected: GPUMatrix3(matrix: $0.expected, isShared: true)
 			)}
+	}
+}
+
+@available(OSX 10.12, *)
+public struct CachedArrayTrainingSampleProvider: TrainingSampleProvider
+{
+	public let samples: [TrainingSample]
+	private var gpuSamples: [Int: (GPUMatrix3, GPUMatrix3)]
+	
+	public init(samples: [TrainingSample])
+	{
+		self.samples = samples
+		self.gpuSamples = [:]
+	}
+	
+	public mutating func nextSamples(count: Int) -> [(input: GPUMatrix3, expected: GPUMatrix3)]
+	{
+		let indices = (0 ..< count)
+			.map{_ in Int(arc4random_uniform(UInt32(samples.count)))}
+		
+		var next:[(GPUMatrix3, GPUMatrix3)] = []
+		
+		for index in indices
+		{
+			if let sample = gpuSamples[index]
+			{
+				next.append(sample)
+			}
+			else
+			{
+				let sample = (GPUMatrix3(matrix: samples[index].values), GPUMatrix3(matrix: samples[index].expected))
+				gpuSamples[index] = sample
+				next.append(sample)
+				
+				sample.0.buffer.addDebugMarker("Hello", range: NSRange())
+			}
+		}
+		
+		return next
 	}
 }

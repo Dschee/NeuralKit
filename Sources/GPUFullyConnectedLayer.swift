@@ -63,6 +63,16 @@ public struct GPUFullyConnectedLayer: GPUBidirectionalLayer, GPUWeightAdjustable
 		return [.matrix(self.gpuWeightGradient)]
 	}
 	
+	public var gradient: GPUMatrix3?
+	{
+		return gpuGradient
+	}
+	
+	public var activation: GPUMatrix3?
+	{
+		return gpuOutput
+	}
+	
 	
 	private var gpuWeights: GPUMatrix
 	private var gpuOutput: GPUMatrix3

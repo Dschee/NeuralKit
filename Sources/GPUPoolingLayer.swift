@@ -48,6 +48,15 @@ public struct GPUPoolingLayer: GPUBidirectionalLayer
 	private var gpuBackpropagateFunctionPipelineState: MTLComputePipelineState
 	private var gpuGradient: GPUMatrix3
 	
+	public var gradient: GPUMatrix3?
+	{
+		return gpuGradient
+	}
+	
+	public var activation: GPUMatrix3?
+	{
+		return gpuOutput
+	}
 	
 	/// Creates a new Max Pooling layer with the given input and output size.
 	/// Scaling factors are determined automatically from the input and output size.

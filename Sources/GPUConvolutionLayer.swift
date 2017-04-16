@@ -89,6 +89,15 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		return [.vector(self.gpuBiasGradient, length: self.bias.count), .matrix3(self.gpuKernelGradient)]
 	}
 	
+	public var gradient: GPUMatrix3?
+	{
+		return gpuGradient
+	}
+	
+	public var activation: GPUMatrix3?
+	{
+		return gpuOutput
+	}
 	
 	private var gpuFunctionPipelineState: MTLComputePipelineState
 	private var gpuBackpropagatePipelineState: MTLComputePipelineState

@@ -40,7 +40,21 @@ kernel void SoftmaxLayer_forward_exp(const	device	float*		input				[[buffer(0)]]
 	if (pos[0] >= output_descriptor.width || pos[1] >= output_descriptor.height || pos[2] >= output_descriptor.depth)
 		return;
 	
-	float in = matrix3_get(input_descriptor, input, pos[0], pos[1], pos[2]);
+	float max = input[0];
+	
+	for (uint z = 0; z < input_descriptor.depth; z++)
+	{
+		for (uint y = 0; y < input_descriptor.height; y++)
+		{
+			for (uint x = 0; x < input_descriptor.width; x++)
+			{
+				max = fmax(max, matrix3_get(input_descriptor, input, x, y, z));
+			}
+		}
+	}
+	
+	// Subtract maximum from actual input for numerical stability.
+	float in = matrix3_get(input_descriptor, input, pos[0], pos[1], pos[2]) - max;
 	float exponentiated = exp(in);
 	matrix3_set(output_descriptor, output, pos[0], pos[1], pos[2], exponentiated);
 }
