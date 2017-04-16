@@ -178,7 +178,7 @@ class GPUMNISTTests: XCTestCase
 		
 		let session = GPUNetworkTrainingSession(
 			network: gpuNetwork,
-			batchSize: 1,
+			batchSize: 20,
 			optimizer: MomentumOptimizer(learningRate: 0.01, momentum: 0.0),
 //			optimizer: AdaGradOptimizer(learningRate: 0.01),
 //			optimizer: AdaDeltaOptimizer(decay: 0.95),
@@ -191,7 +191,7 @@ class GPUMNISTTests: XCTestCase
 		session.onFinishTraining = {sema.signal()}
 		session.onBatchFinish = {
 			_, epoch in
-			if epoch % 1000 == 0
+			if epoch % 100 == 0
 			{
 				print("Epoch \(epoch)")
 			}

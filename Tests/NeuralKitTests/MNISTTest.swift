@@ -114,6 +114,8 @@ class MNISTTest: XCTestCase
 		
 		let epochs = 100_000
 		
+		var time = CACurrentMediaTime()
+		
 		for epoch in 0 ..< epochs
 		{
 			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
@@ -122,7 +124,9 @@ class MNISTTest: XCTestCase
 			
 			if epoch % 1000 == 0
 			{
-				print("Epoch \(epoch): \(error) error")
+				let newTime = CACurrentMediaTime()
+				print("Epoch \(epoch): \(error) error (\(newTime - time) seconds)")
+				time = newTime
 			}
 		}
 		

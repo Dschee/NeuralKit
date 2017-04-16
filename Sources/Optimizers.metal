@@ -61,6 +61,26 @@ kernel void Optimize_momentum(		device	float*		weights			[[buffer(0)]],
 	gradients[index] = 0;
 }
 
+kernel void Optimize_nesterov(		device	float*		weights			[[buffer(0)]],
+							  constant		uint		&count			[[buffer(1)]],
+							 		device 	float*		gradients		[[buffer(2)]],
+							  		device 	float*		weight_deltas	[[buffer(3)]],
+							  constant 		float		&learningRate	[[buffer(4)]],
+							  constant		float		&momentum		[[buffer(5)]],
+							  constant		float		&batch_size		[[buffer(6)]],
+							  uint		index			[[thread_position_in_grid]])
+{
+	if (index >= count)
+		return;
+	
+	float delta = weight_deltas[index];
+	float updated_delta = delta * momentum + gradients[index] * learningRate;
+	delta = momentum * delta - (1 + momentum) * updated_delta;
+	
+	weight_deltas[index] = updated_delta;
+	weights[index] += delta;
+}
+
 kernel void Optimize_adagrad(		device	float*		weights					[[buffer(0)]],
 							 constant		uint		&count					[[buffer(1)]],
 									device	float*		gradients				[[buffer(2)]],
@@ -79,6 +99,27 @@ kernel void Optimize_adagrad(		device	float*		weights					[[buffer(0)]],
 	squared_gradient_sums[index] = squared_gradient_sum;
 	
 	weights[index] -= learningRate * rsqrt(squared_gradient_sum + 1E-8) * gradient;
+	gradients[index] = 0;
+}
+
+kernel void Optimize_rmsprop(		device	float*		weights						[[buffer(0)]],
+							 constant		uint		&count						[[buffer(1)]],
+							 		device	float*		gradients					[[buffer(2)]],
+							 		device	float*		squared_gradient_sums		[[buffer(3)]],
+							 constant		float		&learningRate				[[buffer(4)]],
+							 constant		float		&decay						[[buffer(5)]],
+							 constant		float		&batch_size					[[buffer(6)]],
+											uint		index						[[thread_position_in_grid]])
+{
+	if (index >= count)
+		return;
+	
+	float gradient = gradients[index] / batch_size;
+	
+	float squared_gradient_sum = (decay * squared_gradient_sums[index]) + ((1 - decay) * (gradient * gradient));
+	float weight_delta = learningRate * rsqrt(squared_gradient_sum + 1E-8) * gradient;
+	
+	weights[index] -= weight_delta;
 	gradients[index] = 0;
 }
 
