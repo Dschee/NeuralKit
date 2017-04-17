@@ -197,6 +197,12 @@ public struct FullyConnectedLayer: NeuralLayer
 	}
 	
 	
+	/// Initializes a new fully connected layer with the given input and output depth
+	/// and fills its weight matrix with random small values.
+	///
+	/// - Parameters:
+	///   - inputDepth: Depth of the input volume. Width and height must be zero.
+	///   - outputDepth: Depth of the output volume. Width and height will be zero.
 	public init(inputDepth: Int, outputDepth: Int)
 	{
 		self.weights = RandomWeightMatrix(width: inputDepth + 1, height: outputDepth)

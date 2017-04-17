@@ -26,21 +26,50 @@
 import Foundation
 import Metal
 
-
+/// Normalization Protocol
+///
+/// A normalizer introduces another loss term to a weight gradient matrix
+/// which penalizes big weight values and thereby keeping weights from getting very big.
 @available(OSX 10.12, *)
 public protocol Normalizer
 {
+	
+	/// Updates the weight gradients based on the values in the weight matrix.
+	///
+	/// This will lead to weights getting smaller in a subsequent optimization pass.
+	///
+	/// - Parameters:
+	///   - weights: Weights for which normalization loss should be calculated.
+	///   - gradients: Weight gradients corresponding to the given weights.
+	///   - encoder: Encoder for dispatching on GPU.
 	func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder)
 }
 
 
+/// A L1Normalizer introduces linear loss proportional to the values in the weight matrix.
+///
+/// An L1 normalizer will make all weights decay equally fast towards zero.
 @available(OSX 10.12, *)
 public struct L1Normalizer: Normalizer
 {
+	
+	/// Weight decay rate
+	///
+	/// The weight decay rate determines the magnitude
+	/// with which big weights should be penalized.
 	public var decay: Float
 	
+	
+	/// GPU normalization function state.
 	private let normalizeFunctionPipelineState: MTLComputePipelineState
 	
+	
+	/// Initializes a L1 normalizer.
+	///
+	/// A L1 normalizer introduces linear loss proportional to the values in the weight matrix.
+	/// This will make all weights decay equally fast towards zero.
+	///
+	/// - Parameter decay: Weight decay rate
 	public init(decay: Float)
 	{
 		self.decay = decay
@@ -49,6 +78,15 @@ public struct L1Normalizer: Normalizer
 		self.normalizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: normalizeFunction)
 	}
 	
+	
+	/// Updates the weight gradients based on the values in the weight matrix.
+	///
+	/// This will lead to weights getting smaller in a subsequent optimization pass.
+	///
+	/// - Parameters:
+	///   - weights: Weights for which normalization loss should be calculated.
+	///   - gradients: Weight gradients corresponding to the given weights.
+	///   - encoder: Encoder for dispatching on GPU.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder)
 	{
 		encoder.setComputePipelineState(normalizeFunctionPipelineState)
@@ -63,15 +101,34 @@ public struct L1Normalizer: Normalizer
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
 	}
+	
 }
 
+
+/// A L2 normalizer introduces quadratic loss proportional to the values in the weight matrix.
+///
+/// This will lead to faster decay for big weights and slower decay for small weights.
 @available(OSX 10.12, *)
 public struct L2Normalizer: Normalizer
 {
+	
+	/// Weight decay rate
+	///
+	/// The weight decay rate determines the magnitude
+	/// with which big weights should be penalized.
 	public var decay: Float
 	
+	
+	/// GPU normalization function state
 	private let normalizeFunctionPipelineState: MTLComputePipelineState
 	
+	
+	/// Initializes a L2 normalizer.
+	///
+	/// A L1Normalizer introduces quadratic loss proportional to the values in the weight matrix.
+	/// This will lead to faster decay for big weights and slower decay for small weights.
+	///
+	/// - Parameter decay: Weight decay rate
 	public init(decay: Float)
 	{
 		self.decay = decay
@@ -80,6 +137,15 @@ public struct L2Normalizer: Normalizer
 		self.normalizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: normalizeFunction)
 	}
 	
+	
+	/// Updates the weight gradients based on the values in the weight matrix.
+	///
+	/// This will lead to weights getting smaller in a subsequent optimization pass.
+	///
+	/// - Parameters:
+	///   - weights: Weights for which normalization loss should be calculated.
+	///   - gradients: Weight gradients corresponding to the given weights.
+	///   - encoder: Encoder for dispatching on GPU.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder)
 	{
 		encoder.setComputePipelineState(normalizeFunctionPipelineState)

@@ -56,10 +56,12 @@ class GPUMNISTTests: XCTestCase
 		let trainer = GPUNetworkTrainingSession(
 			network: gpuNetwork,
 			batchSize: 1,
-			optimizer: SGDOptimizer(learningRate: 0.01),
+//			optimizer: SGDOptimizer(learningRate: 0.01),
 //			optimizer: MomentumOptimizer(learningRate: 0.01, momentum: 0.8),
 //			optimizer: AdaGradOptimizer(learningRate: 0.01),
 //			optimizer: AdaDeltaOptimizer(decay: 0.95),
+			optimizer: RMSpropOptimizer(learningRate: 0.01, decay: 0.95),
+//			optimizer: NesterovOptimizer(learningRate: 0.003, momentum: 0.8),
 			normalizers: [L2Normalizer(decay: 0.001)],
 			sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples)
 		)
@@ -182,6 +184,7 @@ class GPUMNISTTests: XCTestCase
 			optimizer: MomentumOptimizer(learningRate: 0.01, momentum: 0.0),
 //			optimizer: AdaGradOptimizer(learningRate: 0.01),
 //			optimizer: AdaDeltaOptimizer(decay: 0.95),
+//			optimizer: NesterovOptimizer(learningRate: 0.01, momentum: 0.8),
 			normalizers: [L2Normalizer(decay: 0.001)],
 			sampleProvider: CachedArrayTrainingSampleProvider(samples: trainingSamples)
 		)

@@ -26,22 +26,79 @@
 import Foundation
 import Metal
 
+
+/// A generic optimizer.
+///
+/// An optimizer will take a set of weights and corresponding gradients
+/// and update the weights according to the gradients and some optional
+/// data.
 @available(OSX 10.12, *)
 public protocol Optimizer
 {
+	
+	/// Data required for optimization.
+	///
+	/// This data will be kept between iterations
+	/// and the result of one optimization will
+	/// be provided to the next optimization pass.
 	associatedtype OptimizerData
 	
+	
+	/// Updates weights based on the provided gradients and
+	/// optimizer specific optimization data.
+	///
+	/// - Parameters:
+	///   - weights: Weights, which should be updated.
+	///   - gradients: Weight gradients, which correspond to the given weights.
+	///   - batchSize: Number of samples which where used to calculate the given weight gradients.
+	///   - encoder: Encoder for dispatching Metal kernels
+	///   - data: Optimization data from the last optimization pass or nil, if this function is called for the first time.
+	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
 	func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: OptimizerData?) -> OptimizerData
 }
 
+
+/// Gradient Descent Optimizer
+///
+/// Optimizes the weights of adjustable layers
+/// using only the current gradients.
+///
+/// This optimizer may perform not as good as other optimizers
+/// as it has a higher chance of getting stuck in a local minimum.
 @available(OSX 10.12, *)
 public struct SGDOptimizer: Optimizer
 {
+	
+	/// Data required for optimization.
+	///
+	/// This data will be kept between iterations
+	/// and the result of one optimization will
+	/// be provided to the next optimization pass.
 	public typealias OptimizerData = Void
 	
+	
+	/// Rate, at which the weights will be updated
+	/// according to the weight gradients.
+	///
+	/// A high learning rate will lead to faster convergence
+	/// but can lead to inaccurate results or divergence,
+	/// if it is chosen too high.
 	public var learningRate: Float
+	
+	
+	/// Optimization function state
 	private let optimizeFunctionPipelineState: MTLComputePipelineState
 	
+	
+	/// Creates a new Stochastic Gradient Descent optimizer.
+	///
+	/// The SGDOptimizer will update the weights of adjustable layers
+	/// using only the current gradients.
+	///
+	/// This optimizer may perform not as good as other optimizers
+	/// as it has a higher chance of getting stuck in a local minimum.
+	///
+	/// - Parameter learningRate: Rate, at which weight will be adapted.
 	public init(learningRate: Float)
 	{
 		self.learningRate = learningRate
@@ -51,6 +108,16 @@ public struct SGDOptimizer: Optimizer
 	}
 	
 	
+	/// Updates weights based on the provided gradients and
+	/// optimizer specific optimization data.
+	///
+	/// - Parameters:
+	///   - weights: Weights, which should be updated.
+	///   - gradients: Weight gradients, which correspond to the given weights.
+	///   - batchSize: Number of samples which where used to calculate the given weight gradients.
+	///   - encoder: Encoder for dispatching Metal kernels
+	///   - data: Optimization data from the last optimization pass or nil, if this function is called for the first time.
+	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: Void?) -> Void
 	{
 		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 3)
@@ -66,18 +133,68 @@ public struct SGDOptimizer: Optimizer
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
 	}
+	
 }
 
+
+/// Gradient Descent Optimizer with momentum.
+///
+/// This optimizer extends the standard SGDOptimizer
+/// by storing exponentially decaying previous weight updates,
+/// which are added to the weight update.
+///
+/// A momentum optimizer can lead to better results than a SGDOptimizer
+/// as the momentum term can help overcome local minima.
 @available(OSX 10.12, *)
 public struct MomentumOptimizer: Optimizer
 {
+	
+	/// Data required for optimization.
+	///
+	/// This data will be kept between iterations
+	/// and the result of one optimization will
+	/// be provided to the next optimization pass.
 	public typealias OptimizerData = [MTLBuffer]
 	
+	
+	/// Rate, at which the weights will be updated
+	/// according to the weight gradients.
+	///
+	/// A high learning rate will lead to faster convergence
+	/// but can lead to inaccurate results or divergence,
+	/// if it is chosen too high.
 	public var learningRate: Float
+	
+	
+	/// Decay rate of previous weight updates.
+	///
+	/// If the momentum is chosen hight, previous weight updates
+	/// will decay slower and have a higher importance on 
+	/// subsequent weight updates.
+	///
+	/// This value must be less than 1 but bigger than 0.
+	/// If the momentum value is zero, the momentum optimizer
+	/// will be equivalent to a SGDOptimizer.
 	public var momentum: Float
 	
+	
+	/// GPU optimize function state
 	private let optimizeFunctionPipelineState: MTLComputePipelineState
 	
+	
+	/// Creates a new momentum optimizer.
+	///
+	/// This optimizer extends the standard SGDOptimizer
+	/// by storing exponentially decaying previous weight updates,
+	/// which are added to the weight update.
+	///
+	/// A momentum optimizer can lead to better results than a SGDOptimizer
+	/// as the momentum term can help overcome local minima.
+	///
+	/// - Parameters:
+	///   - learningRate: Rate, at which weights should be adapted to weight gradients.
+	///   - momentum: Decay rate of previous weight updates. This value should be around 0.8. 
+	///			It must not be greater than or equal to 1.
 	public init(learningRate: Float, momentum: Float)
 	{
 		self.learningRate = learningRate
@@ -87,6 +204,17 @@ public struct MomentumOptimizer: Optimizer
 		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
 	}
 	
+	
+	/// Updates weights based on the provided gradients and
+	/// optimizer specific optimization data.
+	///
+	/// - Parameters:
+	///   - weights: Weights, which should be updated.
+	///   - gradients: Weight gradients, which correspond to the given weights.
+	///   - batchSize: Number of samples which where used to calculate the given weight gradients.
+	///   - encoder: Encoder for dispatching Metal kernels
+	///   - data: Optimization data from the last optimization pass or nil, if this function is called for the first time.
+	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
 	{
 		let momentumData: [MTLBuffer]
@@ -130,6 +258,12 @@ public struct MomentumOptimizer: Optimizer
 @available(OSX 10.12, *)
 public struct NesterovOptimizer: Optimizer
 {
+	
+	/// Data required for optimization.
+	///
+	/// This data will be kept between iterations
+	/// and the result of one optimization will
+	/// be provided to the next optimization pass.
 	public typealias OptimizerData = [MTLBuffer]
 	
 	public var learningRate: Float
@@ -146,6 +280,17 @@ public struct NesterovOptimizer: Optimizer
 		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
 	}
 	
+	
+	/// Updates weights based on the provided gradients and
+	/// optimizer specific optimization data.
+	///
+	/// - Parameters:
+	///   - weights: Weights, which should be updated.
+	///   - gradients: Weight gradients, which correspond to the given weights.
+	///   - batchSize: Number of samples which where used to calculate the given weight gradients.
+	///   - encoder: Encoder for dispatching Metal kernels
+	///   - data: Optimization data from the last optimization pass or nil, if this function is called for the first time.
+	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
 	{
 		let momentumData: [MTLBuffer]
@@ -189,6 +334,12 @@ public struct NesterovOptimizer: Optimizer
 @available(OSX 10.12, *)
 public struct AdaGradOptimizer: Optimizer
 {
+	
+	/// Data required for optimization.
+	///
+	/// This data will be kept between iterations
+	/// and the result of one optimization will
+	/// be provided to the next optimization pass.
 	public typealias OptimizerData = [MTLBuffer]
 	
 	public var learningRate: Float
@@ -203,6 +354,17 @@ public struct AdaGradOptimizer: Optimizer
 		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
 	}
 	
+	
+	/// Updates weights based on the provided gradients and
+	/// optimizer specific optimization data.
+	///
+	/// - Parameters:
+	///   - weights: Weights, which should be updated.
+	///   - gradients: Weight gradients, which correspond to the given weights.
+	///   - batchSize: Number of samples which where used to calculate the given weight gradients.
+	///   - encoder: Encoder for dispatching Metal kernels
+	///   - data: Optimization data from the last optimization pass or nil, if this function is called for the first time.
+	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
 	{
 		let squaredGradientSum: [MTLBuffer]
@@ -245,6 +407,12 @@ public struct AdaGradOptimizer: Optimizer
 @available(OSX 10.12, *)
 public struct RMSpropOptimizer: Optimizer
 {
+	
+	/// Data required for optimization.
+	///
+	/// This data will be kept between iterations
+	/// and the result of one optimization will
+	/// be provided to the next optimization pass.
 	public typealias OptimizerData = [MTLBuffer]
 	
 	public var learningRate: Float
@@ -261,6 +429,17 @@ public struct RMSpropOptimizer: Optimizer
 		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
 	}
 	
+	
+	/// Updates weights based on the provided gradients and
+	/// optimizer specific optimization data.
+	///
+	/// - Parameters:
+	///   - weights: Weights, which should be updated.
+	///   - gradients: Weight gradients, which correspond to the given weights.
+	///   - batchSize: Number of samples which where used to calculate the given weight gradients.
+	///   - encoder: Encoder for dispatching Metal kernels
+	///   - data: Optimization data from the last optimization pass or nil, if this function is called for the first time.
+	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: [MTLBuffer]?) -> [MTLBuffer]
 	{
 		let squaredGradientSum: [MTLBuffer]
@@ -304,6 +483,12 @@ public struct RMSpropOptimizer: Optimizer
 @available(OSX 10.12, *)
 public struct AdaDeltaOptimizer: Optimizer
 {
+	
+	/// Data required for optimization.
+	///
+	/// This data will be kept between iterations
+	/// and the result of one optimization will
+	/// be provided to the next optimization pass.
 	public typealias OptimizerData = ([MTLBuffer], [MTLBuffer])
 	
 	public var decay: Float
@@ -318,6 +503,17 @@ public struct AdaDeltaOptimizer: Optimizer
 		self.optimizeFunctionPipelineState = try! GPUGlobalDevice.makeComputePipelineState(function: function)
 	}
 	
+	
+	/// Updates weights based on the provided gradients and
+	/// optimizer specific optimization data.
+	///
+	/// - Parameters:
+	///   - weights: Weights, which should be updated.
+	///   - gradients: Weight gradients, which correspond to the given weights.
+	///   - batchSize: Number of samples which where used to calculate the given weight gradients.
+	///   - encoder: Encoder for dispatching Metal kernels
+	///   - data: Optimization data from the last optimization pass or nil, if this function is called for the first time.
+	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: ([MTLBuffer], [MTLBuffer])?) -> ([MTLBuffer], [MTLBuffer])
 	{
 		let squaredGradientSum: [MTLBuffer]

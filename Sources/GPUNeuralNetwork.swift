@@ -109,6 +109,12 @@ public struct GPUFeedForwardNeuralNetwork
 	}
 	
 	
+	/// Updates the gradients of all layers of the network using the 
+	/// specified input and expected output.
+	///
+	/// - Parameters:
+	///   - sample: Sample for which the gradient should be calculated.
+	///   - encoder: Encoder for metal kernel dispatch
 	internal mutating func updateGradients(with sample: (input: GPUMatrix3, expected: GPUMatrix3), encoder: MTLComputeCommandEncoder)
 	{
 		var layerInputs = [sample.input]
@@ -132,6 +138,8 @@ public struct GPUFeedForwardNeuralNetwork
 		}
 	}
 	
+	
+	/// Finishes training by copying back all weights from the GPU to the CPU.
 	mutating func finishTraining()
 	{
 		for (index, layer) in layers.enumerated() where layer is GPUWeightAdjustableLayer

@@ -72,7 +72,7 @@ public struct GPUMatrix
 		descriptorBuffer = GPUGlobalDevice.makeBuffer(
 			bytes: [descriptor.width, descriptor.height],
 			length: MemoryLayout.size(ofValue: descriptor),
-			options: .storageModePrivate
+			options: .storageModeShared
 		)
 	}
 	
@@ -91,7 +91,7 @@ public struct GPUMatrix
 		descriptorBuffer = GPUGlobalDevice.makeBuffer(
 			bytes: [descriptor.width, descriptor.height],
 			length: MemoryLayout.size(ofValue: descriptor),
-			options: .storageModePrivate
+			options: .storageModeShared
 		)
 	}
 	
@@ -227,7 +227,7 @@ public struct GPUMatrix3
 		descriptorBuffer = GPUGlobalDevice.makeBuffer(
 			bytes: [descriptor.width, descriptor.height, descriptor.depth],
 			length: MemoryLayout.size(ofValue: descriptor),
-			options: .storageModePrivate
+			options: .storageModeShared
 		)
 	}
 	
@@ -246,7 +246,7 @@ public struct GPUMatrix3
 		descriptorBuffer = GPUGlobalDevice.makeBuffer(
 			bytes: [descriptor.width, descriptor.height, descriptor.depth],
 			length: MemoryLayout.size(ofValue: descriptor),
-			options: .storageModePrivate
+			options: .storageModeShared
 		)
 	}
 	

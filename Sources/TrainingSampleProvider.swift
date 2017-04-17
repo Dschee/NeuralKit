@@ -82,7 +82,10 @@ public struct CachedArrayTrainingSampleProvider: TrainingSampleProvider
 			}
 			else
 			{
-				let sample = (GPUMatrix3(matrix: samples[index].values), GPUMatrix3(matrix: samples[index].expected))
+				let sample = (
+					GPUMatrix3(matrix: samples[index].values, isShared: true),
+					GPUMatrix3(matrix: samples[index].expected, isShared: true)
+				)
 				gpuSamples[index] = sample
 				next.append(sample)
 				
