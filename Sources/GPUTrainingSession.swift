@@ -46,6 +46,15 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 	public private(set) var isTraining: Bool = false
 	
 	
+	deinit
+	{
+		if self.isTraining
+		{
+			print("Warning: Training session deallocated while still training. Interrupting training")
+		}
+		print("Training session deallocated")
+	}
+	
 	public init(network: GPUFeedForwardNeuralNetwork, batchSize: Int = 1, optimizer: OptimizerType, normalizers: [Normalizer] = [], sampleProvider: TrainingSampleProvider)
 	{
 		self.network = network
@@ -114,6 +123,8 @@ public class GPUNetworkTrainingSession<OptimizerType: Optimizer>
 					self?.onBatchFinish?(0, epoch)
 				}
 			}
+			
+			print("Finished training.")
 			
 			self?.finishTraining()
 			self?.onFinishTraining?()

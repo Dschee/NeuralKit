@@ -148,6 +148,45 @@ public protocol NeuralLayer
 }
 
 
+public protocol BidirectionalLayer: NeuralLayer
+{
+	/// Adjusts the weights of the layer to reduce the total error of the network
+	/// using gradient descent.
+	///
+	/// The gradients of the posterior layer will be provided.
+	/// The function has to also calculate the errors of the layer
+	/// for the anterior layer to use.
+	///
+	/// - Parameters:
+	///   - nextLayerGradients: Error matrix from the input of the next layer
+	///   - inputs: Inputs of the current layer
+	///   - learningRate: Learning rate at which the weights should be adjusted
+	///   - momentum: Momentum of weight updates
+	///   - decay: Decay rate at which weights should be decreased
+	/// - Returns: Error matrix of the current layer
+	mutating func updateGradients(
+		nextLayerGradients: Matrix3,
+		inputs: Matrix3,
+		outputs: Matrix3
+	) -> Matrix3
+}
+
+
+public protocol OutputLayer: NeuralLayer
+{
+	func loss(
+		expected: Matrix3,
+		output: Matrix3
+	)
+}
+
+public protocol WeightAdjustableLayer: BidirectionalLayer
+{
+	var weights: [Float] { get set }
+	var gradients: [Float] { get set }
+}
+
+
 /// A fully connected layer of a neural network.
 /// All neurons of the layer are connected to all neurons of the next layer
 public struct FullyConnectedLayer: NeuralLayer
