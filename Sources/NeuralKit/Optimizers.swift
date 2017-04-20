@@ -165,3 +165,39 @@ public struct RMSpropOptimizer: Optimizer
 		return gradientSumData
 	}
 }
+
+public struct AdaDeltaOptimizer: Optimizer
+{
+	public typealias OptimizerData = [([Float], [Float])]
+	
+	public var decay: Float
+	
+	public init(decay: Float)
+	{
+		self.decay = decay
+	}
+	
+	public func update(weights: inout [Tensor], gradients: inout [Tensor], batchSize: Int, data: [([Float], [Float])]?) -> [([Float], [Float])]
+	{
+		var gradientSumData: [([Float], [Float])]
+		
+		if let data = data
+		{
+			gradientSumData = data
+		}
+		else
+		{
+			gradientSumData = weights.map{Array(repeating: 0, count: $0.values.count)}.map{($0, $0)}
+		}
+		
+		for index in weights.indices
+		{
+			gradientSumData[index].0 = (gradientSumData[index].0 &* decay) &+ (gradients[index].values &* gradients[index].values &* (1 - decay))
+			let weightDelta = gradientSumData[index].1 &/ gradientSumData[index].0 &* gradients[index].values
+			gradientSumData[index].1 = (gradientSumData[index].1 &* decay) &+ ((1 - decay) &* weightDelta &* weightDelta)
+			gradients[index].values = zeros(gradients[index].values)
+		}
+		
+		return gradientSumData
+	}
+}
