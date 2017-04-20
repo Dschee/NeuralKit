@@ -31,6 +31,9 @@ import Accelerate
 /// Operator for component wise division of a vector.
 infix operator &/ : MultiplicationPrecedence
 
+infix operator &+= : AssignmentPrecedence
+infix operator &-= : AssignmentPrecedence
+
 //MARK: Vector prefix functions
 
 /// Negates every element of the input vector
@@ -249,7 +252,7 @@ public func &/ (lhs: Float, rhs: [Float]) -> [Float]
 /// - Parameters:
 ///   - lhs: First input and result vector
 ///   - rhs: Second input vector
-public func += (lhs: inout [Float], rhs: [Float])
+public func &+= (lhs: inout [Float], rhs: [Float])
 {
 	vDSP_vadd(lhs, 1, rhs, 1, &lhs, 1, UInt(lhs.count))
 }
@@ -261,7 +264,7 @@ public func += (lhs: inout [Float], rhs: [Float])
 /// - Parameters:
 ///   - lhs: First input and result vector
 ///   - rhs: Second input vector
-public func -= (lhs: inout [Float], rhs: [Float])
+public func &-= (lhs: inout [Float], rhs: [Float])
 {
 	vDSP_vsub(rhs, 1, lhs, 1, &lhs, 1, UInt(lhs.count))
 }

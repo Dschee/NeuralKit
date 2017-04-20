@@ -50,7 +50,7 @@ public struct SGDOptimizer: Optimizer
 	{
 		for index in weights.indices
 		{
-			weights[index].values -= gradients[index].values &* learningRate
+			weights[index].values &-= gradients[index].values &* learningRate
 			gradients[index].values = zeros(gradients[index].values)
 		}
 	}
@@ -86,10 +86,82 @@ public struct MomentumOptimizer: Optimizer
 		{
 			let weightDelta = (momentumData[index] &* momentum) &+ (gradients[index].values &* learningRate)
 			momentumData[index] = weightDelta
-			weights[index].values += weightDelta
+			weights[index].values &+= weightDelta
 			gradients[index].values = zeros(gradients[index].values)
 		}
 		
 		return momentumData
+	}
+}
+
+public struct AdaGradOptimizer: Optimizer
+{
+	public typealias OptimizerData = [[Float]]
+	
+	public var learningRate: Float
+	
+	public init(learningRate: Float)
+	{
+		self.learningRate = learningRate
+	}
+	
+	public func update(weights: inout [Tensor], gradients: inout [Tensor], batchSize: Int, data: [[Float]]?) -> [[Float]]
+	{
+		var gradientSumData: [[Float]]
+		
+		if let data = data
+		{
+			gradientSumData = data
+		}
+		else
+		{
+			gradientSumData = weights.map{Array(repeating: 0, count: $0.values.count)}
+		}
+		
+		for index in weights.indices
+		{
+			gradientSumData[index] &+= gradients[index].values &* gradients[index].values
+			weights[index].values &-= learningRate &/ gradientSumData[index] &* gradients[index].values
+			gradients[index].values = zeros(gradients[index].values)
+		}
+		
+		return gradientSumData
+	}
+}
+
+public struct RMSpropOptimizer: Optimizer
+{
+	public typealias OptimizerData = [[Float]]
+	
+	public var learningRate: Float
+	public var decay: Float
+	
+	public init(learningRate: Float, decay: Float)
+	{
+		self.learningRate = learningRate
+		self.decay = decay
+	}
+	
+	public func update(weights: inout [Tensor], gradients: inout [Tensor], batchSize: Int, data: [[Float]]?) -> [[Float]]
+	{
+		var gradientSumData: [[Float]]
+		
+		if let data = data
+		{
+			gradientSumData = data
+		}
+		else
+		{
+			gradientSumData = weights.map{Array(repeating: 0, count: $0.values.count)}
+		}
+		
+		for index in weights.indices
+		{
+			gradientSumData[index] = (gradientSumData[index] &* decay) &+ (gradients[index].values &* gradients[index].values &* (1 - decay))
+			weights[index].values &-= learningRate &/ gradientSumData[index] &* gradients[index].values
+			gradients[index].values = zeros(gradients[index].values)
+		}
+		
+		return gradientSumData
 	}
 }
