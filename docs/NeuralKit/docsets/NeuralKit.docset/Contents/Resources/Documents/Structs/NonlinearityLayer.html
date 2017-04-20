@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>NonlinearityLayer Struct Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/swift/Struct/NonlinearityLayer" class="dashAnchor"></a>
+
+    <a title="NonlinearityLayer Struct Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          NeuralKit Docs
+        </a>
+         (60% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/palle-k/NeuralKit">
+            <img class="header-icon" src="../img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">NeuralKit Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      NonlinearityLayer Struct Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/NetworkTrainingSession.html">NetworkTrainingSession</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Global Variables.html">Global Variables</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Global Variables.html#/s:v9NeuralKit21CGImageFilterIdentityFCSo7CGImageS0_">CGImageFilterIdentity</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/Activation.html">Activation</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/Tensor.html">Tensor</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Extensions/CGImage.html">CGImage</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKitoi1pFTFCSo7CGImageS0_FS0_S0__FS0_S0_">+(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit25CGImageFilterAppendFilterFT6filterFCSo7CGImageS0_8toFilterFS0_S0__FS0_S0_">CGImageFilterAppendFilter(filter:toFilter:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit23RandomPertubationMatrixFT5widthSi6heightSi_V12MatrixVector6Matrix">RandomPertubationMatrix(width:height:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi5rangeGVs11ClosedRangeSf__V12MatrixVector7Matrix3">RandomWeightMatrix(width:height:depth:range:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi8varianceSf_V12MatrixVector7Matrix3">RandomWeightMatrix(width:height:depth:variance:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5rangeGVs11ClosedRangeSf__V12MatrixVector6Matrix">RandomWeightMatrix(width:height:range:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi8varianceSf_V12MatrixVector6Matrix">RandomWeightMatrix(width:height:variance:)</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/BidirectionalLayer.html">BidirectionalLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/NeuralLayer.html">NeuralLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/Normalizer.html">Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/Optimizer.html">Optimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/OutputLayer.html">OutputLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/PixelDataConvertible.html">PixelDataConvertible</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/Sample.html">Sample</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/TrainingSampleProvider.html">TrainingSampleProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/WeightAdjustableLayer.html">WeightAdjustableLayer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/AdaDeltaOptimizer.html">AdaDeltaOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/AdaGradOptimizer.html">AdaGradOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ArrayTrainingSampleProvider.html">ArrayTrainingSampleProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ConvolutionLayer.html">ConvolutionLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/DirectoryImageSetImporter.html">DirectoryImageSetImporter</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/FeedForwardNeuralNetwork.html">FeedForwardNeuralNetwork</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/FullyConnectedLayer.html">FullyConnectedLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/InputSample.html">InputSample</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/L1Normalizer.html">L1Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/L2Normalizer.html">L2Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/MomentumOptimizer.html">MomentumOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/NeuralLayerEncoder.html">NeuralLayerEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/NonlinearityLayer.html">NonlinearityLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/PoolingLayer.html">PoolingLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/RMSpropOptimizer.html">RMSpropOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ReshapingLayer.html">ReshapingLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/SGDOptimizer.html">SGDOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/TrainingSample.html">TrainingSample</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Typealiases.html">Typealiases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>NonlinearityLayer</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">NonlinearityLayer</span><span class="p">:</span> <span class="kt"><a href="../Protocols/BidirectionalLayer.html">BidirectionalLayer</a></span><span class="p">,</span> <span class="kt"><a href="../Protocols/OutputLayer.html">OutputLayer</a></span></code></pre>
+
+                </div>
+              </div>
+            <p>A layer which adds nonlinearity to forwarded data, which improves performance 
+on nonlinear classification and regression tasks</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vV9NeuralKit17NonlinearityLayer10outputSizeT5widthSi6heightSi5depthSi_"></a>
+                    <a name="//apple_ref/swift/Property/outputSize" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vV9NeuralKit17NonlinearityLayer10outputSizeT5widthSi6heightSi5depthSi_">outputSize</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Output size of the layer.
+Should not change after initialization</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">outputSize</span><span class="p">:</span> <span class="p">(</span><span class="nv">width</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">depth</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vV9NeuralKit17NonlinearityLayer9inputSizeT5widthSi6heightSi5depthSi_"></a>
+                    <a name="//apple_ref/swift/Property/inputSize" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vV9NeuralKit17NonlinearityLayer9inputSizeT5widthSi6heightSi5depthSi_">inputSize</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Input size of the layer.
+Should not change after initialization</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">inputSize</span><span class="p">:</span> <span class="p">(</span><span class="nv">width</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">depth</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vV9NeuralKit17NonlinearityLayer10activationOS_10Activation"></a>
+                    <a name="//apple_ref/swift/Property/activation" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vV9NeuralKit17NonlinearityLayer10activationOS_10Activation">activation</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Activation function used for the layer</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">activation</span><span class="p">:</span> <span class="kt"><a href="../Enums/Activation.html">Activation</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FV9NeuralKit17NonlinearityLayercFT9inputSizeT5widthSi6heightSi5depthSi_10activationOS_10Activation_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(inputSize:activation:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FV9NeuralKit17NonlinearityLayercFT9inputSizeT5widthSi6heightSi5depthSi_10activationOS_10Activation_S0_">init(inputSize:activation:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a new nonlinearity layer with a given nonlinearity function.</p>
+
+<p>Nonlinearity is required for a network to perform nonlinear classification and regression.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">inputSize</span><span class="p">:</span> <span class="p">(</span><span class="nv">width</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">depth</span><span class="p">:</span> <span class="kt">Int</span><span class="p">),</span> <span class="nv">activation</span><span class="p">:</span> <span class="kt"><a href="../Enums/Activation.html">Activation</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>inputSize</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input size of the layer. The output size will be equal to the input size.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>activation</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Nonlinear activation function used by this layer.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FV9NeuralKit17NonlinearityLayer7forwardFV12MatrixVector7Matrix3S2_"></a>
+                    <a name="//apple_ref/swift/Method/forward(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FV9NeuralKit17NonlinearityLayer7forwardFV12MatrixVector7Matrix3S2_">forward(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Performs data transformations for feed forward operation</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">forward</span><span class="p">(</span><span class="n">_</span> <span class="nv">input</span><span class="p">:</span> <span class="kt">Matrix3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Matrix3</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>output</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input of the layer which should be forwarded</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Weighted output of the layer</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FV9NeuralKit17NonlinearityLayer15updateGradientsFT18nextLayerGradientsV12MatrixVector7Matrix36inputsS2_7outputsS2__S2_"></a>
+                    <a name="//apple_ref/swift/Method/updateGradients(nextLayerGradients:inputs:outputs:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FV9NeuralKit17NonlinearityLayer15updateGradientsFT18nextLayerGradientsV12MatrixVector7Matrix36inputsS2_7outputsS2__S2_">updateGradients(nextLayerGradients:inputs:outputs:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adjusts the weights of the layer to reduce the total error of the network
+using gradient descent.</p>
+
+<p>The gradients of the posterior layer will be provided.
+The function has to also calculate the errors of the layer
+for the anterior layer to use.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">updateGradients</span><span class="p">(</span><span class="nv">nextLayerGradients</span><span class="p">:</span> <span class="kt">Matrix3</span><span class="p">,</span> <span class="nv">inputs</span><span class="p">:</span> <span class="kt">Matrix3</span><span class="p">,</span> <span class="nv">outputs</span><span class="p">:</span> <span class="kt">Matrix3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Matrix3</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>nextLayerGradients</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Error matrix from the input of the next layer</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>inputs</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Inputs of the current layer</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>learningRate</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Learning rate at which the weights should be adjusted</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>momentum</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Momentum of weight updates</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>decay</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Decay rate at which weights should be decreased</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Error matrix of the current layer</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FV9NeuralKit17NonlinearityLayer4lossFT8expectedV12MatrixVector7Matrix36outputS2__S2_"></a>
+                    <a name="//apple_ref/swift/Method/loss(expected:output:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FV9NeuralKit17NonlinearityLayer4lossFT8expectedV12MatrixVector7Matrix36outputS2__S2_">loss(expected:output:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">NonlinearityLayer</span><span class="p">:</span> <span class="kt"><a href="../Protocols/BidirectionalLayer.html">BidirectionalLayer</a></span><span class="p">,</span> <span class="kt"><a href="../Protocols/OutputLayer.html">OutputLayer</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FP13Serialization12SerializablecFzT4jsonP__x"></a>
+                    <a name="//apple_ref/swift/Method/init(json:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FP13Serialization12SerializablecFzT4jsonP__x">init(json:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">json</span><span class="p">:</span> <span class="kt">Any</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>json</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>JSON Data</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FP13Serialization12Serializable10serializedFT_P_"></a>
+                    <a name="//apple_ref/swift/Method/serialized()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FP13Serialization12Serializable10serializedFT_P_">serialized()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">serialized</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Any</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A serialized representation which can be used by (NS)JSONSerialization</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2017 <a class="link" href="https://github.com/palle-k" target="_blank" rel="external">palle-k</a>. All rights reserved. (Last updated: 2017-04-21)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.7.4</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

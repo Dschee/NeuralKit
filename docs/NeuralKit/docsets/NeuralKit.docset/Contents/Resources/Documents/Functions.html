@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Functions  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+
+    <a title="Functions  Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="index.html">
+          NeuralKit Docs
+        </a>
+         (60% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/palle-k/NeuralKit">
+            <img class="header-icon" src="img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="index.html">NeuralKit Reference</a>
+      <img class="carat" src="img/carat.png" />
+      Functions  Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/NetworkTrainingSession.html">NetworkTrainingSession</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Global Variables.html">Global Variables</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Global Variables.html#/s:v9NeuralKit21CGImageFilterIdentityFCSo7CGImageS0_">CGImageFilterIdentity</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Enums/Activation.html">Activation</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Enums/Tensor.html">Tensor</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Extensions/CGImage.html">CGImage</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Functions.html#/s:F9NeuralKitoi1pFTFCSo7CGImageS0_FS0_S0__FS0_S0_">+(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Functions.html#/s:F9NeuralKit25CGImageFilterAppendFilterFT6filterFCSo7CGImageS0_8toFilterFS0_S0__FS0_S0_">CGImageFilterAppendFilter(filter:toFilter:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Functions.html#/s:F9NeuralKit23RandomPertubationMatrixFT5widthSi6heightSi_V12MatrixVector6Matrix">RandomPertubationMatrix(width:height:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi5rangeGVs11ClosedRangeSf__V12MatrixVector7Matrix3">RandomWeightMatrix(width:height:depth:range:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi8varianceSf_V12MatrixVector7Matrix3">RandomWeightMatrix(width:height:depth:variance:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5rangeGVs11ClosedRangeSf__V12MatrixVector6Matrix">RandomWeightMatrix(width:height:range:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi8varianceSf_V12MatrixVector6Matrix">RandomWeightMatrix(width:height:variance:)</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/BidirectionalLayer.html">BidirectionalLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/NeuralLayer.html">NeuralLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/Normalizer.html">Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/Optimizer.html">Optimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/OutputLayer.html">OutputLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/PixelDataConvertible.html">PixelDataConvertible</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/Sample.html">Sample</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/TrainingSampleProvider.html">TrainingSampleProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/WeightAdjustableLayer.html">WeightAdjustableLayer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/AdaDeltaOptimizer.html">AdaDeltaOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/AdaGradOptimizer.html">AdaGradOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/ArrayTrainingSampleProvider.html">ArrayTrainingSampleProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/ConvolutionLayer.html">ConvolutionLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/DirectoryImageSetImporter.html">DirectoryImageSetImporter</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/FeedForwardNeuralNetwork.html">FeedForwardNeuralNetwork</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/FullyConnectedLayer.html">FullyConnectedLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/InputSample.html">InputSample</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/L1Normalizer.html">L1Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/L2Normalizer.html">L2Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/MomentumOptimizer.html">MomentumOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/NeuralLayerEncoder.html">NeuralLayerEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/NonlinearityLayer.html">NonlinearityLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/PoolingLayer.html">PoolingLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/RMSpropOptimizer.html">RMSpropOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/ReshapingLayer.html">ReshapingLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/SGDOptimizer.html">SGDOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/TrainingSample.html">TrainingSample</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Typealiases.html">Typealiases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>Functions</h1>
+            <p>The following functions are available globally.</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:F9NeuralKitoi1pFTFCSo7CGImageS0_FS0_S0__FS0_S0_"></a>
+                    <a name="//apple_ref/swift/Function/+(_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:F9NeuralKitoi1pFTFCSo7CGImageS0_FS0_S0__FS0_S0_">+(_:_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Appends the right CGImageFilter to the left CGImageFilter.</p>
+
+<p>When using the returned CGImageFilter, the filter, which was passed
+left to the &rsquo;+&rsquo;-operator will be evaluated first. Then the filter
+passed on the right will be evaluated with the result of the left filter.</p>
+
+<p>The &rsquo;+&rsquo;-operator for CGImageFilters is associative: (a + b) + c = a + (b + c)</p>
+
+<p>The &rsquo;+&rsquo;-operator is non-commutative: a + b ≠ b + a</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="o">+</span> <span class="p">(</span><span class="nv">left</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a></span><span class="p">,</span> <span class="nv">right</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>left</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>CGImageFilter which should be evaluated first</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>right</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>CGImageFilter which should be evaluated second</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A newly created CGImageFilter-function consisting of the two filter functions.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:F9NeuralKit25CGImageFilterAppendFilterFT6filterFCSo7CGImageS0_8toFilterFS0_S0__FS0_S0_"></a>
+                    <a name="//apple_ref/swift/Function/CGImageFilterAppendFilter(filter:toFilter:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:F9NeuralKit25CGImageFilterAppendFilterFT6filterFCSo7CGImageS0_8toFilterFS0_S0__FS0_S0_">CGImageFilterAppendFilter(filter:toFilter:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Appends the first CGImageFilter to the second CGImageFilter.</p>
+
+<p>When using the returned CGImageFilter, the filter, which was passed
+second to the &rsquo;+&rsquo;-operator will be evaluated first.
+Then the filter passed second will be evaluated with the result of the left filter.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">CGImageFilterAppendFilter</span><span class="p">(</span><span class="n">filter</span> <span class="nv">second</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a></span><span class="p">,</span> <span class="n">toFilter</span> <span class="nv">first</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>second</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>CGImageFilter which should be evaluated last</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>first</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>CGImageFilter which should be evaluated first</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A newly created CGImageFilter-function consisting of the two filter functions.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi5rangeGVs11ClosedRangeSf__V12MatrixVector7Matrix3"></a>
+                    <a name="//apple_ref/swift/Function/RandomWeightMatrix(width:height:depth:range:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi5rangeGVs11ClosedRangeSf__V12MatrixVector7Matrix3">RandomWeightMatrix(width:height:depth:range:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a three dimensional weight matrix
+and fills it with small random values in the specified range</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">RandomWeightMatrix</span><span class="p">(</span><span class="nv">width</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">depth</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">range</span><span class="p">:</span> <span class="kt">ClosedRange</span><span class="o">&lt;</span><span class="kt">Float</span><span class="o">&gt;</span> <span class="o">=</span> <span class="kt">Float</span><span class="p">(</span><span class="o">-</span><span class="mf">0.01</span><span class="p">)</span> <span class="o">...</span> <span class="kt">Float</span><span class="p">(</span><span class="mf">0.01</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="kt">Matrix3</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>width</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Width of the weight matrix</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>height</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Height of the weight matrix</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>depth</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Depth of the weight matrix</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>range</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Range in which the random values should be. Default: [-0.01; 0.01]</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Weight matrix containing random values</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi8varianceSf_V12MatrixVector7Matrix3"></a>
+                    <a name="//apple_ref/swift/Function/RandomWeightMatrix(width:height:depth:variance:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi8varianceSf_V12MatrixVector7Matrix3">RandomWeightMatrix(width:height:depth:variance:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi8varianceSf_V12MatrixVector6Matrix"></a>
+                    <a name="//apple_ref/swift/Function/RandomWeightMatrix(width:height:variance:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi8varianceSf_V12MatrixVector6Matrix">RandomWeightMatrix(width:height:variance:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5rangeGVs11ClosedRangeSf__V12MatrixVector6Matrix"></a>
+                    <a name="//apple_ref/swift/Function/RandomWeightMatrix(width:height:range:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5rangeGVs11ClosedRangeSf__V12MatrixVector6Matrix">RandomWeightMatrix(width:height:range:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a weight matrix
+and fills it with small random values in the specified range</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">RandomWeightMatrix</span><span class="p">(</span><span class="nv">width</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">range</span><span class="p">:</span> <span class="kt">ClosedRange</span><span class="o">&lt;</span><span class="kt">Float</span><span class="o">&gt;</span> <span class="o">=</span> <span class="kt">Float</span><span class="p">(</span><span class="o">-</span><span class="mf">0.01</span><span class="p">)</span> <span class="o">...</span> <span class="kt">Float</span><span class="p">(</span><span class="mf">0.01</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="kt">Matrix</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>width</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Width of the weight matrix</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>height</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Height of the weight matrix</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>range</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Range in which the random values should be. Default: [-0.01; 0.01]</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Weight matrix containing random values</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:F9NeuralKit23RandomPertubationMatrixFT5widthSi6heightSi_V12MatrixVector6Matrix"></a>
+                    <a name="//apple_ref/swift/Function/RandomPertubationMatrix(width:height:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:F9NeuralKit23RandomPertubationMatrixFT5widthSi6heightSi_V12MatrixVector6Matrix">RandomPertubationMatrix(width:height:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a pertubation matrix
+consisting of very small values around zero with a few randomly larger values</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">RandomPertubationMatrix</span><span class="p">(</span><span class="nv">width</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Matrix</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>width</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Width of the perturbation matrix</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>height</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Height of the perturbation matrix</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Perturbation matrix</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2017 <a class="link" href="https://github.com/palle-k" target="_blank" rel="external">palle-k</a>. All rights reserved. (Last updated: 2017-04-21)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.7.4</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

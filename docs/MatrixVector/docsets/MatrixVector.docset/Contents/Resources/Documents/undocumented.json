@@ -1,0 +1,12 @@
+{
+  "warnings": [
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/MatrixVector/Matrix3.swift",
+      "line": 260,
+      "symbol": "Matrix3.+=(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Users/Palle/Developer/NeuralKit"
+}

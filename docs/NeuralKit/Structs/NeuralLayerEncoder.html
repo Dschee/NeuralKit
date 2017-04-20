@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>NeuralLayerEncoder Struct Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/swift/Struct/NeuralLayerEncoder" class="dashAnchor"></a>
+
+    <a title="NeuralLayerEncoder Struct Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          NeuralKit Docs
+        </a>
+         (60% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/palle-k/NeuralKit">
+            <img class="header-icon" src="../img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">NeuralKit Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      NeuralLayerEncoder Struct Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/NetworkTrainingSession.html">NetworkTrainingSession</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Global Variables.html">Global Variables</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Global Variables.html#/s:v9NeuralKit21CGImageFilterIdentityFCSo7CGImageS0_">CGImageFilterIdentity</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/Activation.html">Activation</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/Tensor.html">Tensor</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Extensions/CGImage.html">CGImage</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKitoi1pFTFCSo7CGImageS0_FS0_S0__FS0_S0_">+(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit25CGImageFilterAppendFilterFT6filterFCSo7CGImageS0_8toFilterFS0_S0__FS0_S0_">CGImageFilterAppendFilter(filter:toFilter:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit23RandomPertubationMatrixFT5widthSi6heightSi_V12MatrixVector6Matrix">RandomPertubationMatrix(width:height:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi5rangeGVs11ClosedRangeSf__V12MatrixVector7Matrix3">RandomWeightMatrix(width:height:depth:range:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5depthSi8varianceSf_V12MatrixVector7Matrix3">RandomWeightMatrix(width:height:depth:variance:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi5rangeGVs11ClosedRangeSf__V12MatrixVector6Matrix">RandomWeightMatrix(width:height:range:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Functions.html#/s:F9NeuralKit18RandomWeightMatrixFT5widthSi6heightSi8varianceSf_V12MatrixVector6Matrix">RandomWeightMatrix(width:height:variance:)</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/BidirectionalLayer.html">BidirectionalLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/NeuralLayer.html">NeuralLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/Normalizer.html">Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/Optimizer.html">Optimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/OutputLayer.html">OutputLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/PixelDataConvertible.html">PixelDataConvertible</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/Sample.html">Sample</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/TrainingSampleProvider.html">TrainingSampleProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/WeightAdjustableLayer.html">WeightAdjustableLayer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Structs.html">Structs</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/AdaDeltaOptimizer.html">AdaDeltaOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/AdaGradOptimizer.html">AdaGradOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ArrayTrainingSampleProvider.html">ArrayTrainingSampleProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ConvolutionLayer.html">ConvolutionLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/DirectoryImageSetImporter.html">DirectoryImageSetImporter</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/FeedForwardNeuralNetwork.html">FeedForwardNeuralNetwork</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/FullyConnectedLayer.html">FullyConnectedLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/InputSample.html">InputSample</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/L1Normalizer.html">L1Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/L2Normalizer.html">L2Normalizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/MomentumOptimizer.html">MomentumOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/NeuralLayerEncoder.html">NeuralLayerEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/NonlinearityLayer.html">NonlinearityLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/PoolingLayer.html">PoolingLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/RMSpropOptimizer.html">RMSpropOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ReshapingLayer.html">ReshapingLayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/SGDOptimizer.html">SGDOptimizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/TrainingSample.html">TrainingSample</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Typealiases.html">Typealiases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Typealiases.html#/s:9NeuralKit13CGImageFilter">CGImageFilter</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>NeuralLayerEncoder</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">NeuralLayerEncoder</span></code></pre>
+
+                </div>
+              </div>
+            <p>Utility for encoding neural layers.</p>
+
+<p>Encodes the type of a layer next to it, so it can be correctly restored 
+during deserialization</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFV9NeuralKit18NeuralLayerEncoder17registerLayerTypeFPMPS_11NeuralLayer13Serialization12Serializable_T_"></a>
+                    <a name="//apple_ref/swift/Method/registerLayerType(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFV9NeuralKit18NeuralLayerEncoder17registerLayerTypeFPMPS_11NeuralLayer13Serialization12Serializable_T_">registerLayerType(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Registers a custom layer type</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">registerLayerType</span><span class="p">(</span><span class="n">_</span> <span class="nv">layerType</span><span class="p">:</span> <span class="p">(</span><span class="kt"><a href="../Protocols/NeuralLayer.html">NeuralLayer</a></span> <span class="o">&amp;</span> <span class="kt">Serializable</span><span class="p">)</span><span class="o">.</span><span class="k">Type</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>layerType</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Type of the layer which the encoder should be able to decode.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFV9NeuralKit18NeuralLayerEncoder9serializeFPS_11NeuralLayer13Serialization12Serializable_P_"></a>
+                    <a name="//apple_ref/swift/Method/serialize(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFV9NeuralKit18NeuralLayerEncoder9serializeFPS_11NeuralLayer13Serialization12Serializable_P_">serialize(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Serializes a layer and also stores its type for deserialization.</p>
+
+<p>If the layer is not included in the set of default layers
+(fully connected layer, convolutional layer, pooling layer)
+it must be registered before deserialization using the
+<code>NeuralLayerEncoder.registerLayerType(:)</code> method.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">serialize</span><span class="p">(</span><span class="n">_</span> <span class="nv">layer</span><span class="p">:</span> <span class="kt"><a href="../Protocols/NeuralLayer.html">NeuralLayer</a></span> <span class="o">&amp;</span> <span class="kt">Serializable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>layer</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Layer which should be serialized</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Serialized layer</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFV9NeuralKit18NeuralLayerEncoder11deserializeFzP_PS_11NeuralLayer_"></a>
+                    <a name="//apple_ref/swift/Method/deserialize(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFV9NeuralKit18NeuralLayerEncoder11deserializeFzP_PS_11NeuralLayer_">deserialize(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deserializes a layer which was encoded using the encode function.</p>
+
+<p>If the layer is not included in the set of default layers
+(fully connected layer, convolutional layer, pooling layer)
+it must be registered before deserialization using the
+<code>NeuralLayerEncoder.registerLayerType(:)</code> method.</p>
+
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An error if the data is in the incorrect format or is
+missing required values.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">deserialize</span><span class="p">(</span><span class="n">_</span> <span class="nv">json</span><span class="p">:</span> <span class="kt">Any</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/NeuralLayer.html">NeuralLayer</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>json</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Serialized representation of the layer</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Deserialized layer</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2017 <a class="link" href="https://github.com/palle-k" target="_blank" rel="external">palle-k</a>. All rights reserved. (Last updated: 2017-04-21)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.7.4</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

@@ -1,0 +1,551 @@
+{
+  "warnings": [
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/DataImport.swift",
+      "line": 111,
+      "symbol": "DirectoryImageSetImporter",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/ImageProcessing.swift",
+      "line": 484,
+      "symbol": "CGImage.make(from:minValue:maxValue:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/ImageProcessing.swift",
+      "line": 490,
+      "symbol": "CGImage.make(from:minValue:maxValue:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/ImageProcessing.swift",
+      "line": 527,
+      "symbol": "CGImage.write(to:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": null,
+      "symbol": "Tensor",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 106,
+      "symbol": "Tensor",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 108,
+      "symbol": "Tensor.vector",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 110,
+      "symbol": "Tensor.matrix",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 112,
+      "symbol": "Tensor.matrix3",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 117,
+      "symbol": "Tensor.values",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 175,
+      "symbol": "BidirectionalLayer",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 199,
+      "symbol": "OutputLayer",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 201,
+      "symbol": "OutputLayer.loss(expected:output:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 207,
+      "symbol": "WeightAdjustableLayer",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 209,
+      "symbol": "WeightAdjustableLayer.weights",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 210,
+      "symbol": "WeightAdjustableLayer.weightGradients",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 241,
+      "symbol": "FullyConnectedLayer.weightGradients",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 256,
+      "symbol": "FullyConnectedLayer.weights",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 353,
+      "symbol": "ConvolutionLayer.kernelGradients",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 360,
+      "symbol": "ConvolutionLayer.biasGradients",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 386,
+      "symbol": "ConvolutionLayer.weights",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 406,
+      "symbol": "ConvolutionLayer.weightGradients",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 480,
+      "symbol": "ConvolutionLayer.init(inputSize:outputDepth:kernelSize:stride:inset:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Layers.swift",
+      "line": 833,
+      "symbol": "NonlinearityLayer.loss(expected:output:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/NeuralNetwork.swift",
+      "line": 91,
+      "symbol": "FeedForwardNeuralNetwork.backpropagate(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 13,
+      "symbol": "Normalizer",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 15,
+      "symbol": "Normalizer.update(weights:gradients:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 19,
+      "symbol": "L1Normalizer",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 21,
+      "symbol": "L1Normalizer.decay",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 23,
+      "symbol": "L1Normalizer.init(decay:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 28,
+      "symbol": "L1Normalizer.update(weights:gradients:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 38,
+      "symbol": "L2Normalizer",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 40,
+      "symbol": "L2Normalizer.decay",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 42,
+      "symbol": "L2Normalizer.init(decay:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Normalizers.swift",
+      "line": 47,
+      "symbol": "L2Normalizer.update(weights:gradients:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 30,
+      "symbol": "Optimizer",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 34,
+      "symbol": "Optimizer.update(weights:gradients:batchSize:data:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 38,
+      "symbol": "SGDOptimizer",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 42,
+      "symbol": "SGDOptimizer.learningRate",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 44,
+      "symbol": "SGDOptimizer.init(learningRate:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 49,
+      "symbol": "SGDOptimizer.update(weights:gradients:batchSize:data:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 59,
+      "symbol": "MomentumOptimizer",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 63,
+      "symbol": "MomentumOptimizer.learningRate",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 64,
+      "symbol": "MomentumOptimizer.momentum",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 66,
+      "symbol": "MomentumOptimizer.init(learningRate:momentum:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 72,
+      "symbol": "MomentumOptimizer.update(weights:gradients:batchSize:data:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 97,
+      "symbol": "AdaGradOptimizer",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 101,
+      "symbol": "AdaGradOptimizer.learningRate",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 103,
+      "symbol": "AdaGradOptimizer.init(learningRate:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 108,
+      "symbol": "AdaGradOptimizer.update(weights:gradients:batchSize:data:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 133,
+      "symbol": "RMSpropOptimizer",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 137,
+      "symbol": "RMSpropOptimizer.learningRate",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 138,
+      "symbol": "RMSpropOptimizer.decay",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 140,
+      "symbol": "RMSpropOptimizer.init(learningRate:decay:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 146,
+      "symbol": "RMSpropOptimizer.update(weights:gradients:batchSize:data:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 171,
+      "symbol": "AdaDeltaOptimizer",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 175,
+      "symbol": "AdaDeltaOptimizer.decay",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 177,
+      "symbol": "AdaDeltaOptimizer.init(decay:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/Optimizers.swift",
+      "line": 182,
+      "symbol": "AdaDeltaOptimizer.update(weights:gradients:batchSize:data:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSampleProvider.swift",
+      "line": 12,
+      "symbol": "TrainingSampleProvider",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSampleProvider.swift",
+      "line": 14,
+      "symbol": "TrainingSampleProvider.next(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSampleProvider.swift",
+      "line": 18,
+      "symbol": "ArrayTrainingSampleProvider",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSampleProvider.swift",
+      "line": 20,
+      "symbol": "ArrayTrainingSampleProvider.samples",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSampleProvider.swift",
+      "line": 22,
+      "symbol": "ArrayTrainingSampleProvider.init(samples:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSampleProvider.swift",
+      "line": 27,
+      "symbol": "ArrayTrainingSampleProvider.next(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 33,
+      "symbol": "NetworkTrainingSession",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 35,
+      "symbol": "NetworkTrainingSession.network",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 37,
+      "symbol": "NetworkTrainingSession.batchSize",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 39,
+      "symbol": "NetworkTrainingSession.optimizer",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 40,
+      "symbol": "NetworkTrainingSession.normalizers",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 42,
+      "symbol": "NetworkTrainingSession.trainingSampleProvider",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 44,
+      "symbol": "NetworkTrainingSession.onBatchFinish",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 45,
+      "symbol": "NetworkTrainingSession.onFinishTraining",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 47,
+      "symbol": "NetworkTrainingSession.isTraining",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 59,
+      "symbol": "NetworkTrainingSession.init(network:batchSize:optimizer:normalizers:sampleProvider:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/TrainingSession.swift",
+      "line": 69,
+      "symbol": "NetworkTrainingSession.train(epochs:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/WeightInitialization.swift",
+      "line": 51,
+      "symbol": "RandomWeightMatrix(width:height:depth:variance:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/Palle/Developer/NeuralKit/Sources/NeuralKit/WeightInitialization.swift",
+      "line": 67,
+      "symbol": "RandomWeightMatrix(width:height:variance:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Users/Palle/Developer/NeuralKit"
+}
