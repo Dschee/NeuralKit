@@ -161,7 +161,7 @@ extension FullyConnectedLayer: Serializable
 	public func serialized() -> Any
 	{
 		return [
-			"weights": weights.serialized()
+			"weights": _weights.serialized()
 		]
 	}
 	
@@ -515,7 +515,7 @@ extension FeedForwardNeuralNetwork: Serializable
 	{
 		return [
 			"layers": layers.flatMap{$0 as? (NeuralLayer & Serializable)}.map(NeuralLayerEncoder.serialize),
-			"output_activation": outputActivationFunction.serialized()
+			"output_activation": outputLayer.serialized()
 		]
 	}
 	
@@ -530,11 +530,11 @@ extension FeedForwardNeuralNetwork: Serializable
 		{
 			throw DecodingError.missingKey(key: "layers", data: data)
 		}
-		guard let outputActivation = try data["output_activation"].flatMap(Activation.init(json:)) else
+		guard let outputLayer = try data["output_activation"].flatMap(NeuralLayerEncoder.deserialize) else
 		{
 			throw DecodingError.missingKey(key: "output_activation", data: data)
 		}
-		guard let network = FeedForwardNeuralNetwork(layers: layers, outputActivation: outputActivation) else
+		guard let network = FeedForwardNeuralNetwork(layers: layers as! [BidirectionalLayer], outputLayer: outputLayer as! OutputLayer) else
 		{
 			throw DecodingError.invalidValue(expected: "Layer must have matching input size to precedent layer.", actual: data)
 		}

@@ -203,6 +203,6 @@ public extension GPUFullyConnectedLayer
 {
 	public init(_ layer: FullyConnectedLayer)
 	{
-		self.init(weights: layer.weights)
+		self.init(weights: layer._weights)
 	}
 }

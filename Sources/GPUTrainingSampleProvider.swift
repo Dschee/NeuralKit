@@ -27,14 +27,14 @@ import Foundation
 
 
 @available(OSX 10.12, *)
-public protocol TrainingSampleProvider
+public protocol GPUTrainingSampleProvider
 {
 	mutating func nextSamples(count: Int) -> [(input: GPUMatrix3, expected: GPUMatrix3)]
 }
 
 
 @available(OSX 10.12, *)
-public struct ArrayTrainingSampleProvider: TrainingSampleProvider
+public struct ArrayTrainingSampleProvider: GPUTrainingSampleProvider
 {
 	public let samples: [TrainingSample]
 	
@@ -56,7 +56,7 @@ public struct ArrayTrainingSampleProvider: TrainingSampleProvider
 }
 
 @available(OSX 10.12, *)
-public struct CachedArrayTrainingSampleProvider: TrainingSampleProvider
+public struct CachedArrayTrainingSampleProvider: GPUTrainingSampleProvider
 {
 	public let samples: [TrainingSample]
 	private var gpuSamples: [Int: (GPUMatrix3, GPUMatrix3)]

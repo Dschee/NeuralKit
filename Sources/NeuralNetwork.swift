@@ -32,11 +32,11 @@ public struct FeedForwardNeuralNetwork
 {
 	
 	/// Neuron layers of the network
-	public internal(set) var layers: [NeuralLayer]
+	public internal(set) var layers: [BidirectionalLayer]
 	
 	
 	/// Activation function at the output layer
-	public let outputActivationFunction: Activation
+	public internal(set) var outputLayer: OutputLayer
 	
 	
 	/// Creates a new neural network using the given layers and an activation function for the output layer.
@@ -49,7 +49,7 @@ public struct FeedForwardNeuralNetwork
 	///   - layers: Layers of the neural network.
 	///   - outputActivation: Activation function which should be applied at the output or nil if a linear activation function should be used
 	///   - outputActivationDerivative: Derivative of the output activation function or nil if a linear activation function should be used
-	public init?(layers: [NeuralLayer], outputActivation: Activation = .linear)
+	public init?(layers: [BidirectionalLayer], outputLayer: OutputLayer)
 	{
 		guard (1..<layers.count)
 			.map({layers[$0-1].outputSize == layers[$0].inputSize})
@@ -60,7 +60,7 @@ public struct FeedForwardNeuralNetwork
 		}
 		
 		self.layers = layers
-		self.outputActivationFunction = outputActivation
+		self.outputLayer = outputLayer
 	}
 
 	
@@ -82,100 +82,26 @@ public struct FeedForwardNeuralNetwork
 			forwarded, layer in
 			layer.forward(forwarded)
 		}
-		return lastLayerOutput.mapv(outputActivationFunction.function)
+		return outputLayer.forward(lastLayerOutput)
 	}
 	
 	
-	/// Trains a network to match a given training sample more closely
-	/// by backpropagating the error between the expected and actual value through the network.
-	///
-	/// The learning rate determines how fast the network should adapt.
-	/// If it is chosen very small, the network will learn slower but also more accurately.
-	///
-	/// The returned error is calculated by summing the squares of the errors at each output neuron
-	/// and multiplying it by 1/2.
-	///
-	/// - Parameters:
-	///   - sample: Sample containing the input and expected value of the network
-	///   - learningRate: Rate at which the network should adapt to the sample
-	/// - Returns: The total error between the expected and actual output
-	@discardableResult
-	public mutating func train(_ sample: TrainingSample, learningRate: Float, annealingRate: Float = 0, momentum: Float = 0, decay: Float = 0) -> Float
+	public mutating func backpropagate(_ sample: TrainingSample)
 	{
-		// Feed forward sample, keeping results of individual layers
+		var layerOutputs = [sample.values]
 		
-		var partialResults = Array<Matrix3>(repeating: Matrix3(repeating: 0, width: 0, height: 0, depth: 0), count: layers.count)
-		
-		var lastResult = sample.values
-		
-		for (index, layer) in layers.enumerated()
+		for layer in layers
 		{
-			lastResult = layer.forward(lastResult)
-			partialResults[index] = lastResult
+			layerOutputs.append(layer.forward(layerOutputs.last!))
 		}
 		
-		let networkOutput = outputActivationFunction.function(lastResult.values)
-
-		let errors: [Float]
+		layerOutputs.append(outputLayer.forward(layerOutputs.last!))
 		
-		// Calculate the errors at the output layer
-		if outputActivationFunction == .softmax
-		{
-			errors = sample.expected.values &- networkOutput
-		}
-		else
-		{
-			errors = (sample.expected.values &- networkOutput) &* outputActivationFunction.derivative(networkOutput)
-		}
-
-		let errorMatrix = Matrix3(
-			values: errors,
-			width: layers.last?.outputSize.width ?? 0,
-			height: layers.last?.outputSize.height ?? 0,
-			depth: layers.last?.outputSize.depth ?? 0
-		)
-		
-		// Backpropagate the error through the network
-		
-//		print("CPU actual: \(networkOutput.map(String.init).joined(separator: ", "))")
-		
-		var gradient: Matrix3 = errorMatrix
-		
-//		print("CPU: \(gradient.values.map(String.init).joined(separator: ", "))")
+		var loss = outputLayer.loss(expected: sample.expected, output: layerOutputs.last!)
 		
 		for index in layers.indices.reversed()
 		{
-			gradient = layers[index].adjustWeights(
-				nextLayerGradients: gradient,
-				inputs: index > 0 ? partialResults[index-1] : sample.values,
-				learningRate: learningRate,
-				annealingRate: annealingRate,
-				momentum: momentum,
-				decay: decay
-			)
-		}
-		
-//		_ = layers.indices.reversed().reduce(errorMatrix)
-//		{ (errorMatrix, layerIndex) -> Matrix3 in
-//			layers[layerIndex].adjustWeights(
-//				nextLayerGradients: errorMatrix,
-//				inputs: layerIndex > 0 ? partialResults[layerIndex-1] : sample.values,
-//				learningRate: learningRate,
-//				annealingRate: annealingRate,
-//				momentum: momentum,
-//				decay: decay
-//			)
-//		}
-		
-		// Calculate the total error
-		if outputActivationFunction == .softmax
-		{
-			return -sum(log(networkOutput) &* sample.expected.values)
-		}
-		else
-		{
-			let deltas = networkOutput &- sample.expected.values
-			return (deltas * deltas) * 0.5
+			loss = layers[index].updateGradients(nextLayerGradients: loss, inputs: layerOutputs[index], outputs: layerOutputs[index+1])
 		}
 	}
 	

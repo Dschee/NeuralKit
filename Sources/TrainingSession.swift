@@ -1,8 +1,8 @@
 //
-//  GPUTrainingSession.swift
+//  TrainingSession.swift
 //  NeuralKit
 //
-//  Created by Palle Klewitz on 13.04.17.
+//  Created by Palle Klewitz on 18.04.17.
 //	Copyright (c) 2017 Palle Klewitz
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,27 +24,35 @@
 //	SOFTWARE.
 
 import Foundation
-import Metal
 
 
-@available(OSX 10.12, *)
-public class GPUNetworkTrainingSession<OptimizerType: GPUOptimizer>
+public protocol Normalizer
 {
-	public private(set) var network: GPUFeedForwardNeuralNetwork
+	func update(weights: [Tensor], gradients: inout [Tensor])
+}
+
+public protocol TrainingSampleProvider
+{
+	func next(_ count: Int) -> [TrainingSample]
+}
+
+public class NetworkTrainingSession<OptimizerType: Optimizer>
+{
+	public private(set) var network: FeedForwardNeuralNetwork
+	
 	public let batchSize: Int
 	
-	public let optimizer: OptimizerType
-	public let normalizers: [GPUNormalizer]
+	public var optimizer: OptimizerType
+	public var normalizers: [Normalizer]
 	
-	public var trainingSampleProvider: GPUTrainingSampleProvider
+	public var trainingSampleProvider: TrainingSampleProvider
 	
 	public var onBatchFinish: ((_ loss: Float, _ epoch: Int) -> ())?
 	public var onFinishTraining: (() -> ())?
 	
-	private var optimizerData: OptimizerType.GPUOptimizerData?
-	
 	public private(set) var isTraining: Bool = false
 	
+	private var optimizerData: [OptimizerType.OptimizerData?]
 	
 	deinit
 	{
@@ -54,14 +62,14 @@ public class GPUNetworkTrainingSession<OptimizerType: GPUOptimizer>
 		}
 	}
 	
-	public init(network: GPUFeedForwardNeuralNetwork, batchSize: Int = 1, optimizer: OptimizerType, normalizers: [GPUNormalizer] = [], sampleProvider: GPUTrainingSampleProvider)
+	public init(network: FeedForwardNeuralNetwork, batchSize: Int, optimizer: OptimizerType, normalizers: [Normalizer], sampleProvider: TrainingSampleProvider)
 	{
 		self.network = network
-		self.batchSize = batchSize
 		self.optimizer = optimizer
 		self.normalizers = normalizers
-		self.optimizerData = nil
+		self.batchSize = batchSize
 		self.trainingSampleProvider = sampleProvider
+		self.optimizerData = Array(repeating: nil, count: network.layers.count)
 	}
 	
 	public func train(epochs: Int)
@@ -81,57 +89,37 @@ public class GPUNetworkTrainingSession<OptimizerType: GPUOptimizer>
 			{
 				guard let this = self else { break }
 				
-				autoreleasepool // required, otherwise unbounded memory growth
+				let batch = this.trainingSampleProvider.next(this.batchSize)
+				
+				for sample in batch
 				{
-					let batch = this.trainingSampleProvider.nextSamples(count: this.batchSize)
-					
-					let buffer = GPUGlobalQueue.makeCommandBuffer()
-					let encoder = buffer.makeComputeCommandEncoder()
-					
-					for sample in batch
-					{
-						this.network.updateGradients(with: sample, encoder: encoder)
-					}
-					
-					let weights = this
-						.network
-						.layers
-						.flatMap{$0 as? GPUWeightAdjustableLayer}
-						.flatMap{$0.weights}
-					
-					let gradients = this
-						.network
-						.layers
-						.flatMap{$0 as? GPUWeightAdjustableLayer}
-						.flatMap{$0.weightGradients}
-					
+					this.network.backpropagate(sample)
+				}
+				
+				for index in this.network.layers.indices
+				{
+					guard var layer = this.network.layers[index] as? WeightAdjustableLayer else { continue }
 					
 					for normalizer in this.normalizers
 					{
-						normalizer.update(weights: weights, gradients: gradients, encoder: encoder)
+						normalizer.update(weights: layer.weights, gradients: &layer.weightGradients)
 					}
 					
-					this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, batchSize: this.batchSize, encoder: encoder, data: this.optimizerData)
+					this.optimizerData[index] = this.optimizer.update(
+						weights: &layer.weights,
+						gradients: &layer.weightGradients,
+						batchSize: this.batchSize,
+						data: this.optimizerData[index]
+					)
 					
-					encoder.endEncoding()
-					buffer.commit()
-					buffer.waitUntilCompleted()
-					
-					self?.onBatchFinish?(0, epoch)
+					this.network.layers[index] = layer
 				}
+				
+				this.onBatchFinish?(0, epoch)
 			}
 			
-			print("Finished training.")
-			
-			self?.finishTraining()
-			self?.onFinishTraining?()
-			
 			self?.isTraining = false
+			self?.onFinishTraining?()
 		}
-	}
-	
-	private func finishTraining()
-	{
-		self.network.finishTraining()
 	}
 }

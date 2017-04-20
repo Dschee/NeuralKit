@@ -33,7 +33,7 @@ import Metal
 /// and update the weights according to the gradients and some optional
 /// data.
 @available(OSX 10.12, *)
-public protocol Optimizer
+public protocol GPUOptimizer
 {
 	
 	/// Data required for optimization.
@@ -41,7 +41,7 @@ public protocol Optimizer
 	/// This data will be kept between iterations
 	/// and the result of one optimization will
 	/// be provided to the next optimization pass.
-	associatedtype OptimizerData
+	associatedtype GPUOptimizerData
 	
 	
 	/// Updates weights based on the provided gradients and
@@ -54,7 +54,7 @@ public protocol Optimizer
 	///   - encoder: Encoder for dispatching Metal kernels
 	///   - data: Optimization data from the last optimization pass or nil, if this function is called for the first time.
 	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
-	func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: OptimizerData?) -> OptimizerData
+	func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: GPUOptimizerData?) -> GPUOptimizerData
 }
 
 
@@ -66,7 +66,7 @@ public protocol Optimizer
 /// This optimizer may perform not as good as other optimizers
 /// as it has a higher chance of getting stuck in a local minimum.
 @available(OSX 10.12, *)
-public struct SGDOptimizer: Optimizer
+public struct SGDOptimizer: GPUOptimizer
 {
 	
 	/// Data required for optimization.
@@ -74,7 +74,7 @@ public struct SGDOptimizer: Optimizer
 	/// This data will be kept between iterations
 	/// and the result of one optimization will
 	/// be provided to the next optimization pass.
-	public typealias OptimizerData = Void
+	public typealias GPUOptimizerData = Void
 	
 	
 	/// Rate, at which the weights will be updated
@@ -146,7 +146,7 @@ public struct SGDOptimizer: Optimizer
 /// A momentum optimizer can lead to better results than a SGDOptimizer
 /// as the momentum term can help overcome local minima.
 @available(OSX 10.12, *)
-public struct MomentumOptimizer: Optimizer
+public struct MomentumOptimizer: GPUOptimizer
 {
 	
 	/// Data required for optimization.
@@ -154,7 +154,7 @@ public struct MomentumOptimizer: Optimizer
 	/// This data will be kept between iterations
 	/// and the result of one optimization will
 	/// be provided to the next optimization pass.
-	public typealias OptimizerData = [MTLBuffer]
+	public typealias GPUOptimizerData = [MTLBuffer]
 	
 	
 	/// Rate, at which the weights will be updated
@@ -256,7 +256,7 @@ public struct MomentumOptimizer: Optimizer
 }
 
 @available(OSX 10.12, *)
-public struct NesterovOptimizer: Optimizer
+public struct NesterovOptimizer: GPUOptimizer
 {
 	
 	/// Data required for optimization.
@@ -264,7 +264,7 @@ public struct NesterovOptimizer: Optimizer
 	/// This data will be kept between iterations
 	/// and the result of one optimization will
 	/// be provided to the next optimization pass.
-	public typealias OptimizerData = [MTLBuffer]
+	public typealias GPUOptimizerData = [MTLBuffer]
 	
 	public var learningRate: Float
 	public var momentum: Float
@@ -332,7 +332,7 @@ public struct NesterovOptimizer: Optimizer
 }
 
 @available(OSX 10.12, *)
-public struct AdaGradOptimizer: Optimizer
+public struct AdaGradOptimizer: GPUOptimizer
 {
 	
 	/// Data required for optimization.
@@ -340,7 +340,7 @@ public struct AdaGradOptimizer: Optimizer
 	/// This data will be kept between iterations
 	/// and the result of one optimization will
 	/// be provided to the next optimization pass.
-	public typealias OptimizerData = [MTLBuffer]
+	public typealias GPUOptimizerData = [MTLBuffer]
 	
 	public var learningRate: Float
 	
@@ -405,7 +405,7 @@ public struct AdaGradOptimizer: Optimizer
 }
 
 @available(OSX 10.12, *)
-public struct RMSpropOptimizer: Optimizer
+public struct RMSpropOptimizer: GPUOptimizer
 {
 	
 	/// Data required for optimization.
@@ -413,7 +413,7 @@ public struct RMSpropOptimizer: Optimizer
 	/// This data will be kept between iterations
 	/// and the result of one optimization will
 	/// be provided to the next optimization pass.
-	public typealias OptimizerData = [MTLBuffer]
+	public typealias GPUOptimizerData = [MTLBuffer]
 	
 	public var learningRate: Float
 	public var decay: Float
@@ -481,7 +481,7 @@ public struct RMSpropOptimizer: Optimizer
 }
 
 @available(OSX 10.12, *)
-public struct AdaDeltaOptimizer: Optimizer
+public struct AdaDeltaOptimizer: GPUOptimizer
 {
 	
 	/// Data required for optimization.
@@ -489,7 +489,7 @@ public struct AdaDeltaOptimizer: Optimizer
 	/// This data will be kept between iterations
 	/// and the result of one optimization will
 	/// be provided to the next optimization pass.
-	public typealias OptimizerData = ([MTLBuffer], [MTLBuffer])
+	public typealias GPUOptimizerData = ([MTLBuffer], [MTLBuffer])
 	
 	public var decay: Float
 	

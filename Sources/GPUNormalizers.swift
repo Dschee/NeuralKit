@@ -31,7 +31,7 @@ import Metal
 /// A normalizer introduces another loss term to a weight gradient matrix
 /// which penalizes big weight values and thereby keeping weights from getting very big.
 @available(OSX 10.12, *)
-public protocol Normalizer
+public protocol GPUNormalizer
 {
 	
 	/// Updates the weight gradients based on the values in the weight matrix.
@@ -50,7 +50,7 @@ public protocol Normalizer
 ///
 /// An L1 normalizer will make all weights decay equally fast towards zero.
 @available(OSX 10.12, *)
-public struct L1Normalizer: Normalizer
+public struct L1Normalizer: GPUNormalizer
 {
 	
 	/// Weight decay rate
@@ -109,7 +109,7 @@ public struct L1Normalizer: Normalizer
 ///
 /// This will lead to faster decay for big weights and slower decay for small weights.
 @available(OSX 10.12, *)
-public struct L2Normalizer: Normalizer
+public struct L2Normalizer: GPUNormalizer
 {
 	
 	/// Weight decay rate
