@@ -25,6 +25,7 @@
 
 import Foundation
 import Metal
+import MatrixVector
 
 
 @available(OSX 10.12, *)

@@ -25,6 +25,8 @@
 
 import Foundation
 import Metal
+import MatrixVector
+import NeuralKit
 
 
 /// A layer which is connected to the next layer using convolution kernels.

@@ -25,6 +25,7 @@
 
 import Foundation
 import Metal
+import MatrixVector
 
 /// A two dimensional Matrix which is accessible to the GPU.
 /// 

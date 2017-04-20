@@ -25,6 +25,8 @@
 
 import Foundation
 import Metal
+import NeuralKit
+import MatrixVector
 
 
 /// A fully connected layer of a neural network.
@@ -203,6 +205,6 @@ public extension GPUFullyConnectedLayer
 {
 	public init(_ layer: FullyConnectedLayer)
 	{
-		self.init(weights: layer._weights)
+		self.init(weights: layer.weightMatrix)
 	}
 }

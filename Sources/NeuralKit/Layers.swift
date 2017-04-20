@@ -184,7 +184,7 @@ public struct FullyConnectedLayer: WeightAdjustableLayer
 	public var inputSize: (width: Int, height: Int, depth: Int)
 	{
 		// The last neuron is an extra bias neuron and will not be counted in input depth
-		return (width: 1, height: 1, depth: _weights.width - 1)
+		return (width: 1, height: 1, depth: weightMatrix.width - 1)
 	}
 	
 	
@@ -192,27 +192,27 @@ public struct FullyConnectedLayer: WeightAdjustableLayer
 	/// Should not change after initialization
 	public var outputSize: (width: Int, height: Int, depth: Int)
 	{
-		return (width: 1, height: 1, depth: _weights.height)
+		return (width: 1, height: 1, depth: weightMatrix.height)
 	}
 	
 	
 	/// Weights with which outputs of the layer are weighted when presented to the next layer
-	var _weights: Matrix
+	public internal(set) var weightMatrix: Matrix
 	
-	var _weightGradients: Matrix
+	var weightGradientMatrix: Matrix
 	
 	
 	public var weightGradients: [Tensor]
 	{
 		get
 		{
-			return [.matrix(_weightGradients)]
+			return [.matrix(weightGradientMatrix)]
 		}
 		
 		set (new)
 		{
 			guard case .matrix(let matrix) = new[0] else { fatalError() }
-			_weightGradients = matrix
+			weightGradientMatrix = matrix
 		}
 	}
 	
@@ -221,13 +221,13 @@ public struct FullyConnectedLayer: WeightAdjustableLayer
 	{
 		get
 		{
-			return [.matrix(_weights)]
+			return [.matrix(weightMatrix)]
 		}
 		
 		set (new)
 		{
 			guard case .matrix(let matrix) = new[0] else { fatalError() }
-			_weights = matrix
+			weightMatrix = matrix
 		}
 	}
 	
@@ -246,8 +246,8 @@ public struct FullyConnectedLayer: WeightAdjustableLayer
 	///   - activationDerivative: Derivative of the activation function used for training
 	public init(weights: Matrix)
 	{
-		self._weights = weights
-		self._weightGradients = Matrix(repeating: 0, width: weights.width, height: weights.height)
+		self.weightMatrix = weights
+		self.weightGradientMatrix = Matrix(repeating: 0, width: weights.width, height: weights.height)
 	}
 	
 	
@@ -259,8 +259,8 @@ public struct FullyConnectedLayer: WeightAdjustableLayer
 	///   - outputDepth: Depth of the output volume. Width and height will be zero.
 	public init(inputDepth: Int, outputDepth: Int)
 	{
-		self._weights = RandomWeightMatrix(width: inputDepth + 1, height: outputDepth)
-		self._weightGradients = Matrix(repeating: 0, width: inputDepth + 1, height: outputDepth)
+		self.weightMatrix = RandomWeightMatrix(width: inputDepth + 1, height: outputDepth)
+		self.weightGradientMatrix = Matrix(repeating: 0, width: inputDepth + 1, height: outputDepth)
 	}
 	
 	
@@ -270,16 +270,16 @@ public struct FullyConnectedLayer: WeightAdjustableLayer
 	/// - Returns: Weighted output of the layer
 	public func forward(_ input: Matrix3) -> Matrix3
 	{
-		return Matrix3(values: _weights * (input.values + [1]), width: 1, height: 1, depth: _weights.height)
+		return Matrix3(values: weightMatrix * (input.values + [1]), width: 1, height: 1, depth: weightMatrix.height)
 	}
 	
 	
 	public mutating func updateGradients(nextLayerGradients: Matrix3, inputs: Matrix3, outputs: Matrix3) -> Matrix3
 	{
 		// Calculating signal errors for anterior layer
-		let errorsIncludingBias = Matrix.multiply(_weights, nextLayerGradients.values, transpose: true)
+		let errorsIncludingBias = Matrix.multiply(weightMatrix, nextLayerGradients.values, transpose: true)
 
-		_weightGradients.addMultiplied(
+		weightGradientMatrix.addMultiplied(
 			Matrix(
 				nextLayerGradients.reshaped(
 					width: 1,

@@ -24,7 +24,8 @@
 //	SOFTWARE.
 
 import Foundation
-
+import NeuralKit
+import MatrixVector
 
 @available(OSX 10.12, *)
 public protocol GPUTrainingSampleProvider

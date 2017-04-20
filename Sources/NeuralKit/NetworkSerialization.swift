@@ -96,7 +96,7 @@ extension FullyConnectedLayer: Serializable
 	public func serialized() -> Any
 	{
 		return [
-			"weights": _weights.serialized()
+			"weights": weightMatrix.serialized()
 		]
 	}
 	
@@ -450,7 +450,7 @@ extension FeedForwardNeuralNetwork: Serializable
 	{
 		return [
 			"layers": layers.flatMap{$0 as? (NeuralLayer & Serializable)}.map(NeuralLayerEncoder.serialize),
-			"output_activation": outputLayer.serialized()
+			"output_activation": (outputLayer as! Serializable).serialized()
 		]
 	}
 	

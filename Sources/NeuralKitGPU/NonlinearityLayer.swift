@@ -25,7 +25,8 @@
 
 import Foundation
 import Metal
-
+import NeuralKit
+import MatrixVector
 
 /// A layer which adds nonlinearity to forwarded data, which improves performance
 /// on nonlinear classification and regression tasks

@@ -25,6 +25,8 @@
 
 import Foundation
 import Metal
+import MatrixVector
+import NeuralKit
 
 
 /// A pooling layer for reducing dimensionality using max pooling.
