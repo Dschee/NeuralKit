@@ -26,10 +26,7 @@
 import Foundation
 
 
-public protocol Normalizer
-{
-	func update(weights: [Tensor], gradients: inout [Tensor])
-}
+
 
 public protocol TrainingSampleProvider
 {

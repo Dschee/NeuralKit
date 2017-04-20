@@ -350,6 +350,20 @@ public func pow(_ base: [Float], _ exponent: [Float]) -> [Float]
 }
 
 
+/// Sets the sign on the values of the first vector based on the sign of the second vector
+///
+/// - Parameters:
+///   - magnitudes: Magnitudes of the resulting vector. The sign is ignored.
+///   - signs: Signs of the resulting vector. The magnitude is ignored.
+/// - Returns: Vector containing values with the magnitude determined by the first vector and the sign determined by the second vector.
+public func copysign(_ magnitudes: [Float], _ signs: [Float]) -> [Float]
+{
+	var output = magnitudes
+	vvcopysignf(&output, magnitudes, signs, [Int32(output.count)])
+	return output
+}
+
+
 /// Computes a rectified linear unit activation function
 /// The output values will be equal to max(input, 0)
 ///
