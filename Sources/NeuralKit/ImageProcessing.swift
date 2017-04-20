@@ -28,6 +28,7 @@ import CoreGraphics
 import QuartzCore
 import Accelerate
 import Cocoa
+import MatrixVector
 
 
 /**

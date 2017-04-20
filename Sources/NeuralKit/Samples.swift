@@ -25,6 +25,7 @@
 
 
 import Foundation
+import MatrixVector
 
 
 /// A sample which can be forwarded through a neural network.

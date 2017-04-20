@@ -24,7 +24,7 @@
 //	SOFTWARE.
 
 import Foundation
-
+import MatrixVector
 
 
 /// Creates a three dimensional weight matrix

@@ -25,6 +25,8 @@
 
 import Foundation
 import Cocoa
+import MatrixVector
+
 
 // Extension providing a function to partition an array into a tuple of two arrays
 fileprivate extension Array

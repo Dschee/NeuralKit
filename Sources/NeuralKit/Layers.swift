@@ -25,6 +25,7 @@
 
 
 import Foundation
+import MatrixVector
 
 
 /// Activation functions for a neural network
@@ -62,19 +63,19 @@ internal extension Activation
 		switch self
 		{
 		case .sigmoid:
-			return NeuralKit.sigmoid
+			return MatrixVector.sigmoid
 			
 		case .tanh:
-			return NeuralKit.tanh
+			return MatrixVector.tanh
 			
 		case .relu:
-			return NeuralKit.relu
+			return MatrixVector.relu
 			
 		case .linear:
-			return NeuralKit.identity
+			return MatrixVector.identity
 			
 		case .softmax:
-			return NeuralKit.softmax
+			return MatrixVector.softmax
 		}
 	}
 	
@@ -84,19 +85,19 @@ internal extension Activation
 		switch self
 		{
 		case .sigmoid:
-			return NeuralKit.sigmoid_deriv
+			return MatrixVector.sigmoid_deriv
 			
 		case .tanh:
-			return NeuralKit.tanh_deriv
+			return MatrixVector.tanh_deriv
 			
 		case .relu:
-			return NeuralKit.relu_deriv
+			return MatrixVector.relu_deriv
 			
 		case .linear:
-			return NeuralKit.ones
+			return MatrixVector.ones
 			
 		case .softmax:
-			return NeuralKit.softmax_deriv
+			return MatrixVector.softmax_deriv
 		}
 	}
 }

@@ -28,5 +28,10 @@ import PackageDescription
 
 let package = Package(
 	name: "NeuralKit",
-	dependencies: []
+	targets: [
+		Target(name: "Serialization", dependencies: []),
+		Target(name: "MatrixVector", dependencies: ["Serialization"]),
+		Target(name: "NeuralKit", dependencies: ["MatrixVector", "Serialization"]),
+		Target(name: "NeuralKitGPU", dependencies: ["MatrixVector", "Serialization", "NeuralKit"])
+	]
 )

@@ -420,7 +420,7 @@ public struct Matrix3
 	/// Returns the index of the biggest value of the tensor
 	///
 	/// - Returns: (x,y,z) index of the biggest value of the tensor
-	func maxIndex() -> (x: Int, y: Int, z: Int)
+	public func maxIndex() -> (x: Int, y: Int, z: Int)
 	{
 		let (_, maxIndex) = argmax(self.values)
 		return (x: maxIndex % width, y: (maxIndex / width) % height, z: maxIndex / width / height)

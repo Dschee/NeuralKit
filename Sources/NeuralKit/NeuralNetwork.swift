@@ -25,6 +25,8 @@
 
 
 import Foundation
+import MatrixVector
+
 
 
 /// A feed forward multi layer neural network
