@@ -112,6 +112,42 @@ public enum Tensor
 	case matrix3(Matrix3)
 }
 
+public extension Tensor
+{
+	public var values: [Float]
+	{
+		get
+		{
+			switch self
+			{
+			case .vector(let values):
+				return values
+				
+			case .matrix(let matrix):
+				return matrix.values
+				
+			case .matrix3(let matrix):
+				return matrix.values
+			}
+		}
+		
+		set (new)
+		{
+			switch self
+			{
+			case .vector(_):
+				self = .vector(new)
+				
+			case .matrix(let matrix):
+				self = .matrix(Matrix(values: new, width: matrix.width, height: matrix.height))
+				
+			case .matrix3(let matrix):
+				self = .matrix3(Matrix3(values: new, width: matrix.width, height: matrix.height, depth: matrix.depth))
+			}
+		}
+	}
+}
+
 
 /// A layer of a feed forward neural network
 public protocol NeuralLayer

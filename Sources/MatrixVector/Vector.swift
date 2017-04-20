@@ -243,6 +243,30 @@ public func &/ (lhs: Float, rhs: [Float]) -> [Float]
 }
 
 
+/// Performs a component wise in place addition of two input vectors.
+/// The result will be stored in the first input vector
+///
+/// - Parameters:
+///   - lhs: First input and result vector
+///   - rhs: Second input vector
+public func += (lhs: inout [Float], rhs: [Float])
+{
+	vDSP_vadd(lhs, 1, rhs, 1, &lhs, 1, UInt(lhs.count))
+}
+
+
+/// Performs a component wise in place subtraction of the two input vectors.
+/// The result will be stored in the first input vector.
+///
+/// - Parameters:
+///   - lhs: First input and result vector
+///   - rhs: Second input vector
+public func -= (lhs: inout [Float], rhs: [Float])
+{
+	vDSP_vsub(rhs, 1, lhs, 1, &lhs, 1, UInt(lhs.count))
+}
+
+
 //MARK: Vector functions commonly used in neural networks
 
 /// Calculates the element wise square root of an input vector
