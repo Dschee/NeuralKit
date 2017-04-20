@@ -25,6 +25,7 @@
 
 import XCTest
 @testable import NeuralKit
+@testable import NeuralKitGPU
 
 class NetworkPerformanceTests: XCTestCase
 {
@@ -95,10 +96,11 @@ class NetworkPerformanceTests: XCTestCase
 				
 				FullyConnectedLayer(weights: RandomWeightMatrix(width: 1601, height: 800)),
 				
-//				NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 800), activation: .tanh)
-//				FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 100))
+				NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 800), activation: .tanh),
+				
+				FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 100))
 			],
-			outputActivation: .softmax
+			outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 100), activation: .softmax)
 		)!
 		
 		let samples = (0..<100).map{_ in RandomWeightMatrix(width: 128, height: 128, depth: 3)}

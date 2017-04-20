@@ -26,6 +26,7 @@
 import Foundation
 import XCTest
 @testable import NeuralKit
+import MatrixVector
 
 class ReverseMNISTTest: XCTestCase
 {
@@ -94,20 +95,20 @@ class ReverseMNISTTest: XCTestCase
 		let hiddenLayer2 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 501, height: 800))
 		let hiddenLayer3 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 801, height: 784))
 		
-		var network = FeedForwardNeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputActivation: .tanh)!
+		var network = FeedForwardNeuralNetwork(layers: [inputLayer, hiddenLayer1, hiddenLayer2, hiddenLayer3], outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 748), activation: .tanh))!
 		
 		let epochs = 300_000
 		
-		for epoch in 0 ..< epochs
-		{
-			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
-			let error = network.train(sample, learningRate: 0.005 * pow(0.999996, Float(epoch))/*, annealingRate: epoch % 300 == 0 ? 0.002 * pow(0.99999, Float(epoch)) : 0*/)
-			
-			if epoch % 1000 == 0
-			{
-				print("epoch \(epoch) of \(epochs): \(error * 100)% error")
-			}
-		}
+//		for epoch in 0 ..< epochs
+//		{
+//			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
+//			let error = network.train(sample, learningRate: 0.005 * pow(0.999996, Float(epoch))/*, annealingRate: epoch % 300 == 0 ? 0.002 * pow(0.99999, Float(epoch)) : 0*/)
+//			
+//			if epoch % 1000 == 0
+//			{
+//				print("epoch \(epoch) of \(epochs): \(error * 100)% error")
+//			}
+//		}
 		
 		var correctCount = 0
 		var wrongCount = 0

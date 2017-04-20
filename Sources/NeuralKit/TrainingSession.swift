@@ -28,10 +28,7 @@ import Foundation
 
 
 
-public protocol TrainingSampleProvider
-{
-	func next(_ count: Int) -> [TrainingSample]
-}
+
 
 public class NetworkTrainingSession<OptimizerType: Optimizer>
 {

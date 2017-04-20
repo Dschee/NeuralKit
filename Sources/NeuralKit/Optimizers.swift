@@ -50,7 +50,7 @@ public struct SGDOptimizer: Optimizer
 	{
 		for index in weights.indices
 		{
-			weights[index].values &-= gradients[index].values &* learningRate
+			weights[index].values &-= gradients[index].values &* (learningRate / Float(batchSize))
 			gradients[index].values = zeros(gradients[index].values)
 		}
 	}
@@ -84,7 +84,7 @@ public struct MomentumOptimizer: Optimizer
 		
 		for index in weights.indices
 		{
-			let weightDelta = (momentumData[index] &* momentum) &+ (gradients[index].values &* learningRate)
+			let weightDelta = (momentumData[index] &* momentum) &+ (gradients[index].values &* (learningRate / Float(batchSize)))
 			momentumData[index] = weightDelta
 			weights[index].values &+= weightDelta
 			gradients[index].values = zeros(gradients[index].values)
@@ -120,8 +120,9 @@ public struct AdaGradOptimizer: Optimizer
 		
 		for index in weights.indices
 		{
-			gradientSumData[index] &+= gradients[index].values &* gradients[index].values
-			weights[index].values &-= learningRate &/ sqrt(gradientSumData[index] &+ 1E-8) &* gradients[index].values
+			let gradient = gradients[index].values &/ Float(batchSize)
+			gradientSumData[index] &+= (gradient &* gradient)
+			weights[index].values &-= learningRate &/ sqrt(gradientSumData[index] &+ 1E-8) &* gradient
 			gradients[index].values = zeros(gradients[index].values)
 		}
 		
@@ -157,8 +158,9 @@ public struct RMSpropOptimizer: Optimizer
 		
 		for index in weights.indices
 		{
-			gradientSumData[index] = (gradientSumData[index] &* decay) &+ (gradients[index].values &* gradients[index].values &* (1 - decay))
-			weights[index].values &-= learningRate &/ sqrt(gradientSumData[index] &+ 1E-8) &* gradients[index].values
+			let gradient = gradients[index].values &/ Float(batchSize)
+			gradientSumData[index] = (gradientSumData[index] &* decay) &+ (gradient &* gradient &* (1 - decay))
+			weights[index].values &-= learningRate &/ sqrt(gradientSumData[index] &+ 1E-8) &* gradient
 			gradients[index].values = zeros(gradients[index].values)
 		}
 		
@@ -192,8 +194,9 @@ public struct AdaDeltaOptimizer: Optimizer
 		
 		for index in weights.indices
 		{
-			gradientSumData[index].0 = (gradientSumData[index].0 &* decay) &+ (gradients[index].values &* gradients[index].values &* (1 - decay))
-			let weightDelta = sqrt(gradientSumData[index].1 &+ 1E-8) &/ sqrt(gradientSumData[index].0 &+ 1E-8) &* gradients[index].values
+			let gradient = gradients[index].values &/ Float(batchSize)
+			gradientSumData[index].0 = (gradientSumData[index].0 &* decay) &+ (gradient &* gradient &* (1 - decay))
+			let weightDelta = sqrt(gradientSumData[index].1 &+ 1E-8) &/ sqrt(gradientSumData[index].0 &+ 1E-8) &* gradient
 			gradientSumData[index].1 = (gradientSumData[index].1 &* decay) &+ ((1 - decay) &* weightDelta &* weightDelta)
 			gradients[index].values = zeros(gradients[index].values)
 		}

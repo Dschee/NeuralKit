@@ -832,7 +832,7 @@ public struct NonlinearityLayer: BidirectionalLayer, OutputLayer
 	
 	public func loss(expected: Matrix3, output: Matrix3) -> Matrix3
 	{
-		if activation == .sigmoid
+		if activation == .softmax
 		{
 			return Matrix3(
 				values: output.values &- expected.values,

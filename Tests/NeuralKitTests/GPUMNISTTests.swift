@@ -7,7 +7,9 @@
 //
 
 import NeuralKit
+import NeuralKitGPU
 import XCTest
+import MatrixVector
 
 class GPUMNISTTests: XCTestCase
 {
@@ -25,7 +27,7 @@ class GPUMNISTTests: XCTestCase
 				NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 250), activation: .tanh),
 				FullyConnectedLayer(weights: RandomWeightMatrix(width: 251, height: 10))
 			],
-			outputActivation: .softmax
+			outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .softmax)
 		)!
 		
 		let gpuNetwork = GPUFeedForwardNeuralNetwork(
@@ -37,7 +39,7 @@ class GPUMNISTTests: XCTestCase
 				}
 				else if let layer = l as? FullyConnectedLayer
 				{
-					return GPUFullyConnectedLayer(weights: layer.weights)
+					return GPUFullyConnectedLayer(weights: layer.weightMatrix)
 				}
 				else if let layer = l as? NonlinearityLayer
 				{
@@ -135,7 +137,7 @@ class GPUMNISTTests: XCTestCase
 		
 		let fullyConnected = FullyConnectedLayer(weights: RandomWeightMatrix(width: 257, height: 10, range: -0.004 ... 0.004))
 		
-		let network = FeedForwardNeuralNetwork(layers: [conv1, nonlinear1, pool1, conv2, nonlinear2, pool2, reshape, fullyConnected], outputActivation: .softmax)!
+		let network = FeedForwardNeuralNetwork(layers: [conv1, nonlinear1, pool1, conv2, nonlinear2, pool2, reshape, fullyConnected], outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .softmax))!
 		
 		let gpuNetwork = GPUFeedForwardNeuralNetwork(
 			layers: network.layers.flatMap
@@ -146,7 +148,7 @@ class GPUMNISTTests: XCTestCase
 				}
 				else if let layer = l as? FullyConnectedLayer
 				{
-					return GPUFullyConnectedLayer(weights: layer.weights)
+					return GPUFullyConnectedLayer(weights: layer.weightMatrix)
 				}
 				else if let layer = l as? NonlinearityLayer
 				{
@@ -256,7 +258,7 @@ class GPUMNISTTests: XCTestCase
 		let tanh3 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 200), activation: .tanh)
 		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10))
 		
-		let network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputActivation: .softmax)!
+		let network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 10), activation: .softmax))!
 		
 		let gpuNetwork = GPUFeedForwardNeuralNetwork(
 			layers: network.layers.flatMap
@@ -267,7 +269,7 @@ class GPUMNISTTests: XCTestCase
 				}
 				else if let layer = l as? FullyConnectedLayer
 				{
-					return GPUFullyConnectedLayer(weights: layer.weights)
+					return GPUFullyConnectedLayer(weights: layer.weightMatrix)
 				}
 				else if let layer = l as? NonlinearityLayer
 				{

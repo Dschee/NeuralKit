@@ -25,6 +25,7 @@
 
 import XCTest
 @testable import NeuralKit
+import MatrixVector
 
 fileprivate let TestSetBase = "/Users/Palle/Developer/NeuralKit/Tests/NeuralKitTests/TestSets/"
 
@@ -128,14 +129,13 @@ class FullyConnectedLayerTests: XCTestCase
 	
 	func performRegressionTest(network net: FeedForwardNeuralNetwork, trainingSamples: [TrainingSample], testSamples: [InputSample], expected: [Matrix3])
 	{
-		var network = net
-		for _ in 0 ..< 10_000
-		{
-			for sample in trainingSamples
-			{
-				network.train(sample, learningRate: 0.0004)
-			}
-		}
+		let session = NetworkTrainingSession(network: net, batchSize: 1, optimizer: SGDOptimizer(learningRate: 0.0004), normalizers: [], sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples))
+		let sema = DispatchSemaphore(value: 0)
+		session.onFinishTraining = { sema.signal() }
+		session.train(epochs: 10_000)
+		sema.wait()
+		
+		let network = session.network
 		
 		for (index, sample) in testSamples.enumerated()
 		{
@@ -151,14 +151,13 @@ class FullyConnectedLayerTests: XCTestCase
 	
 	func performBinaryClassificationTest(network net: FeedForwardNeuralNetwork, trainingSamples: [TrainingSample], testSamples: [InputSample], expected: [Matrix3])
 	{
-		var network = net
-		for _ in 0 ..< 10_000
-		{
-			for sample in trainingSamples
-			{
-				network.train(sample, learningRate: 0.003)
-			}
-		}
+		let session = NetworkTrainingSession(network: net, batchSize: 1, optimizer: SGDOptimizer(learningRate: 0.003), normalizers: [], sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples))
+		let sema = DispatchSemaphore(value: 0)
+		session.onFinishTraining = { sema.signal() }
+		session.train(epochs: 10_000)
+		sema.wait()
+		
+		let network = session.network
 		
 		for (index, sample) in testSamples.enumerated()
 		{
@@ -170,9 +169,12 @@ class FullyConnectedLayerTests: XCTestCase
 	func testLinearRegression()
 	{
 		srand48(time(nil))
-		let network = FeedForwardNeuralNetwork(layers: [
-			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 1))
-		])!
+		let network = FeedForwardNeuralNetwork(
+			layers: [
+				FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 1))
+			],
+			outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 1), activation: .linear)
+		)!
 		for x in ["a", "b", "c", "d"]
 		{
 			let (trainingSamples, inputSamples, expectedOutputs) = regressionSamples(from: TestSetBase + "Regression/Linear/\(x)")
@@ -183,11 +185,14 @@ class FullyConnectedLayerTests: XCTestCase
 	func testNonlinearRegression()
 	{
 		srand48(time(nil))
-		let	network = FeedForwardNeuralNetwork(layers: [
-			FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 4)),
-			NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 4), activation: .tanh),
-			FullyConnectedLayer(weights: RandomWeightMatrix(width: 5, height: 1))
-		])!
+		let	network = FeedForwardNeuralNetwork(
+			layers: [
+				FullyConnectedLayer(weights: RandomWeightMatrix(width: 2, height: 4)),
+				NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 4), activation: .tanh),
+				FullyConnectedLayer(weights: RandomWeightMatrix(width: 5, height: 1))
+			],
+			outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 1), activation: .linear)
+		)!
 		
 		for x in ["a", "b", "c"]
 		{
@@ -201,7 +206,7 @@ class FullyConnectedLayerTests: XCTestCase
 		srand48(time(nil))
 		let network = FeedForwardNeuralNetwork(
 			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 1))],
-			outputActivation: .tanh
+			outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 1), activation: .tanh)
 		)!
 		for x in ["a", "b", "c"]
 		{
@@ -216,7 +221,7 @@ class FullyConnectedLayerTests: XCTestCase
 		let network = FeedForwardNeuralNetwork(
 			layers: [FullyConnectedLayer(weights: RandomWeightMatrix(width: 3, height: 6)),
 			         FullyConnectedLayer(weights: RandomWeightMatrix(width: 7, height: 1))],
-			outputActivation: .tanh
+			outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 1), activation: .tanh)
 		)!
 		for x in ["a", "b", "c"]
 		{

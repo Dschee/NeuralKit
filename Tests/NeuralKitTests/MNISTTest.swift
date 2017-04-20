@@ -27,6 +27,7 @@ import Foundation
 import XCTest
 import Cocoa
 @testable import NeuralKit
+import MatrixVector
 
 class MNISTTest: XCTestCase
 {
@@ -110,25 +111,56 @@ class MNISTTest: XCTestCase
 		let tanh3 = NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 200), activation: .relu)
 		let hiddenLayer4 = FullyConnectedLayer(weights: RandomWeightMatrix(width: 201, height: 10))
 		
-		var network = FeedForwardNeuralNetwork(layers: [reshapingLayer, inputLayer, tanh1, hiddenLayer2, tanh2, hiddenLayer3, tanh3, hiddenLayer4], outputActivation: .softmax)!
+		var network = FeedForwardNeuralNetwork(
+			layers: [
+				reshapingLayer,
+				inputLayer,
+				tanh1,
+				hiddenLayer2,
+				tanh2,
+				hiddenLayer3,
+				tanh3,
+				hiddenLayer4
+			],
+			outputLayer: NonlinearityLayer(
+				inputSize: (
+					width: 1,
+					height: 1,
+					depth: 10
+				),
+				activation: .softmax
+			)
+		)!
 		
 		let epochs = 100_000
 		
-		var time = CACurrentMediaTime()
+		let sema = DispatchSemaphore(value: 0)
 		
-		for epoch in 0 ..< epochs
-		{
-			let sample = trainingSamples[Int(arc4random_uniform(UInt32(trainingSamples.count)))]
-			
-			let error = network.train(sample, learningRate: 0.01)
+		let session = NetworkTrainingSession(
+			network: network,
+			batchSize: 1,
+			optimizer: SGDOptimizer(learningRate: 0.005),
+			normalizers: [],
+			sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples)
+		)
+		
+		session.onBatchFinish = {
+			error, epoch in
 			
 			if epoch % 1000 == 0
 			{
-				let newTime = CACurrentMediaTime()
-				print("Epoch \(epoch): \(error) error (\(newTime - time) seconds)")
-				time = newTime
+				print("Epoch \(epoch)")
 			}
 		}
+		
+		session.onFinishTraining = {
+			sema.signal()
+		}
+		
+		session.train(epochs: epochs)
+		sema.wait()
+		
+		network = session.network
 		
 		var correctCount = 0
 		var wrongCount = 0
