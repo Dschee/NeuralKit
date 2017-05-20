@@ -139,7 +139,7 @@ class MNISTTest: XCTestCase
 		let session = NetworkTrainingSession(
 			network: network,
 			batchSize: 1,
-			optimizer: SGDOptimizer(learningRate: 0.005),
+			optimizer: SGDOptimizer(learningRate: 0.01),
 			normalizers: [],
 			sampleProvider: ArrayTrainingSampleProvider(samples: trainingSamples)
 		)

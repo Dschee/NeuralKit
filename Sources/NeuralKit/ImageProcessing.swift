@@ -444,12 +444,6 @@ public extension CGImage
 		let colorSpace = CGColorSpaceCreateDeviceGray()
 		var bytes = from.map{($0 + maxMagnitude) / max(2 * maxMagnitude, Float.leastNonzeroMagnitude) * 255}.map{UInt8($0)}
 		
-//		let image = withUnsafeMutablePointer(to: &bytes) { (pointer) -> CGImage? in
-//			let rawPointer = UnsafeMutableRawPointer(pointer)
-//			let ctx = CGContext(data: rawPointer, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: colorSpace, bitmapInfo: CGImageAlphaInfo.none.rawValue)
-//			return ctx?.makeImage()
-//		}
-		
 		guard let context = CGContext(
 			data: nil,
 			width: width,
@@ -481,12 +475,26 @@ public extension CGImage
 	}
 	
 	
+	/// Creates a greyscale CGImage from a matrix.
+	///
+	/// - Parameters:
+	///   - matrix: Matrix to create an image from
+	///   - minValue: Minimum matrix value, which will be interpreted as black. If no parameter is passed, the minumum value from the matrix is used.
+	///   - maxValue: Maximum matrix value, which will be interpreted as white. If no parameter is passed, the maximum value from the matrix is used.
+	/// - Returns: An image which was created from the matrix.
 	public static func make(from matrix: Matrix, minValue: Float? = nil, maxValue: Float? = nil) -> CGImage?
 	{
 		return self.make(from: matrix.values, width: matrix.width, height: matrix.height, minValue: minValue, maxValue: maxValue)
 	}
 	
 	
+	/// Creates an array of greyscale images from every slice of the source tensor.
+	///
+	/// - Parameters:
+	///   - matrix: Source tensor to create images from.
+	///   - minValue: Minimum matrix value, which will be interpreted as black. If no parameter is passed, the minumum value from each slice is used.
+	///   - maxValue: Maximum matrix value, which will be interpreted as white. If no parameter is passed, the maximum value from each slice is used.
+	/// - Returns: An array of greyscale images
 	public static func make(from matrix: Matrix3, minValue: Float? = nil, maxValue: Float? = nil) -> [CGImage]
 	{
 		var result: [CGImage] = []
@@ -523,6 +531,11 @@ public extension CGImage
 		return result
 	}
 	
+	
+	/// Writes a CGImage to a given URL.
+	///
+	/// - Parameter url: URL to write the image to
+	/// - Returns: A boolean value indicating success of the operation.
 	@discardableResult
 	public func write(to url: URL) -> Bool
 	{

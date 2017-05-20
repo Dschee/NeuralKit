@@ -103,6 +103,11 @@ internal extension Activation
 }
 
 
+/// A tensor is a a*...*n dimensional vector/matrix/etc.
+///
+/// - vector: A one dimensional vector
+/// - matrix: A two dimensional matrix
+/// - matrix3: A three dimensional tensor
 public enum Tensor
 {
 	case vector([Float])
@@ -112,8 +117,11 @@ public enum Tensor
 	case matrix3(Matrix3)
 }
 
+
 public extension Tensor
 {
+	
+	/// Retrieves the values which a tensor stores or sets them.
 	public var values: [Float]
 	{
 		get

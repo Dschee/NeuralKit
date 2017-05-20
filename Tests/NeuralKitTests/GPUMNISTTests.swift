@@ -183,7 +183,8 @@ class GPUMNISTTests: XCTestCase
 		let session = GPUNetworkTrainingSession(
 			network: gpuNetwork,
 			batchSize: 20,
-			optimizer: MomentumOptimizer(learningRate: 0.01, momentum: 0.0),
+//			optimizer: MomentumOptimizer(learningRate: 0.01, momentum: 0.0),
+			optimizer: SGDOptimizer(learningRate: 0.003),
 //			optimizer: AdaGradOptimizer(learningRate: 0.01),
 //			optimizer: AdaDeltaOptimizer(decay: 0.95),
 //			optimizer: NesterovOptimizer(learningRate: 0.01, momentum: 0.8),

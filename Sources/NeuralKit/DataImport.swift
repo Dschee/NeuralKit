@@ -85,30 +85,7 @@ fileprivate extension Array
 }
 
 
-// /// A protocol defining methods required for importing a training set used for classification.
-//public protocol ClassificationTrainingSetImporter
-//{
-//	/// Label of a training sample
-//	associatedtype Label
-//	
-//	/// Imports all training samples from the given directory.
-//	///
-//	/// - Parameters:
-//	///   - directory: Directory to import samples from
-//	///   - baseOutputValue: Output in the training samples used if an output does not correspond to the label of a sample
-//	///   - hotOutputValue: Output in the training samples used if an output represents the label of a sample
-//	/// - Returns: List of samples and their corresponding label
-//	/// - Throws: Throws an error if the contents of the directory, its subdirectories or files could not be read.
-//	static func `import`(
-//		from directory: URL,
-//		baseOutputValue: Float,
-//		hotOutputValue: Float,
-//		includeFile: @escaping (URL) throws -> Bool,
-//		label: @escaping (URL) throws -> String
-//	) throws -> [(TrainingSample, Label)]
-//}
-
-public struct DirectoryImageSetImporter//: ClassificationTrainingSetImporter
+public struct DirectoryImageSetImporter
 {
 	/// Label of a training sample.
 	/// The label will be equal to the path of the folder it is contained in
