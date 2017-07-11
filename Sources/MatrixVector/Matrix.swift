@@ -59,7 +59,7 @@ public struct Matrix
 	/// The number of possible indices is equal to width * height of the matrix
 	public var indices:[(Int,Int)]
 	{
-		func combine<BoundA: Comparable, BoundB: Comparable>(_ a: CountableRange<BoundA>, _ b: CountableRange<BoundB>) -> [(BoundA,BoundB)]
+		func combine<BoundA, BoundB>(_ a: CountableRange<BoundA>, _ b: CountableRange<BoundB>) -> [(BoundA,BoundB)]
 		{
 			return b.flatMap{elB in a.map{($0,elB)}}
 		}

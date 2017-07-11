@@ -33,7 +33,7 @@ private class _BundleIdentifyingClass {}
 @available(OSX 10.12, *)
 public let GPUGlobalDevice = MTLCreateSystemDefaultDevice()!
 @available(OSX 10.12, *)
-public let GPUGlobalQueue = GPUGlobalDevice.makeCommandQueue()
+public let GPUGlobalQueue = GPUGlobalDevice.makeCommandQueue()!
 @available(OSX 10.12, *)
 public let GPUGlobalLibrary = try! GPUGlobalDevice.makeDefaultLibrary(bundle: Bundle(for: _BundleIdentifyingClass.self))
 
@@ -90,8 +90,8 @@ public struct GPUFeedForwardNeuralNetwork
 	/// - Returns: Result of the feed forward operation on the last layer
 	public func feedForward(_ sample: GPUMatrix3) -> Matrix3
 	{
-		let buffer = GPUGlobalQueue.makeCommandBuffer()
-		let encoder = buffer.makeComputeCommandEncoder()
+		let buffer = GPUGlobalQueue.makeCommandBuffer()!
+		let encoder = buffer.makeComputeCommandEncoder()!
 		
 		let lastHiddenLayerResult = layers.reduce(sample)
 		{ layerInput, layer in

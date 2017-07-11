@@ -230,4 +230,32 @@ class FullyConnectedLayerTests: XCTestCase
 		}
 	}
 	
+	func testLinearRegression2()
+	{
+		var net = FeedForwardNeuralNetwork(layers: [FullyConnectedLayer(inputDepth: 1, outputDepth: 1)], outputLayer: NonlinearityLayer(inputSize: (width: 1, height: 1, depth: 1), activation: .linear))!
+		
+		let points: [[Float]] = [[2,2], [0,1], [1,3]]
+		
+		let samples = points.map { point -> TrainingSample in
+			return TrainingSample(
+				values: Matrix3(repeating: point[0], width: 1, height: 1, depth: 1),
+				expected: Matrix3(repeating: point[1], width: 1, height: 1, depth: 1)
+			)
+		}
+		
+		let session = NetworkTrainingSession(network: net, batchSize: 1, optimizer: MomentumOptimizer(learningRate: 0.001, momentum: 0.6), normalizers: [L2Normalizer(decay: 0.0001)], sampleProvider: ArrayTrainingSampleProvider(samples: samples))
+		
+		let sema = DispatchSemaphore(value: 0)
+		session.onFinishTraining = { sema.signal() }
+		session.train(epochs: 100000)
+		sema.wait()
+		
+		net = session.network
+		let result = (net.layers[0] as! FullyConnectedLayer).weightMatrix
+		print(result)
+		
+		XCTAssertEqualWithAccuracy(result[0, 0], 0.5, accuracy: 0.05)
+		XCTAssertEqualWithAccuracy(result[1, 0], 1.5, accuracy: 0.05)
+	}
+	
 }

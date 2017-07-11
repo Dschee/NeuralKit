@@ -90,13 +90,13 @@ public struct L1Normalizer: GPUNormalizer
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder)
 	{
 		encoder.setComputePipelineState(normalizeFunctionPipelineState)
-		encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 3)
+		encoder.setBytes([decay], length: MemoryLayout<Float>.size, index: 3)
 		
 		for (weightBuffer, gradientBuffer) in zip(weights, gradients)
 		{
-			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
-			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
-			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, index: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, index: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, index: 2)
 			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
@@ -149,13 +149,13 @@ public struct L2Normalizer: GPUNormalizer
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], encoder: MTLComputeCommandEncoder)
 	{
 		encoder.setComputePipelineState(normalizeFunctionPipelineState)
-		encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 3)
+		encoder.setBytes([decay], length: MemoryLayout<Float>.size, index: 3)
 		
 		for (weightBuffer, gradientBuffer) in zip(weights, gradients)
 		{
-			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
-			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
-			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, index: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, index: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, index: 2)
 			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}

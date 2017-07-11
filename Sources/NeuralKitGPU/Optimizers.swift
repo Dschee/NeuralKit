@@ -120,16 +120,16 @@ public struct SGDOptimizer: GPUOptimizer
 	/// - Returns: Updated optimization data, which will be passed to the next optimization pass.
 	public func update(weights: [GPUTensor], gradients: [GPUTensor], batchSize: Int, encoder: MTLComputeCommandEncoder, data: Void?) -> Void
 	{
-		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 3)
-		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 4)
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, index: 3)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, index: 4)
 		
 		for (weightBuffer, gradientBuffer) in zip(weights, gradients)
 		{
 			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 			
-			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
-			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
-			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, index: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, index: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, index: 2)
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
 	}
@@ -231,22 +231,22 @@ public struct MomentumOptimizer: GPUOptimizer
 					bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
 					length: Int(tensor.count) * MemoryLayout<Float>.size,
 					options: .storageModePrivate
-				)
+					)!
 			}
 		}
 		
-		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
-		encoder.setBytes([momentum], length: MemoryLayout<Float>.size, at: 5)
-		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 6)
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, index: 4)
+		encoder.setBytes([momentum], length: MemoryLayout<Float>.size, index: 5)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, index: 6)
 		
 		for ((weightBuffer, gradientBuffer), momentumBuffer) in zip(zip(weights, gradients), momentumData)
 		{
 			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 			
-			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
-			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
-			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
-			encoder.setBuffer(momentumBuffer, offset: 0, at: 3)
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, index: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, index: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, index: 2)
+			encoder.setBuffer(momentumBuffer, offset: 0, index: 3)
 			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
@@ -307,22 +307,22 @@ public struct NesterovOptimizer: GPUOptimizer
 					bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
 					length: Int(tensor.count) * MemoryLayout<Float>.size,
 					options: .storageModePrivate
-				)
+					)!
 			}
 		}
 		
-		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
-		encoder.setBytes([momentum], length: MemoryLayout<Float>.size, at: 5)
-		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 6)
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, index: 4)
+		encoder.setBytes([momentum], length: MemoryLayout<Float>.size, index: 5)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, index: 6)
 		
 		for ((weightBuffer, gradientBuffer), momentumBuffer) in zip(zip(weights, gradients), momentumData)
 		{
 			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 			
-			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
-			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
-			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
-			encoder.setBuffer(momentumBuffer, offset: 0, at: 3)
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, index: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, index: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, index: 2)
+			encoder.setBuffer(momentumBuffer, offset: 0, index: 3)
 			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
@@ -381,21 +381,21 @@ public struct AdaGradOptimizer: GPUOptimizer
 					bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
 					length: Int(tensor.count) * MemoryLayout<Float>.size,
 					options: .storageModePrivate
-				)
+					)!
 			}
 		}
 		
-		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
-		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 5)
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, index: 4)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, index: 5)
 		
 		for ((weightBuffer, gradientBuffer), squaredGradientSumBuffer) in zip(zip(weights, gradients), squaredGradientSum)
 		{
 			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 		
-			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
-			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
-			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
-			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, at: 3)
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, index: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, index: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, index: 2)
+			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, index: 3)
 			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
@@ -456,22 +456,22 @@ public struct RMSpropOptimizer: GPUOptimizer
 					bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
 					length: Int(tensor.count) * MemoryLayout<Float>.size,
 					options: .storageModePrivate
-				)
+					)!
 			}
 		}
 		
-		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, at: 4)
-		encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 5)
-		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 6)
+		encoder.setBytes([learningRate], length: MemoryLayout<Float>.size, index: 4)
+		encoder.setBytes([decay], length: MemoryLayout<Float>.size, index: 5)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, index: 6)
 		
 		for ((weightBuffer, gradientBuffer), squaredGradientSumBuffer) in zip(zip(weights, gradients), squaredGradientSum)
 		{
 			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 			
-			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
-			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
-			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
-			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, at: 3)
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, index: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, index: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, index: 2)
+			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, index: 3)
 			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}
@@ -531,7 +531,7 @@ public struct AdaDeltaOptimizer: GPUOptimizer
 						bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
 						length: Int(tensor.count) * MemoryLayout<Float>.size,
 						options: .storageModePrivate
-					)
+						)!
 			}
 			squaredWeightUpdateSum = weights.map
 			{ (tensor) -> MTLBuffer in
@@ -539,22 +539,22 @@ public struct AdaDeltaOptimizer: GPUOptimizer
 					bytes: Array<Float>(repeating: 0, count: Int(tensor.count)),
 					length: Int(tensor.count) * MemoryLayout<Float>.size,
 					options: .storageModePrivate
-				)
+					)!
 			}
 		}
 		
-		encoder.setBytes([decay], length: MemoryLayout<Float>.size, at: 5)
-		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, at: 6)
+		encoder.setBytes([decay], length: MemoryLayout<Float>.size, index: 5)
+		encoder.setBytes([Float(batchSize)], length: MemoryLayout<Float>.size, index: 6)
 		
 		for ((weightBuffer, gradientBuffer), (squaredGradientSumBuffer, squaredWeightUpdateBuffer)) in zip(zip(weights, gradients), zip(squaredGradientSum, squaredWeightUpdateSum))
 		{
 			encoder.setComputePipelineState(self.optimizeFunctionPipelineState)
 			
-			encoder.setBuffer(weightBuffer.buffer, offset: 0, at: 0)
-			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, at: 1)
-			encoder.setBuffer(gradientBuffer.buffer, offset: 0, at: 2)
-			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, at: 3)
-			encoder.setBuffer(squaredWeightUpdateBuffer, offset: 0, at: 4)
+			encoder.setBuffer(weightBuffer.buffer, offset: 0, index: 0)
+			encoder.setBytes([weightBuffer.count], length: MemoryLayout<UInt32>.size, index: 1)
+			encoder.setBuffer(gradientBuffer.buffer, offset: 0, index: 2)
+			encoder.setBuffer(squaredGradientSumBuffer, offset: 0, index: 3)
+			encoder.setBuffer(squaredWeightUpdateBuffer, offset: 0, index: 4)
 			
 			encoder.dispatch(workSize: (width: Int(weightBuffer.count), height: 1, depth: 1))
 		}

@@ -187,7 +187,7 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 			bytes: bias,
 			length: MemoryLayout.size(ofValue: Float(0)) * bias.count,
 			options: []
-		)
+			)!
 		
 		let kernelGradient = Matrix3(
 			repeating: 0,
@@ -201,7 +201,7 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 			bytes: (0..<kernels.count).map{_ in Float(0)},
 			length: MemoryLayout<Float>.size * kernels.count,
 			options: []
-		)
+			)!
 		
 		
 		let outputSize =
@@ -236,10 +236,10 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		)
 		self.gpuGradient = GPUMatrix3(matrix: gradient)
 		
-		gpuHorizontalInset	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.horizontalInset)],	length: MemoryLayout<Int32>.size, options: [])
-		gpuVerticalInset	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.verticalInset)],		length: MemoryLayout<Int32>.size, options: [])
-		gpuHorizontalStride = GPUGlobalDevice.makeBuffer(bytes: [Int32(self.horizontalStride)],	length: MemoryLayout<Int32>.size, options: [])
-		gpuVerticalStride	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.verticalStride)],	length: MemoryLayout<Int32>.size, options: [])
+		gpuHorizontalInset	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.horizontalInset)],	length: MemoryLayout<Int32>.size, options: [])!
+		gpuVerticalInset	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.verticalInset)],		length: MemoryLayout<Int32>.size, options: [])!
+		gpuHorizontalStride = GPUGlobalDevice.makeBuffer(bytes: [Int32(self.horizontalStride)],	length: MemoryLayout<Int32>.size, options: [])!
+		gpuVerticalStride	= GPUGlobalDevice.makeBuffer(bytes: [Int32(self.verticalStride)],	length: MemoryLayout<Int32>.size, options: [])!
 	}
 	
 	
@@ -266,12 +266,12 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		gpuOutput.setBuffer(on: encoder,				   at: 2)
 		gpuKernels.setBuffer(on: encoder,				   at: 4)
 		
-		encoder.setBuffer(gpuBias,				offset: 0, at: 6)
+		encoder.setBuffer(gpuBias,				offset: 0, index: 6)
 		
-		encoder.setBuffer(gpuHorizontalInset,	offset: 0, at: 7)
-		encoder.setBuffer(gpuVerticalInset,		offset: 0, at: 8)
-		encoder.setBuffer(gpuHorizontalStride,	offset: 0, at: 9)
-		encoder.setBuffer(gpuVerticalStride,	offset: 0, at: 10)
+		encoder.setBuffer(gpuHorizontalInset,	offset: 0, index: 7)
+		encoder.setBuffer(gpuVerticalInset,		offset: 0, index: 8)
+		encoder.setBuffer(gpuHorizontalStride,	offset: 0, index: 9)
+		encoder.setBuffer(gpuVerticalStride,	offset: 0, index: 10)
 		
 		encoder.dispatch(workSize: outputSize)
 		
@@ -307,10 +307,10 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		gpuKernels.setBuffer(on: encoder, at: 6)
 		gpuKernelGradient.setBuffer(on: encoder, at: 8)
 		
-		encoder.setBuffer(gpuHorizontalInset,	offset: 0, at: 12)
-		encoder.setBuffer(gpuVerticalInset,		offset: 0, at: 13)
-		encoder.setBuffer(gpuHorizontalStride,	offset: 0, at: 14)
-		encoder.setBuffer(gpuVerticalStride,	offset: 0, at: 15)
+		encoder.setBuffer(gpuHorizontalInset,	offset: 0, index: 12)
+		encoder.setBuffer(gpuVerticalInset,		offset: 0, index: 13)
+		encoder.setBuffer(gpuHorizontalStride,	offset: 0, index: 14)
+		encoder.setBuffer(gpuVerticalStride,	offset: 0, index: 15)
 		
 		encoder.dispatch(workSize: inputSize)
 		
@@ -318,7 +318,7 @@ public struct GPUConvolutionLayer: GPUBidirectionalLayer, GPUWeightAdjustableLay
 		encoder.dispatch(workSize: (width: kernels[0].width, height: kernels[0].height, depth: inputSize.depth * kernels.count))
 		
 		encoder.setComputePipelineState(gpuBiasGradientUpdatePipelineState)
-		encoder.setBuffer(gpuBiasGradient, offset: 0, at: 8)
+		encoder.setBuffer(gpuBiasGradient, offset: 0, index: 8)
 		encoder.dispatch(workSize: (width: outputSize.depth, height: 1, depth: 1))
 		
 		return gpuGradient

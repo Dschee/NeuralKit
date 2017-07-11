@@ -86,11 +86,11 @@ public class GPUNetworkTrainingSession<OptimizerType: GPUOptimizer>
 					let batch = this.trainingSampleProvider.nextSamples(count: this.batchSize)
 					
 					let buffer = GPUGlobalQueue.makeCommandBuffer()
-					let encoder = buffer.makeComputeCommandEncoder()
+					let encoder = buffer?.makeComputeCommandEncoder()
 					
 					for sample in batch
 					{
-						this.network.updateGradients(with: sample, encoder: encoder)
+						this.network.updateGradients(with: sample, encoder: encoder!)
 					}
 					
 					let weights = this
@@ -108,14 +108,14 @@ public class GPUNetworkTrainingSession<OptimizerType: GPUOptimizer>
 					
 					for normalizer in this.normalizers
 					{
-						normalizer.update(weights: weights, gradients: gradients, encoder: encoder)
+						normalizer.update(weights: weights, gradients: gradients, encoder: encoder!)
 					}
 					
-					this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, batchSize: this.batchSize, encoder: encoder, data: this.optimizerData)
+					this.optimizerData = this.optimizer.update(weights: weights, gradients: gradients, batchSize: this.batchSize, encoder: encoder!, data: this.optimizerData)
 					
-					encoder.endEncoding()
-					buffer.commit()
-					buffer.waitUntilCompleted()
+					encoder?.endEncoding()
+					buffer?.commit()
+					buffer?.waitUntilCompleted()
 					
 					self?.onBatchFinish?(0, epoch)
 				}

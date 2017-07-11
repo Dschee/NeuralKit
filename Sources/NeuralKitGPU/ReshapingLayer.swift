@@ -80,7 +80,7 @@ public struct GPUReshapingLayer: GPUBidirectionalLayer
 			],
 			length: 3 * MemoryLayout<UInt32>.size,
 			options: .storageModePrivate
-		)
+			)!
 	}
 	
 	

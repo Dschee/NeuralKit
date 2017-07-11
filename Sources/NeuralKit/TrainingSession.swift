@@ -99,14 +99,16 @@ public class NetworkTrainingSession<OptimizerType: Optimizer>
 						normalizer.update(weights: layer.weights, gradients: &layer.weightGradients)
 					}
 					
+					var updatedLayer = layer
+					
 					this.optimizerData[index] = this.optimizer.update(
-						weights: &layer.weights,
+						weights: &updatedLayer.weights,
 						gradients: &layer.weightGradients,
 						batchSize: this.batchSize,
 						data: this.optimizerData[index]
 					)
 					
-					this.network.layers[index] = layer
+					this.network.layers[index] = updatedLayer
 				}
 				
 				this.onBatchFinish?(0, epoch)

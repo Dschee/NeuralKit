@@ -1,3 +1,4 @@
+// swift-tools-version:4.0
 //
 //  Package.swift
 //  NeuralKit
@@ -28,10 +29,16 @@ import PackageDescription
 
 let package = Package(
 	name: "NeuralKit",
+	products: [
+		.library(name: "Serialization", targets: ["Serialization", "MatrixVector", "NeuralKit", "NeuralKitGPU"]),
+		.library(name: "MatrixVector", targets: ["MatrixVector", "NeuralKit", "NeuralKitGPU"]),
+		.library(name: "NeuralKitGPU", targets: ["NeuralKitGPU"])
+	],
 	targets: [
-		Target(name: "Serialization", dependencies: []),
-		Target(name: "MatrixVector", dependencies: ["Serialization"]),
-		Target(name: "NeuralKit", dependencies: ["MatrixVector", "Serialization"]),
-		Target(name: "NeuralKitGPU", dependencies: ["MatrixVector", "Serialization", "NeuralKit"])
+		.target(name: "Serialization", dependencies: []),
+		.target(name: "MatrixVector", dependencies: ["Serialization"]),
+		.target(name: "NeuralKit", dependencies: ["MatrixVector", "Serialization"]),
+		.target(name: "NeuralKitGPU", dependencies: ["MatrixVector", "Serialization", "NeuralKit"]),
+		.testTarget(name: "NeuralKitTests", dependencies: ["Serialization", "MatrixVector", "NeuralKit", "NeuralKitGPU"])
 	]
 )

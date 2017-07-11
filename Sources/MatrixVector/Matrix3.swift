@@ -67,7 +67,7 @@ public struct Matrix3
 	/// The number of possible indices is equal to width * height * depth of the matrix
 	public var indices:[(Int,Int,Int)]
 	{
-		func combine<BoundA: Comparable, BoundB: Comparable, BoundC: Comparable>(_ a: CountableRange<BoundA>, _ b: CountableRange<BoundB>, _ c: CountableRange<BoundC>) -> [(BoundA,BoundB,BoundC)]
+		func combine<BoundA, BoundB, BoundC>(_ a: CountableRange<BoundA>, _ b: CountableRange<BoundB>, _ c: CountableRange<BoundC>) -> [(BoundA,BoundB,BoundC)]
 		{
 			return c.flatMap{elC in b.flatMap{elB in a.map{($0,elB,elC)}}}
 		}

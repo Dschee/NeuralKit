@@ -64,7 +64,7 @@ public struct GPUMatrix
 			bytes: matrix.values,
 			length: MemoryLayout.size(ofValue: Float(0)) * matrix.values.count,
 			options: isShared ? .storageModeShared : .storageModePrivate
-		)
+			)!
 		
 		descriptor = (
 			width: UInt32(matrix.width),
@@ -74,7 +74,7 @@ public struct GPUMatrix
 			bytes: [descriptor.width, descriptor.height],
 			length: MemoryLayout.size(ofValue: descriptor),
 			options: .storageModeShared
-		)
+			)!
 	}
 	
 	
@@ -93,7 +93,7 @@ public struct GPUMatrix
 			bytes: [descriptor.width, descriptor.height],
 			length: MemoryLayout.size(ofValue: descriptor),
 			options: .storageModeShared
-		)
+			)!
 	}
 	
 	
@@ -113,20 +113,20 @@ public struct GPUMatrix
 			destination = GPUGlobalDevice.makeBuffer(
 				length: MemoryLayout<Float>.size * Int(descriptor.width) * Int(descriptor.height),
 				options: .storageModeShared
-			)
+				)!
 			
 			let buffer = GPUGlobalQueue.makeCommandBuffer()
-			let encoder = buffer.makeBlitCommandEncoder()
-			encoder.copy(
+			let encoder = buffer?.makeBlitCommandEncoder()
+			encoder?.copy(
 				from: self.buffer,
 				sourceOffset: 0,
 				to: destination,
 				destinationOffset: 0,
 				size: Int(descriptor.width) * Int(descriptor.height) * MemoryLayout<Float>.size
 			)
-			encoder.endEncoding()
-			buffer.commit()
-			buffer.waitUntilCompleted()
+			encoder?.endEncoding()
+			buffer?.commit()
+			buffer?.waitUntilCompleted()
 		}
 		else
 		{
@@ -177,8 +177,8 @@ public struct GPUMatrix
 	///   - index: Index at which the buffer should be set as an argument.
 	public func setBuffer(on encoder: MTLComputeCommandEncoder, at index: Int)
 	{
-		encoder.setBuffer(self.buffer, offset: 0, at: index)
-		encoder.setBuffer(self.descriptorBuffer, offset: 0, at: index + 1)
+		encoder.setBuffer(self.buffer, offset: 0, index: index)
+		encoder.setBuffer(self.descriptorBuffer, offset: 0, index: index + 1)
 	}
 }
 
@@ -218,7 +218,7 @@ public struct GPUMatrix3
 			bytes: matrix.values,
 			length: MemoryLayout.size(ofValue: Float(0)) * matrix.values.count,
 			options: isShared ? .storageModeShared : .storageModePrivate
-		)
+			)!
 		
 		descriptor = (
 			width: UInt32(matrix.width),
@@ -229,7 +229,7 @@ public struct GPUMatrix3
 			bytes: [descriptor.width, descriptor.height, descriptor.depth],
 			length: MemoryLayout.size(ofValue: descriptor),
 			options: .storageModeShared
-		)
+			)!
 	}
 	
 	
@@ -248,7 +248,7 @@ public struct GPUMatrix3
 			bytes: [descriptor.width, descriptor.height, descriptor.depth],
 			length: MemoryLayout.size(ofValue: descriptor),
 			options: .storageModeShared
-		)
+			)!
 	}
 	
 	
@@ -282,20 +282,20 @@ public struct GPUMatrix3
 			destination = GPUGlobalDevice.makeBuffer(
 				length: MemoryLayout<Float>.size * Int(descriptor.width) * Int(descriptor.height) * Int(descriptor.depth),
 				options: .storageModeShared
-			)
+				)!
 			
 			let buffer = GPUGlobalQueue.makeCommandBuffer()
-			let encoder = buffer.makeBlitCommandEncoder()
-			encoder.copy(
+			let encoder = buffer?.makeBlitCommandEncoder()
+			encoder?.copy(
 				from: self.buffer,
 				sourceOffset: 0,
 				to: destination,
 				destinationOffset: 0,
 				size: Int(descriptor.width) * Int(descriptor.height) * Int(descriptor.depth) * MemoryLayout<Float>.size
 			)
-			encoder.endEncoding()
-			buffer.commit()
-			buffer.waitUntilCompleted()
+			encoder?.endEncoding()
+			buffer?.commit()
+			buffer?.waitUntilCompleted()
 		}
 		else
 		{
@@ -351,8 +351,8 @@ public struct GPUMatrix3
 	///   - index: Index at which the buffer should be set as an argument.
 	public func setBuffer(on encoder: MTLComputeCommandEncoder, at index: Int)
 	{
-		encoder.setBuffer(self.buffer, offset: 0, at: index)
-		encoder.setBuffer(self.descriptorBuffer, offset: 0, at: index + 1)
+		encoder.setBuffer(self.buffer, offset: 0, index: index)
+		encoder.setBuffer(self.descriptorBuffer, offset: 0, index: index + 1)
 	}
 }
 
