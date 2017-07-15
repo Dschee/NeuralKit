@@ -16,6 +16,7 @@ The NeuralKitGPU framework provides a similar implementation of a feed forward n
 
 #### Serialization
 The Serialization Framework includes helper functions used to store and load neural networks to and from JSON files.
+(This framework will be replaced by the builtin Encoding and Decoding mechanisms in Swift 4)
 
 ## Functions
 
@@ -45,4 +46,4 @@ Commonly used optimization methods are implemented:
 ### Known Issues
 
 - Networks using convolution layers cannot be optimized. Training currently diverges.
-- Optimizers other than vanilla SGD and Momentum SGD currently do not work. Training currently diverges.
+- Optimizers other than vanilla SGD and Momentum SGD currently lead to divergence of weights.
