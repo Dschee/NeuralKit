@@ -23,7 +23,7 @@ The Serialization Framework includes helper functions used to store and load neu
 Both implementations provide many layers commonly used in neural networks:
 
 - Fully connected layers
-- Convolution layers
+- Convolution layers (can currently not be trained)
 - Pooling layers
 - Nonlinearity layers
 
