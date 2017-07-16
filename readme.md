@@ -1,5 +1,5 @@
 # NeuralKit
-<img src="https://raw.githubusercontent.com/palle-k/NeuralKit/master/Docs/badge.svg" alt="Documentation Status"/>
+<img src="/docs/NeuralKit/badge.svg" alt="Documentation Status"/>
 
 NeuralKit is a collection of 3 frameworks for training and running artificial neural networks.
 
