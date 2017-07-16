@@ -42,6 +42,7 @@ Commonly used optimization methods are implemented:
 - RMSprop
 - AdaDelta
 
+Normalization (L1 and L2) are implemented
 
 ### Known Issues
 
